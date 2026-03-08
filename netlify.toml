@@ -1,0 +1,39 @@
+# Netlify config for Cyber/AI Python Lab (Vite + React)
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Force correct MIME types (fixes "application/octet-stream" for module scripts)
+# Match nested paths under /assets/ (where Vite puts JS/CSS)
+[[headers]]
+  for = "/assets/*.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    X-Content-Type-Options = "nosniff"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*.css"
+  [headers.values]
+    Content-Type = "text/css; charset=utf-8"
+    X-Content-Type-Options = "nosniff"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Fallback for any other .js/.css (root-level)
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Content-Type = "text/css; charset=utf-8"
+    X-Content-Type-Options = "nosniff"
+
+# SPA fallback: serve index.html only when no static file exists (e.g. deep link refresh)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 404

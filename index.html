@@ -7,14 +7,28 @@
     <title>Cyber/AI Python Lab</title>
     <style>
       body { background: #1e2a35; color: #e8edf4; margin: 0; font-family: system-ui, sans-serif; min-height: 100vh; }
-      #root { min-height: 100vh; padding: 24px; display: flex; align-items: center; justify-content: center; }
+      #root { min-height: 100vh; padding: 24px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
       #root .load-msg { font-size: 18px; }
+      #root .load-hint { font-size: 13px; color: #9fb3c9; max-width: 360px; text-align: center; }
     </style>
   </head>
   <body>
     <div id="root">
       <div class="load-msg">Loading Cyber/AI Python Lab…</div>
+      <div class="load-hint" id="load-hint" style="display: none;">
+        If the app doesn’t load here, run it locally: open a terminal in this project folder, run <strong>npm run dev</strong>, then open <strong>http://localhost:5173</strong> in your browser.
+      </div>
+      <!-- Build: production (deploy marker) -->
     </div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      setTimeout(function() {
+        var root = document.getElementById('root');
+        var hint = document.getElementById('load-hint');
+        if (hint && root && root.querySelector && root.querySelector('.load-msg') && !root.querySelector('.app')) {
+          hint.style.display = 'block';
+        }
+      }, 4500);
+    </script>
   </body>
 </html>
