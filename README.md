@@ -1,3 +1,25 @@
+# Cyber/AI Python Lab (Grades 10–11)
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/418ddb2b-69d7-4a60-8915-2e4ff366c59f/deploy-status)](https://app.netlify.com/projects/pythoncyber-lab/deploys)
+
+A React + Vite app for learning Python in a cyber/AI context. Teacher/student roles, lessons with videos (MP4, YouTube, NotebookLM), Run/Reset/Mastery Check, and teacher notifications.
+
+## How to run the app
+
+**If you only see “Loading Cyber/AI Python Lab…”**, the app needs to be run locally (it does not run from the raw GitHub page).
+
+1. Clone the repo and open a terminal in the project folder:
+   ```bash
+   cd PythonLab
+   npm install
+   npm run dev
+   ```
+2. In your browser, open **http://localhost:5173** (or the URL Vite prints).
+
+You should then see the **Teacher / Student** role picker, then the full lab.
+
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
