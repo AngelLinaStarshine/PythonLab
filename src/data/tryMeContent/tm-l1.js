@@ -32,6 +32,9 @@ print("username:", username)
 print("grade:", grade)
 print("risk_score:", risk_score)
 print("2FA enabled:", two_factor_enabled)`,
+        editableToken: "YourName",
+        editableLabel: "Your name (replace YourName)",
+        editableMaxLength: 48,
         expectedOutput:
           "username: YourName\ngrade: 10\nrisk_score: 0.0\n2FA enabled: True",
         hint: "Change YourName to your own name and run it. Notice how each type prints differently.",

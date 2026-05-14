@@ -13,6 +13,7 @@ import {
 } from "react";
 import { getMergedVideoSources } from "../utils/videoUtils.js";
 import { getLessonContent } from "../data/lessonTryMe.js";
+import { splitTryMeStarter, previewTryMeExpected } from "../utils/tryMeConstraint.js";
 import TeacherVideoManager from "./TeacherVideoManager.jsx";
 import TeacherLearnEditor from "./TeacherLearnEditor.jsx";
 
@@ -258,6 +259,7 @@ const LearnPanel = forwardRef(function LearnPanel(
     onLessonOverride,
     onTryMeApply,
     tryMeRunPreview,
+    liveEditorCode = "",
   },
   ref,
 ) {
@@ -628,65 +630,129 @@ const LearnPanel = forwardRef(function LearnPanel(
                                 <code>{sec.code}</code>
                               </pre>
                             )}
-                            {sec.tryMe && (
-                              <div className="lesson-enrichment-tryme practice-lab">
-                                <div className="lesson-enrichment-tryme-label">Try me</div>
-                                <p className="lesson-enrichment-tryme-locked-note">
-                                  Starter is read-only. Use <strong>Load in editor</strong>, then type and run in the Code
-                                  panel.
-                                </p>
-                                <pre className="lesson-enrichment-code">
-                                  <code>{sec.tryMe.starter}</code>
-                                </pre>
-                                {onTryMeApply && (
-                                  <div className="lesson-enrichment-tryme-actions">
-                                    <button
-                                      type="button"
-                                      className="btn small"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onTryMeApply(sec.tryMe.starter, sec.id);
-                                      }}
-                                    >
-                                      Load in editor
-                                    </button>
-                                  </div>
-                                )}
-                                <details className="lesson-enrichment-details">
-                                  <summary>Hint</summary>
-                                  <p className="lesson-enrichment-hint">{sec.tryMe.hint}</p>
-                                </details>
-                                <details className="lesson-enrichment-details">
-                                  <summary>Expected output</summary>
-                                  <pre className="lesson-enrichment-expected">
-                                    <code>{sec.tryMe.expectedOutput}</code>
+                            {sec.tryMe && (() => {
+                              const token =
+                                typeof sec.tryMe.editableToken === "string"
+                                  ? sec.tryMe.editableToken.trim()
+                                  : "";
+                              const split = token
+                                ? splitTryMeStarter(sec.tryMe.starter, token)
+                                : null;
+                              const midForPreview = (() => {
+                                if (
+                                  !split ||
+                                  tryMeRunPreview?.sectionId !== sec.id ||
+                                  typeof liveEditorCode !== "string"
+                                ) {
+                                  return split ? split.token : "";
+                                }
+                                const c = liveEditorCode;
+                                if (c.startsWith(split.before) && c.endsWith(split.after)) {
+                                  return c.slice(
+                                    split.before.length,
+                                    c.length - split.after.length,
+                                  );
+                                }
+                                return split.token;
+                              })();
+                              const expectedShown = split
+                                ? previewTryMeExpected(
+                                    sec.tryMe.expectedOutput,
+                                    split.token,
+                                    midForPreview,
+                                  )
+                                : sec.tryMe.expectedOutput;
+                              const constraint =
+                                split != null
+                                  ? {
+                                      before: split.before,
+                                      after: split.after,
+                                      maxLength: Number(sec.tryMe.editableMaxLength) || 64,
+                                      defaultMid: split.token,
+                                    }
+                                  : null;
+
+                              return (
+                                <div className="lesson-enrichment-tryme practice-lab">
+                                  <div className="lesson-enrichment-tryme-label">Try me</div>
+                                  <p className="lesson-enrichment-tryme-locked-note">
+                                    {split ? (
+                                      <>
+                                        Change only <strong>{split.token}</strong> in the <strong>Code</strong> editor
+                                        after <strong>Load in editor</strong> (see Hint). Other text is fixed
+                                        automatically.
+                                      </>
+                                    ) : (
+                                      <>
+                                        Starter is read-only here. Use <strong>Load in editor</strong>, then edit and
+                                        run in the Code panel.
+                                      </>
+                                    )}
+                                  </p>
+                                  <pre className="lesson-enrichment-code">
+                                    <code>{sec.tryMe.starter}</code>
                                   </pre>
-                                  {tryMeRunPreview?.sectionId === sec.id && (
-                                    <div className="lesson-enrichment-tryme-runout">
-                                      <div className="lesson-enrichment-tryme-runout-label">Your run (Code panel)</div>
-                                      {(() => {
-                                        const err = (tryMeRunPreview.error || "").trim();
-                                        const out = (tryMeRunPreview.stdout || "").trim();
-                                        const combined = [err, out].filter(Boolean).join("\n\n");
-                                        if (!combined) {
-                                          return (
-                                            <p className="lesson-enrichment-tryme-runout-placeholder">
-                                              Press <strong>Run</strong> after loading; your program output will show
-                                              here.
-                                            </p>
-                                          );
-                                        }
-                                        return (
-                                          <pre className="lesson-enrichment-tryme-runout-pre">
-                                            <code>{combined}</code>
-                                          </pre>
-                                        );
-                                      })()}
+                                  {onTryMeApply && (
+                                    <div className="lesson-enrichment-tryme-actions">
+                                      <button
+                                        type="button"
+                                        className="btn small"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onTryMeApply(sec.tryMe.starter, sec.id, { constraint });
+                                        }}
+                                      >
+                                        Load in editor
+                                      </button>
                                     </div>
                                   )}
-                                </details>
-                              </div>
-                            )}
+                                  <details className="lesson-enrichment-details">
+                                    <summary>Hint</summary>
+                                    <p className="lesson-enrichment-hint">{sec.tryMe.hint}</p>
+                                  </details>
+                                  <details className="lesson-enrichment-details">
+                                    <summary>Expected output</summary>
+                                    <pre className="lesson-enrichment-expected">
+                                      <code>{expectedShown}</code>
+                                    </pre>
+                                    {tryMeRunPreview?.sectionId === sec.id && (
+                                      <div className="lesson-enrichment-tryme-runout">
+                                        <div className="lesson-enrichment-tryme-runout-label">
+                                          Your run (Code panel)
+                                        </div>
+                                        {(() => {
+                                          const err = (tryMeRunPreview.error || "").trim();
+                                          const out = (tryMeRunPreview.stdout || "").trim();
+                                          const combined = [err, out].filter(Boolean).join("\n\n");
+                                          if (!combined) {
+                                            return (
+                                              <p className="lesson-enrichment-tryme-runout-placeholder">
+                                                {split ? (
+                                                  <>
+                                                    Edit <strong>{split.token}</strong> in the Code editor, then{" "}
+                                                    <strong>Run</strong>; your output appears here.
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    Press <strong>Run</strong> after loading; your program output will
+                                                    show here.
+                                                  </>
+                                                )}
+                                              </p>
+                                            );
+                                          }
+                                          return (
+                                            <pre className="lesson-enrichment-tryme-runout-pre">
+                                              <code>{combined}</code>
+                                            </pre>
+                                          );
+                                        })()}
+                                      </div>
+                                    )}
+                                  </details>
+                                </div>
+                              );
+                            })()}
                             {sec.tip && <p className="lesson-enrichment-tip">Tip: {sec.tip}</p>}
                           </li>
                         ))}

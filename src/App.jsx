@@ -13,6 +13,7 @@ import { useDebounce } from "./hooks/useDebounce.js";
 import { gradeLesson, getLessonTestInputs, wrapWithMockInputs } from "./grading/gradeLesson.js";
 import { recordStudentEvent, clearStudentEvents } from "./utils/studentActivityStore.js";
 import { loadLessonOverrides, getLessonWithOverrides } from "./utils/lessonOverrides.js";
+import { clampTryMeCode } from "./utils/tryMeConstraint.js";
 import TeacherNotificationsPanel from "./components/TeacherNotificationsPanel.jsx";
 import TeacherDashboard from "./components/TeacherDashboard.jsx";
 import AgentARIA from "./components/AgentARIA.jsx";
@@ -206,8 +207,14 @@ export default function App() {
     };
   }, [isTeacher]);
 
+  const [editorTryMeConstraint, setEditorTryMeConstraint] = useState(null);
+
   const onChangeCode = (next) => {
-    setCodeByLesson((prev) => ({ ...prev, [activeLessonId]: next }));
+    let v = next ?? "";
+    if (editorTryMeConstraint) {
+      v = clampTryMeCode(v, editorTryMeConstraint);
+    }
+    setCodeByLesson((prev) => ({ ...prev, [activeLessonId]: v }));
   };
 
   const applyStarterToEditor = (nextCode) => {
@@ -220,18 +227,23 @@ export default function App() {
 
   useEffect(() => {
     setTryMeRunPreview(null);
+    setEditorTryMeConstraint(null);
   }, [activeLessonId]);
 
   const applyStarterFromLab = (nextCode) => {
     setTryMeRunPreview(null);
+    setEditorTryMeConstraint(null);
     applyStarterToEditor(nextCode);
   };
 
-  const onTryMeLoadInEditor = (starter, sectionId) => {
+  const onTryMeLoadInEditor = (starter, sectionId, meta) => {
     applyStarterToEditor(starter ?? "");
     if (sectionId != null && sectionId !== "") {
       setTryMeRunPreview({ sectionId, stdout: "", error: "" });
+    } else {
+      setTryMeRunPreview(null);
     }
+    setEditorTryMeConstraint(meta?.constraint ?? null);
   };
 
   const onRun = async () => {
@@ -261,6 +273,7 @@ export default function App() {
     setHint({ severity: "none", message: "" });
     setMasteryMsg("");
     setTryMeRunPreview(null);
+    setEditorTryMeConstraint(null);
     // keep mastery as-is (teacher choice); if you want reset mastery, tell me.
   };
 
@@ -276,6 +289,7 @@ export default function App() {
     if (!learnComplete) return;
 
     setTryMeRunPreview(null);
+    setEditorTryMeConstraint(null);
     setStdout("");
     setError("");
     setMasteryMsg("Running mastery tests...");
@@ -365,6 +379,7 @@ export default function App() {
         setHint({ severity: "none", message: "" });
       }
       setTryMeRunPreview(null);
+      setEditorTryMeConstraint(null);
       saveProgress({
         activeLessonId: firstId,
         codeByLesson: initialCode,
@@ -582,6 +597,7 @@ export default function App() {
               setHint({ severity: "none", message: "" });
               setMasteryMsg("");
               setTryMeRunPreview(null);
+              setEditorTryMeConstraint(null);
             }}
           />
         </aside>
@@ -605,6 +621,7 @@ export default function App() {
             onLessonOverride={() => setLessonOverridesVersion((v) => v + 1)}
             onTryMeApply={onTryMeLoadInEditor}
             tryMeRunPreview={tryMeRunPreview}
+            liveEditorCode={code}
           />
 
           <PracticeLab
@@ -632,6 +649,7 @@ export default function App() {
               antiPasteEnabled={isTeacher ? noPasteEnabled : true}
               unlocked={learnComplete}
               layoutKey={editorLayoutKey}
+              tryMeConstrained={Boolean(editorTryMeConstraint)}
             />
 
         <ResultPane

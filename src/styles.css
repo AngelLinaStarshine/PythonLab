@@ -979,6 +979,15 @@ a { color: inherit; }
 .pane-title { font-weight: 900; }
 .pane-actions { display: flex; gap: 8px; }
 
+.editor-tryme-constrained-banner {
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--sun);
+  background: rgba(255, 173, 46, 0.1);
+  border-bottom: 1px solid rgba(255, 173, 46, 0.22);
+}
+
 /* ✅ Monaco container must have real height */
 .editor-wrap {
   position: relative;

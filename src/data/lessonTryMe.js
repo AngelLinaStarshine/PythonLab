@@ -1,6 +1,7 @@
 // src/data/lessonTryMe.js
 // Extended lesson content: TTS intro text + per-section Try Me blocks.
 // Each section has: id, icon, heading, body (TTS readable), code, tryMe, tip.
+// tryMe optional: editableToken (substring of starter, first match) + editableLabel / editableMaxLength — single inline field only; rest locked.
 // Bodies live in ./tryMeContent/tm-l*.js for maintainability.
 
 import { tryMeL1 } from "./tryMeContent/tm-l1.js";
