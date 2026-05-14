@@ -149,7 +149,18 @@ function hasPrintUsingVars(code) {
   const usesUsername = /\busername\b/.test(c);
   const usesGrade = /\bgrade\b/.test(c);
   const uses2fa = /\btwo_factor_enabled\b/.test(c);
-  return hasPrint && usesUsername && usesGrade && uses2fa;
+  const usesRisk = /\brisk_score\b/.test(c);
+  return hasPrint && usesUsername && usesGrade && uses2fa && usesRisk;
+}
+
+function looksLikeFloatLiteral(expr) {
+  const t = String(expr ?? "").trim();
+  if (!t) return false;
+  if (isQuotedString(t) || isBooleanTF(t)) return false;
+  if (isInt10or11(t)) return false;
+  // int literals without a dot are not floats for this lab
+  if (/^-?\d+$/.test(t)) return false;
+  return /^-?\d*\.\d+([eE][+-]?\d+)?$/.test(t) || /^-?\d+\.$/.test(t);
 }
 
 /* -----------------------------
@@ -164,7 +175,9 @@ const TESTS = {
     requiredPatterns: [
       /\busername\s*=/,
       /\bgrade\s*=/,
+      /\brisk_score\s*=/,
       /\btwo_factor_enabled\s*=/,
+      /\btype\s*\(/,
       /\bprint\s*\(/,
     ],
     grade: ({ code, stdout, error }) => {
@@ -174,7 +187,7 @@ const TESTS = {
       const req = requirePatterns(
         code,
         TESTS.l1.requiredPatterns,
-        "Lesson 1 requires variables (username, grade, two_factor_enabled) and print()."
+        "Lesson 1 requires username, grade, risk_score, two_factor_enabled, type(), and print()."
       );
       if (req) return req;
 
@@ -182,10 +195,11 @@ const TESTS = {
 
       const usernameExpr = findAssignment(clean, "username");
       const gradeExpr = findAssignment(clean, "grade");
+      const riskExpr = findAssignment(clean, "risk_score");
       const twoFAExpr = findAssignment(clean, "two_factor_enabled");
 
-      if (!usernameExpr || !gradeExpr || !twoFAExpr) {
-        return missing("Define all three variables: username, grade, two_factor_enabled.");
+      if (!usernameExpr || !gradeExpr || !riskExpr || !twoFAExpr) {
+        return missing("Define all four variables: username, grade, risk_score, two_factor_enabled.");
       }
 
       if (!isQuotedString(usernameExpr)) {
@@ -196,6 +210,10 @@ const TESTS = {
         return missing("grade must be 10 or 11 as a number (no quotes). Example: grade = 10");
       }
 
+      if (!looksLikeFloatLiteral(riskExpr)) {
+        return missing("risk_score must be a float literal (include a decimal point). Example: risk_score = 0.0");
+      }
+
       if (!isBooleanTF(twoFAExpr)) {
         return missing(
           "two_factor_enabled must be True or False (capital T/F, no quotes). Example: two_factor_enabled = True"
@@ -203,7 +221,7 @@ const TESTS = {
       }
 
       if (!hasPrintUsingVars(clean)) {
-        return missing("Use print() and include username, grade, and two_factor_enabled in the output.");
+        return missing("Use print() and include username, grade, risk_score, and two_factor_enabled in the summary output.");
       }
 
       return pass("Mastered ✅ Lesson 1 strict type rules passed.");
@@ -213,7 +231,7 @@ const TESTS = {
   // Lesson 2: Input & Output (phishing checker style)
   l2: {
     inputs: ["Click this now!", "85"],
-    expectedStdoutLines: ["message:", "risk:", "label:"], // used for anti-cheat + contains checks
+    expectedStdoutLines: ["message", "risk", "label"],
     requiredPatterns: [/\binput\s*\(/, /\bint\s*\(/, /\bprint\s*\(/],
     grade: ({ code, stdout, error }) => {
       const crash = assertNoRuntimeCrash(error);
@@ -229,7 +247,6 @@ const TESTS = {
       );
       if (req) return req;
 
-      // Must show message + risk + label; label should indicate high risk
       const contains = stdoutMustContain(
         stdout,
         ["message", "risk", "label"],
@@ -248,11 +265,11 @@ const TESTS = {
     },
   },
 
-  // Lesson 3: Conditionals (login guard)
+  // Lesson 3: Conditionals (risk labeler)
   l3: {
     inputs: [],
-    expectedStdoutLines: ["weak", "2fa"],
-    requiredPatterns: [/^\s*if\s+/m, /len\s*\(/, /\bprint\s*\(/],
+    expectedStdoutLines: [],
+    requiredPatterns: [/^\s*if\s+/m, /^\s*elif\s+/m, /\bprint\s*\(/],
     grade: ({ code, stdout, error }) => {
       const crash = assertNoRuntimeCrash(error);
       if (crash) return crash;
@@ -263,14 +280,13 @@ const TESTS = {
       const req = requirePatterns(
         code,
         TESTS.l3.requiredPatterns,
-        "Lesson 3 requires if/else and len() for password strength."
+        "Lesson 3 requires if / elif and print() for risk labels."
       );
       if (req) return req;
 
-      // Output can vary; just ensure it prints something about weak/2FA
       const out = norm(stdout).toLowerCase();
-      if (out && !(out.includes("weak") || out.includes("2fa") || out.includes("enable"))) {
-        return missing("Your output should indicate password strength and 2FA status.", { stdout: norm(stdout) });
+      if (!out.match(/\bhigh\b|\bmedium\b|\blow\b/)) {
+        return missing("Print a risk label that includes HIGH, MEDIUM, or LOW.", { stdout: norm(stdout) });
       }
 
       return pass("Mastered ✅ Lesson 3 passed.");
@@ -391,7 +407,7 @@ const TESTS = {
   l9: {
     inputs: [],
     expectedStdoutLines: ["invalid"],
-    requiredPatterns: [/^\s*try\s*:\s*$/m, /^\s*except\s*:\s*$/m, /\bint\s*\(/, /\bprint\s*\(/],
+    requiredPatterns: [/^\s*try\s*:\s*$/m, /^\s*except\s+ValueError\s*:\s*$/m, /\bint\s*\(/, /\bprint\s*\(/],
     grade: ({ code, stdout, error }) => {
       const crash = assertNoRuntimeCrash(error);
       if (crash) return crash;
@@ -399,7 +415,7 @@ const TESTS = {
       const ac = antiCheat(code, TESTS.l9.expectedStdoutLines);
       if (ac) return ac;
 
-      const req = requirePatterns(code, TESTS.l9.requiredPatterns, "Lesson 9 requires try/except with int() conversion and a friendly message.");
+      const req = requirePatterns(code, TESTS.l9.requiredPatterns, "Lesson 9 requires try/except ValueError with int() conversion and a friendly message.");
       if (req) return req;
 
       const contains = stdoutMustContain(stdout, ["invalid"], 'Output should include an "Invalid" style message when conversion fails.');

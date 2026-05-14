@@ -1,7 +1,7 @@
 // src/hooks/usePyodideRunner.js
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Local copy (Canvas/Brightspace safe) — put Pyodide build in public/pyodide/
+// Prefer a local copy in public/pyodide/ (works offline and behind strict firewalls).
 const PYODIDE_INDEX_URL = "/pyodide/";
 const PYODIDE_SCRIPT = "/pyodide/pyodide.js";
 
@@ -37,18 +37,29 @@ export function usePyodideRunner() {
     async function init() {
       try {
         setInitError("");
-        setLoadingMsg("Loading Pyodide script (local)...");
-        let indexURL = PYODIDE_INDEX_URL;
+        const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+        let indexURL = PYODIDE_CDN_INDEX;
+        setLoadingMsg("Loading Pyodide from CDN...");
         try {
-          await loadScript(PYODIDE_SCRIPT);
+          if (isLocal) {
+            setLoadingMsg("Loading Pyodide script (local)...");
+            await loadScript(PYODIDE_SCRIPT);
+            indexURL = PYODIDE_INDEX_URL;
+          } else {
+            await loadScript(PYODIDE_CDN_SCRIPT);
+          }
         } catch {
-          setLoadingMsg("Loading Pyodide from CDN...");
-          await loadScript(PYODIDE_CDN_SCRIPT);
-          indexURL = PYODIDE_CDN_INDEX;
+          if (isLocal) {
+            setLoadingMsg("Loading Pyodide from CDN...");
+            await loadScript(PYODIDE_CDN_SCRIPT);
+            indexURL = PYODIDE_CDN_INDEX;
+          } else {
+            throw new Error("Failed to load Pyodide. Check your network.");
+          }
         }
 
         if (typeof window.loadPyodide !== "function") {
-          throw new Error("Pyodide script loaded but loadPyodide is not available. If in Canvas/Brightspace, host Pyodide locally in public/pyodide/.");
+          throw new Error("Pyodide script loaded but loadPyodide is not available. Add a full Pyodide build under public/pyodide/.");
         }
 
         setLoadingMsg("Initializing Python...");

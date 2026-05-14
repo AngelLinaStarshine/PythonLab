@@ -261,6 +261,21 @@ a { color: inherit; }
 /* =========================
    Learn Panel
 ========================= */
+/* Tabbed inline-styled Learn (inner card supplies chrome) */
+.learn-panel.learn-panel-tabbed {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Tabbed LearnPanel: outer scroll is not .material (avoids global .material height:280px clipping). */
+.learn-reading-scroll {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.2);
+}
+
 .learn-panel {
   margin: 12px 16px 0 16px;
   border: 1px solid var(--border);
@@ -361,6 +376,145 @@ a { color: inherit; }
   background: rgba(0,0,0,0.45);
   border: 1px solid var(--border);
   overflow: auto;
+}
+
+/* Guided Try Me (below injected lesson HTML, same scroll box) */
+.lesson-enrichment {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255,255,255,0.15);
+}
+
+.lesson-enrichment-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.lesson-enrichment-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--sun);
+}
+
+.lesson-enrichment-sections {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lesson-enrichment-section {
+  list-style: decimal;
+}
+
+.lesson-enrichment-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.lesson-enrichment-icon { font-size: 16px; }
+
+.lesson-enrichment-heading {
+  margin: 0;
+  flex: 1;
+  min-width: 120px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.lesson-enrichment-body {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.lesson-enrichment-code {
+  margin: 6px 0 8px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: auto;
+}
+
+.lesson-enrichment-code code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre;
+  display: block;
+}
+
+.lesson-enrichment-tryme {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(125,207,182,0.25);
+  background: rgba(125,207,182,0.06);
+}
+
+.lesson-enrichment-tryme-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.lesson-enrichment-details {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.lesson-enrichment-details summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.lesson-enrichment-hint {
+  margin: 6px 0 0;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.lesson-enrichment-expected {
+  margin: 6px 0 0;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  overflow: auto;
+}
+
+.lesson-enrichment-expected code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.lesson-enrichment-tip {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
 }
 
 /* ✅ Video panel + controls visible */
@@ -507,6 +661,223 @@ a { color: inherit; }
 }
 
 /* =========================
+   Practice Lab (Coursera-style drills)
+========================= */
+.practice-lab-coursera {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin: 12px 16px 0 16px;
+  background: rgba(4, 12, 24, 0.55);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.practice-lab {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px 16px;
+  background:
+    radial-gradient(520px 240px at 100% 0%, rgba(125,207,182,0.12), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent),
+    rgba(255,255,255,0.03);
+  box-shadow: var(--shadow);
+}
+
+.practice-lab-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.practice-lab-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.practice-lab-title {
+  margin: 4px 0 2px;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.practice-lab-sub {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.practice-lab-meta { display: flex; align-items: center; gap: 8px; }
+
+.practice-lab-pill {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(125,207,182,0.45);
+  color: var(--text);
+  background: rgba(125,207,182,0.12);
+}
+
+.practice-lab-intro {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.practice-lab-section { margin-top: 12px; }
+
+.practice-lab-h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.practice-lab-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.practice-lab-exercises {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.practice-exercise {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(0,0,0,0.16);
+}
+
+.practice-exercise-title {
+  font-weight: 900;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.practice-prompt {
+  margin: 0 0 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.28);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: var(--text);
+  overflow: auto;
+}
+
+.practice-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.practice-code {
+  margin: 0 0 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid var(--border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: auto;
+  white-space: pre;
+  color: var(--text);
+}
+
+.practice-code.muted { color: #b8c9d9; }
+
+.practice-muted { color: var(--muted); font-size: 12px; }
+
+.practice-hints {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px dashed rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.12);
+}
+
+.practice-hints-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.practice-hint-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.practice-hint-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.practice-details {
+  margin-bottom: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  background: rgba(0,0,0,0.12);
+}
+
+.practice-details summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--sun);
+}
+
+.practice-after {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.practice-wrapup {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.btn.small {
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.btn.ghost.small {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* =========================
    Practice Panes
 ========================= */
 .panes {
@@ -569,6 +940,7 @@ a { color: inherit; }
   text-align: center;
   color: var(--text);
   font-weight: 900;
+  pointer-events: none;
 }
 
 /* =========================
@@ -836,6 +1208,51 @@ a { color: inherit; }
 .role-btn-icon { font-size: 28px; margin-bottom: 6px; }
 .role-btn-label { font-weight: 900; font-size: 16px; }
 .role-btn-desc { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+.role-picker-passcode-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.role-picker-passcode-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.role-picker-passcode-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(125, 207, 182, 0.45);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  letter-spacing: 0.12em;
+}
+
+.role-picker-passcode-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(125, 207, 182, 0.25);
+}
+
+.role-picker-passcode-error {
+  margin: 0;
+  font-size: 13px;
+  color: #f87171;
+}
+
+.role-picker-passcode-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
 
 .role-badge {
   display: inline-flex;

@@ -43,7 +43,7 @@ export default function ResultPane({
         <div className="runtime-loading">
           {loadingMsg || "Loading Python runtime..."}
           <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 12 }}>
-            If you’re inside Canvas/Brightspace, external CDNs may be blocked — host Pyodide locally.
+            If loading stalls, put a full Pyodide build in <code>public/pyodide/</code> or check your network.
           </div>
         </div>
       )}

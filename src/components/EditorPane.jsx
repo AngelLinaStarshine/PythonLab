@@ -9,6 +9,8 @@ export default function EditorPane({
   onSave,
   antiPasteEnabled,
   unlocked,
+  /** Increment when loading starter code from Learn / Lab so Monaco picks up `value` while read-only. */
+  layoutKey = 0,
 }) {
   const block = (e) => {
     if (!antiPasteEnabled) return;
@@ -35,12 +37,13 @@ export default function EditorPane({
         onDragOver={(e) => antiPasteEnabled && e.preventDefault()}
       >
         <Editor
+          key={layoutKey}
           height="70vh"
           defaultLanguage="python"
           value={code}
           onChange={(v) => onChange(v ?? "")}
           options={{
-            readOnly: !unlocked,        // ✅ lock until Learn is complete
+            readOnly: false,
             minimap: { enabled: false },
             fontSize: 14,
             wordWrap: "on",
@@ -53,7 +56,7 @@ export default function EditorPane({
 
         {!unlocked && (
           <div className="locked-overlay">
-            Complete Learn (scroll + time + video) to unlock coding.
+            Complete Learn (scroll + time + video) to unlock Run and mastery checks.
           </div>
         )}
       </div>

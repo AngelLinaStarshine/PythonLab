@@ -1,21 +1,23 @@
 // src/App.jsx
-import { scorm } from "./lms/scorm.js";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import "./styles.css";
 import { lessons } from "./data/lessons.js";
 import LessonList from "./components/LessonList.jsx";
 import EditorPane from "./components/EditorPane.jsx";
 import ResultPane from "./components/ResultPane.jsx";
 import LearnPanel from "./components/LearnPanel.jsx";
-import RolePicker, { saveRole } from "./components/RolePicker.jsx";
+import RolePicker, { saveRole, loadRole, loadStudentName } from "./components/RolePicker.jsx";
 import { usePyodideRunner } from "./hooks/usePyodideRunner.js";
 import { analyzeCode } from "./ai/analyzeClient.js";
 import { useDebounce } from "./hooks/useDebounce.js";
 import { useAntiCheat } from "./hooks/useAntiCheat.js";
 import { gradeLesson, getLessonTestInputs, wrapWithMockInputs } from "./grading/gradeLesson.js";
-import { recordStudentEvent } from "./utils/studentActivityStore.js";
+import { recordStudentEvent, clearStudentEvents } from "./utils/studentActivityStore.js";
 import { loadLessonOverrides, getLessonWithOverrides } from "./utils/lessonOverrides.js";
 import TeacherNotificationsPanel from "./components/TeacherNotificationsPanel.jsx";
+import TeacherDashboard from "./components/TeacherDashboard.jsx";
+import AgentARIA from "./components/AgentARIA.jsx";
+import PracticeLab from "./components/PracticeLab.jsx";
 
 const STORAGE_KEY = "py_learn_progress_v3"; // bump again to avoid old saves
 
@@ -45,14 +47,7 @@ function normalizeCodeForLesson(lesson, code) {
 }
 
 export default function App() {
-  const [userRole, setUserRole] = useState(() => {
-    try {
-      const r = localStorage.getItem("py_learn_role");
-      return (r === "teacher" || r === "student") ? r : null;
-    } catch {
-      return null;
-    }
-  });
+  const [userRole, setUserRole] = useState(() => loadRole());
   const [activeLessonId, setActiveLessonId] = useState(lessons[0]?.id ?? "l1");
 
   const [lessonOverridesVersion, setLessonOverridesVersion] = useState(0);
@@ -92,18 +87,6 @@ export default function App() {
       return next;
     });
   }, []);
-  useEffect(() => {
-    // init SCORM if inside LMS
-    if (scorm.isAvailable()) {
-      scorm.init();
-      const sc = scorm.loadState();
-      if (sc?.activeLessonId) setActiveLessonId(sc.activeLessonId);
-      if (sc?.codeByLesson) setCodeByLesson(sc.codeByLesson);
-      if (sc?.stageByLesson) setStageByLesson(sc.stageByLesson);
-      if (sc?.activeLessonId) scorm.setLocation(sc.activeLessonId);
-      scorm.setStatus("incomplete");
-    }
-  }, []);
   const lessonProgress =
     stageByLesson[activeLessonId] ?? { scrolled: false, timed: false, videoDone: false };
 
@@ -127,10 +110,43 @@ export default function App() {
   const [hint, setHint] = useState({ severity: "none", message: "" });
 
   const [masteryMsg, setMasteryMsg] = useState(""); // shown in ResultPane
+
+  const learnPanelRef = useRef(null);
+  /** Bumped on full session reset so LearnPanel remounts (local timers / tabs / video state). */
+  const [learnPanelMountKey, setLearnPanelMountKey] = useState(0);
+  const viewportSizeRef = useRef({
+    w: typeof window !== "undefined" ? window.innerWidth : 0,
+    h: typeof window !== "undefined" ? window.innerHeight : 0,
+  });
+  const [masteryFailByLesson, setMasteryFailByLesson] = useState({});
+  const [ariaDismissedByLesson, setAriaDismissedByLesson] = useState({});
+  const ariaTriggerLoggedRef = useRef({});
+
   const mastered = Boolean(masteryByLesson[activeLessonId]);
+
+  const masteryFailCount = masteryFailByLesson[activeLessonId] || 0;
+  const showAgentAria =
+    !isTeacher &&
+    learnComplete &&
+    !mastered &&
+    masteryFailCount >= 3 &&
+    !ariaDismissedByLesson[activeLessonId];
+
+  useEffect(() => {
+    if (!showAgentAria) return;
+    if (ariaTriggerLoggedRef.current[activeLessonId]) return;
+    ariaTriggerLoggedRef.current[activeLessonId] = true;
+    recordStudentEvent({
+      type: "aria_triggered",
+      lessonId: activeLessonId,
+      lessonTitle: activeLesson?.title,
+    });
+  }, [showAgentAria, activeLessonId, activeLesson?.title]);
 
   const [antiCheatEnabled, setAntiCheatEnabled] = useState(true);
   const [noPasteEnabled, setNoPasteEnabled] = useState(true);
+  /** Bumped when starter code is applied from Learn / Lab so Monaco remounts with the new `value`. */
+  const [editorLayoutKey, setEditorLayoutKey] = useState(0);
 
   const { ready, loadingMsg, run } = usePyodideRunner();
 
@@ -159,10 +175,6 @@ export default function App() {
     if (learnComplete) doAnalyze();
     return () => { cancelled = true; };
   }, [debouncedCode, activeLessonId, learnComplete, isTeacher, activeLesson?.title]);
-  useEffect(() => {
-    if (scorm.isAvailable()) scorm.setLocation(activeLessonId);
-  }, [activeLessonId]);
-
   useEffect(() => {
     lastRecordedHintRef.current = "";
   }, [activeLessonId]);
@@ -196,7 +208,7 @@ export default function App() {
   }, [isTeacher]);
 
   useAntiCheat({
-    enabled: antiCheatEnabled,
+    enabled: isTeacher ? antiCheatEnabled : true,
     onViolation: (reason) => {
       if (!isTeacher) {
         recordStudentEvent({ type: "window_switch", reason });
@@ -216,6 +228,11 @@ export default function App() {
     setCodeByLesson((prev) => ({ ...prev, [activeLessonId]: next }));
   };
 
+  const applyStarterToEditor = (nextCode) => {
+    setCodeByLesson((prev) => ({ ...prev, [activeLessonId]: nextCode ?? "" }));
+    setEditorLayoutKey((k) => k + 1);
+  };
+
   const onRun = async () => {
     if (!learnComplete) return;
     setStdout("");
@@ -229,6 +246,7 @@ export default function App() {
 
   const onReset = () => {
     setCodeByLesson((prev) => ({ ...prev, [activeLessonId]: activeLesson?.template ?? "" }));
+    setEditorLayoutKey((k) => k + 1);
     setStdout("");
     setError("");
     setHint({ severity: "none", message: "" });
@@ -236,37 +254,12 @@ export default function App() {
     // keep mastery as-is (teacher choice); if you want reset mastery, tell me.
   };
 
-const onSave = () => {
-  const payload = { activeLessonId, codeByLesson, stageByLesson };
-
-  // your local fallback save (still good)
-  saveProgress(payload);
-
-  // ✅ SCORM save (only works when inside LMS)
-  if (scorm.isAvailable()) {
-    scorm.init();
-    scorm.saveState(payload);
-    scorm.setLocation(activeLessonId);
-    scorm.commit();
-  }
-
-  setHint({ severity: "info", message: "Progress saved successfully." });
-};
-
-function reportMastery({ lessonId, score0to100, passed }) {
-  if (!scorm.isAvailable()) return;
-
-  scorm.init();
-  scorm.setScore(score0to100);
-
-  // Strict status: passed/failed affects gradebook in many LMS
-  scorm.setStatus(passed ? "passed" : "failed");
-
-  // Save current location (so LMS resumes properly)
-  scorm.setLocation(lessonId);
-
-  scorm.commit();
-}
+  const onSave = () => {
+    const payload = { activeLessonId, codeByLesson, stageByLesson };
+    const p = loadProgress();
+    saveProgress({ ...p, ...payload, masteryByLesson });
+    setHint({ severity: "info", message: "Progress saved successfully." });
+  };
 
   // ✅ NEW: Mastery Check
   const onMasteryCheck = async () => {
@@ -291,6 +284,9 @@ function reportMastery({ lessonId, score0to100, passed }) {
     if (grade.ok) {
       setMasteryByLesson((prev) => ({ ...prev, [activeLessonId]: true }));
       setMasteryMsg(grade.message);
+      setMasteryFailByLesson((prev) => ({ ...prev, [activeLessonId]: 0 }));
+      setAriaDismissedByLesson((prev) => ({ ...prev, [activeLessonId]: false }));
+      delete ariaTriggerLoggedRef.current[activeLessonId];
       if (!isTeacher) {
         recordStudentEvent({
           type: "correct_answer",
@@ -302,6 +298,18 @@ function reportMastery({ lessonId, score0to100, passed }) {
     } else {
       setMasteryByLesson((prev) => ({ ...prev, [activeLessonId]: false }));
       setMasteryMsg(`Not yet ❌ ${grade.message}`);
+      setMasteryFailByLesson((prev) => ({
+        ...prev,
+        [activeLessonId]: (prev[activeLessonId] || 0) + 1,
+      }));
+      if (!isTeacher) {
+        recordStudentEvent({
+          type: "mastery_attempt",
+          lessonId: activeLessonId,
+          lessonTitle: activeLesson?.title,
+          message: grade.message,
+        });
+      }
     }
   };
 
@@ -315,22 +323,121 @@ function reportMastery({ lessonId, score0to100, passed }) {
     setUserRole(null);
     try {
       localStorage.removeItem("py_learn_role");
-    } catch {}
+    } catch {
+      /* ignore */
+    }
   };
 
+  const resetSessionToBeginning = useCallback(
+    ({ clearActivityLog = false, progressHint = null } = {}) => {
+      const initialCode = {};
+      for (const l of lessons) {
+        initialCode[l.id] = l.template ?? "";
+      }
+      const firstId = lessons[0]?.id ?? "l1";
+      setActiveLessonId(firstId);
+      setCodeByLesson(initialCode);
+      setStageByLesson({});
+      setMasteryByLesson({});
+      setStdout("");
+      setError("");
+      setMasteryMsg("");
+      setMasteryFailByLesson({});
+      setAriaDismissedByLesson({});
+      ariaTriggerLoggedRef.current = {};
+      setEditorLayoutKey((k) => k + 1);
+      setLearnPanelMountKey((k) => k + 1);
+      if (clearActivityLog) clearStudentEvents();
+      if (progressHint) {
+        setHint({ severity: "info", message: progressHint });
+      } else {
+        setHint({ severity: "none", message: "" });
+      }
+      saveProgress({
+        activeLessonId: firstId,
+        codeByLesson: initialCode,
+        stageByLesson: {},
+        masteryByLesson: {},
+      });
+      if (typeof window !== "undefined") {
+        viewportSizeRef.current = { w: window.innerWidth, h: window.innerHeight };
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    /** Ignore scrollbar / layout jitter so we do not reset in a tight loop. */
+    const SIGNIFICANT_SIZE_CHANGE_PX = 180;
+    /** Let first paint + scrollbar settle before any auto-reset. */
+    const MOUNT_SETTLE_MS = 1600;
+    const DEBOUNCE_MS = 450;
+
+    const mountedAt = Date.now();
+    let tid;
+
+    const runReset = (progressHint) => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      viewportSizeRef.current = { w, h };
+      resetSessionToBeginning({
+        clearActivityLog: false,
+        progressHint,
+      });
+    };
+
+    const schedule = (kind) => {
+      window.clearTimeout(tid);
+      tid = window.setTimeout(() => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const prev = viewportSizeRef.current;
+
+        if (Date.now() - mountedAt < MOUNT_SETTLE_MS) {
+          viewportSizeRef.current = { w, h };
+          return;
+        }
+
+        if (kind === "orientation") {
+          if (w === prev.w && h === prev.h) {
+            viewportSizeRef.current = { w, h };
+            return;
+          }
+          runReset(
+            "Screen orientation changed — starting again from the first lesson."
+          );
+          return;
+        }
+
+        const delta = Math.abs(w - prev.w) + Math.abs(h - prev.h);
+        if (delta < SIGNIFICANT_SIZE_CHANGE_PX) {
+          viewportSizeRef.current = { w, h };
+          return;
+        }
+
+        runReset(
+          "Window size changed a lot — starting again from the first lesson."
+        );
+      }, DEBOUNCE_MS);
+    };
+
+    const onResize = () => schedule("resize");
+    const onOrientation = () => schedule("orientation");
+
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onOrientation);
+    return () => {
+      window.clearTimeout(tid);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onOrientation);
+    };
+  }, [resetSessionToBeginning]);
+
   const onResetAllProgress = () => {
-    const initialCode = {};
-    for (const l of lessons) {
-      initialCode[l.id] = l.template ?? "";
-    }
-    setCodeByLesson(initialCode);
-    setStageByLesson({});
-    setMasteryByLesson({});
-    setStdout("");
-    setError("");
-    setHint({ severity: "none", message: "" });
-    setMasteryMsg("");
-    saveProgress({ activeLessonId: lessons[0].id, codeByLesson: initialCode, stageByLesson: {}, masteryByLesson: {} });
+    resetSessionToBeginning({
+      clearActivityLog: true,
+      progressHint: "All progress cleared.",
+    });
   };
 
   if (!userRole) {
@@ -354,34 +461,52 @@ function reportMastery({ lessonId, score0to100, passed }) {
 
         <div className="toggles">
           <span className={`role-badge ${userRole}`}>
-            {userRole === "teacher" ? "👩‍🏫 Teacher" : "👩‍🎓 Student"}
+            {userRole === "teacher"
+              ? "👩‍🏫 Teacher"
+              : `👩‍🎓 ${loadStudentName() || "Student"}`}
           </span>
           {isTeacher && <TeacherNotificationsPanel />}
-          <button type="button" className="btn ghost" onClick={onSwitchRole}>
-            Switch role
-          </button>
+          {isTeacher && (
+            <TeacherDashboard
+              masteryByLesson={masteryByLesson}
+              noPasteEnabled={noPasteEnabled}
+              antiCheatEnabled={antiCheatEnabled}
+              onToggleCopy={setNoPasteEnabled}
+              onToggleAntiCheat={setAntiCheatEnabled}
+              onResetAll={onResetAllProgress}
+            />
+          )}
+          {isTeacher && (
+            <button type="button" className="btn ghost" onClick={onSwitchRole}>
+              Switch role
+            </button>
+          )}
           {isTeacher && (
             <button type="button" className="btn ghost" onClick={onResetAllProgress} title="Reset all code, gates, and mastery">
               Reset all progress
             </button>
           )}
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={antiCheatEnabled}
-              onChange={(e) => setAntiCheatEnabled(e.target.checked)}
-            />
-            Reset on tab switch
-          </label>
+          {isTeacher && (
+            <>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={antiCheatEnabled}
+                  onChange={(e) => setAntiCheatEnabled(e.target.checked)}
+                />
+                Reset on tab switch
+              </label>
 
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={noPasteEnabled}
-              onChange={(e) => setNoPasteEnabled(e.target.checked)}
-            />
-            Block copy/paste
-          </label>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={noPasteEnabled}
+                  onChange={(e) => setNoPasteEnabled(e.target.checked)}
+                />
+                Block copy/paste
+              </label>
+            </>
+          )}
         </div>
       </header>
 
@@ -410,6 +535,8 @@ function reportMastery({ lessonId, score0to100, passed }) {
           </div>
 
           <LearnPanel
+            key={`learn-${learnPanelMountKey}-${activeLessonId}`}
+            ref={learnPanelRef}
             lesson={activeLesson}
             progress={lessonProgress}
             onProgressChange={(next) =>
@@ -418,6 +545,23 @@ function reportMastery({ lessonId, score0to100, passed }) {
             isTeacher={isTeacher}
             lessonId={activeLessonId}
             onLessonOverride={() => setLessonOverridesVersion((v) => v + 1)}
+            onTryMeApply={applyStarterToEditor}
+          />
+
+          <PracticeLab
+            lessonId={activeLessonId}
+            unlocked={learnComplete}
+            onApplyStarter={applyStarterToEditor}
+            onComplete={
+              !isTeacher
+                ? () =>
+                    recordStudentEvent({
+                      type: "lab_completed",
+                      lessonId: activeLessonId,
+                      lessonTitle: activeLesson?.title,
+                    })
+                : undefined
+            }
           />
 
           <div className="panes">
@@ -426,8 +570,9 @@ function reportMastery({ lessonId, score0to100, passed }) {
               onChange={onChangeCode}
               hint={hint}
               onSave={onSave}
-              antiPasteEnabled={noPasteEnabled}
+              antiPasteEnabled={isTeacher ? noPasteEnabled : true}
               unlocked={learnComplete}
+              layoutKey={editorLayoutKey}
             />
 
         <ResultPane
@@ -445,6 +590,20 @@ function reportMastery({ lessonId, score0to100, passed }) {
           </div>
         </main>
       </div>
+
+      {showAgentAria && (
+        <AgentARIA
+          lessonId={activeLessonId}
+          lesson={activeLesson}
+          wrongAttempts={masteryFailCount}
+          lastError={[error, masteryMsg, stdout].filter(Boolean).join("\n")}
+          lastCode={code}
+          onDismiss={() =>
+            setAriaDismissedByLesson((prev) => ({ ...prev, [activeLessonId]: true }))
+          }
+          onGoToRead={(sectionTitle) => learnPanelRef.current?.scrollToReading?.(sectionTitle)}
+        />
+      )}
     </div>
   );
 }
