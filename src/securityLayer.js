@@ -29,6 +29,7 @@ function isProtectedCodeContext(node) {
   if (!el?.closest) return false;
   if (el.closest(".monaco-editor") || el.closest(".editor-wrap")) return false;
   if (el.closest(".console")) return false;
+  if (el.closest(".lesson-enrichment-tryme-runout")) return false;
   const inMaterial = el.closest(".material");
   const inPractice = el.closest(".practice-lab");
   if (!inMaterial && !inPractice) return false;
@@ -65,11 +66,17 @@ function isProtectedCodeContext(node) {
 
     .material pre,
     .material code,
-    .practice-lab pre {
+    .practice-lab pre:not(.lesson-enrichment-tryme-runout-pre) {
       -webkit-user-select: none !important;
       -moz-user-select: none !important;
       user-select: none !important;
       -webkit-touch-callout: none !important;
+    }
+
+    .lesson-enrichment-tryme-runout-pre {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      user-select: text !important;
     }
 
     #security-blur-overlay {

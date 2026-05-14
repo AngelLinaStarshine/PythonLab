@@ -249,7 +249,16 @@ function StepsList({ steps }) {
 }
 
 const LearnPanel = forwardRef(function LearnPanel(
-  { lesson, progress, onProgressChange, isTeacher, lessonId, onLessonOverride, onTryMeApply },
+  {
+    lesson,
+    progress,
+    onProgressChange,
+    isTeacher,
+    lessonId,
+    onLessonOverride,
+    onTryMeApply,
+    tryMeRunPreview,
+  },
   ref,
 ) {
   const scrollRef = useRef(null);
@@ -622,20 +631,26 @@ const LearnPanel = forwardRef(function LearnPanel(
                             {sec.tryMe && (
                               <div className="lesson-enrichment-tryme practice-lab">
                                 <div className="lesson-enrichment-tryme-label">Try me</div>
+                                <p className="lesson-enrichment-tryme-locked-note">
+                                  Starter is read-only. Use <strong>Load in editor</strong>, then type and run in the Code
+                                  panel.
+                                </p>
                                 <pre className="lesson-enrichment-code">
                                   <code>{sec.tryMe.starter}</code>
                                 </pre>
                                 {onTryMeApply && (
-                                  <button
-                                    type="button"
-                                    className="btn small"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onTryMeApply(sec.tryMe.starter);
-                                    }}
-                                  >
-                                    Load in editor
-                                  </button>
+                                  <div className="lesson-enrichment-tryme-actions">
+                                    <button
+                                      type="button"
+                                      className="btn small"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onTryMeApply(sec.tryMe.starter, sec.id);
+                                      }}
+                                    >
+                                      Load in editor
+                                    </button>
+                                  </div>
                                 )}
                                 <details className="lesson-enrichment-details">
                                   <summary>Hint</summary>
@@ -646,6 +661,29 @@ const LearnPanel = forwardRef(function LearnPanel(
                                   <pre className="lesson-enrichment-expected">
                                     <code>{sec.tryMe.expectedOutput}</code>
                                   </pre>
+                                  {tryMeRunPreview?.sectionId === sec.id && (
+                                    <div className="lesson-enrichment-tryme-runout">
+                                      <div className="lesson-enrichment-tryme-runout-label">Your run (Code panel)</div>
+                                      {(() => {
+                                        const err = (tryMeRunPreview.error || "").trim();
+                                        const out = (tryMeRunPreview.stdout || "").trim();
+                                        const combined = [err, out].filter(Boolean).join("\n\n");
+                                        if (!combined) {
+                                          return (
+                                            <p className="lesson-enrichment-tryme-runout-placeholder">
+                                              Press <strong>Run</strong> after loading; your program output will show
+                                              here.
+                                            </p>
+                                          );
+                                        }
+                                        return (
+                                          <pre className="lesson-enrichment-tryme-runout-pre">
+                                            <code>{combined}</code>
+                                          </pre>
+                                        );
+                                      })()}
+                                    </div>
+                                  )}
                                 </details>
                               </div>
                             )}

@@ -10,7 +10,6 @@ import RolePicker, { saveRole, loadRole, loadStudentName } from "./components/Ro
 import { usePyodideRunner } from "./hooks/usePyodideRunner.js";
 import { analyzeCode } from "./ai/analyzeClient.js";
 import { useDebounce } from "./hooks/useDebounce.js";
-import { useAntiCheat } from "./hooks/useAntiCheat.js";
 import { gradeLesson, getLessonTestInputs, wrapWithMockInputs } from "./grading/gradeLesson.js";
 import { recordStudentEvent, clearStudentEvents } from "./utils/studentActivityStore.js";
 import { loadLessonOverrides, getLessonWithOverrides } from "./utils/lessonOverrides.js";
@@ -207,23 +206,6 @@ export default function App() {
     };
   }, [isTeacher]);
 
-  useAntiCheat({
-    enabled: isTeacher ? antiCheatEnabled : true,
-    onViolation: (reason) => {
-      if (!isTeacher) {
-        recordStudentEvent({ type: "window_switch", reason });
-      }
-      setCodeByLesson((prev) => ({
-        ...prev,
-        [activeLessonId]: activeLesson?.template ?? "",
-      }));
-      setStdout("");
-      setError(`Session reset: ${reason}`);
-      setHint({ severity: "info", message: "Stay in the app. Your code was reset." });
-      setMasteryMsg("");
-    },
-  });
-
   const onChangeCode = (next) => {
     setCodeByLesson((prev) => ({ ...prev, [activeLessonId]: next }));
   };
@@ -231,6 +213,25 @@ export default function App() {
   const applyStarterToEditor = (nextCode) => {
     setCodeByLesson((prev) => ({ ...prev, [activeLessonId]: nextCode ?? "" }));
     setEditorLayoutKey((k) => k + 1);
+  };
+
+  /** When set, normal Run output is mirrored under that Try me section’s “Expected output”. */
+  const [tryMeRunPreview, setTryMeRunPreview] = useState(null);
+
+  useEffect(() => {
+    setTryMeRunPreview(null);
+  }, [activeLessonId]);
+
+  const applyStarterFromLab = (nextCode) => {
+    setTryMeRunPreview(null);
+    applyStarterToEditor(nextCode);
+  };
+
+  const onTryMeLoadInEditor = (starter, sectionId) => {
+    applyStarterToEditor(starter ?? "");
+    if (sectionId != null && sectionId !== "") {
+      setTryMeRunPreview({ sectionId, stdout: "", error: "" });
+    }
   };
 
   const onRun = async () => {
@@ -242,6 +243,14 @@ export default function App() {
     const result = await run(code);
     setStdout(result.stdout || "");
     setError(result.error || "");
+    setTryMeRunPreview((prev) => {
+      if (!prev?.sectionId) return prev;
+      return {
+        sectionId: prev.sectionId,
+        stdout: result.stdout || "",
+        error: result.error || "",
+      };
+    });
   };
 
   const onReset = () => {
@@ -251,6 +260,7 @@ export default function App() {
     setError("");
     setHint({ severity: "none", message: "" });
     setMasteryMsg("");
+    setTryMeRunPreview(null);
     // keep mastery as-is (teacher choice); if you want reset mastery, tell me.
   };
 
@@ -265,6 +275,7 @@ export default function App() {
   const onMasteryCheck = async () => {
     if (!learnComplete) return;
 
+    setTryMeRunPreview(null);
     setStdout("");
     setError("");
     setMasteryMsg("Running mastery tests...");
@@ -353,6 +364,7 @@ export default function App() {
       } else {
         setHint({ severity: "none", message: "" });
       }
+      setTryMeRunPreview(null);
       saveProgress({
         activeLessonId: firstId,
         codeByLesson: initialCode,
@@ -365,6 +377,51 @@ export default function App() {
     },
     []
   );
+
+  /**
+   * Leaving the tab or hiding the window: after a short delay, restart from lesson 1
+   * (cancel if the user comes back before the delay). Students always; teachers only
+   * when “Reset on tab switch” is enabled.
+   */
+  useEffect(() => {
+    const leaveResetEnabled = !isTeacher || antiCheatEnabled;
+    if (!leaveResetEnabled) return;
+
+    const HIDDEN_DEBOUNCE_MS = 500;
+    const MOUNT_GRACE_MS = 2000;
+    const mountedAt = Date.now();
+    let tid;
+
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        if (Date.now() - mountedAt < MOUNT_GRACE_MS) return;
+        window.clearTimeout(tid);
+        tid = window.setTimeout(() => {
+          tid = undefined;
+          if (!isTeacher) {
+            recordStudentEvent({
+              type: "window_switch",
+              reason: "tab_or_window_hidden_session_reset",
+            });
+          }
+          resetSessionToBeginning({
+            clearActivityLog: false,
+            progressHint:
+              "You left this tab or window — starting again from the first lesson.",
+          });
+        }, HIDDEN_DEBOUNCE_MS);
+      } else {
+        window.clearTimeout(tid);
+        tid = undefined;
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.clearTimeout(tid);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [isTeacher, antiCheatEnabled, resetSessionToBeginning]);
 
   useEffect(() => {
     /** Ignore scrollbar / layout jitter so we do not reset in a tight loop. */
@@ -524,6 +581,7 @@ export default function App() {
               setError("");
               setHint({ severity: "none", message: "" });
               setMasteryMsg("");
+              setTryMeRunPreview(null);
             }}
           />
         </aside>
@@ -545,13 +603,14 @@ export default function App() {
             isTeacher={isTeacher}
             lessonId={activeLessonId}
             onLessonOverride={() => setLessonOverridesVersion((v) => v + 1)}
-            onTryMeApply={applyStarterToEditor}
+            onTryMeApply={onTryMeLoadInEditor}
+            tryMeRunPreview={tryMeRunPreview}
           />
 
           <PracticeLab
             lessonId={activeLessonId}
             unlocked={learnComplete}
-            onApplyStarter={applyStarterToEditor}
+            onApplyStarter={applyStarterFromLab}
             onComplete={
               !isTeacher
                 ? () =>

@@ -475,6 +475,66 @@ a { color: inherit; }
   margin-bottom: 6px;
 }
 
+.lesson-enrichment-tryme-locked-note {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.lesson-enrichment-tryme-runout {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.lesson-enrichment-tryme-runout-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sun);
+  margin-bottom: 8px;
+}
+
+.lesson-enrichment-tryme-runout-placeholder {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.lesson-enrichment-tryme-runout-pre {
+  margin: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0, 40, 60, 0.35);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: auto;
+  max-height: 240px;
+}
+
+.lesson-enrichment-tryme-runout-pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  display: block;
+  color: var(--text);
+}
+
+.lesson-enrichment-tryme-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
 .lesson-enrichment-details {
   margin-top: 8px;
   font-size: 12px;
