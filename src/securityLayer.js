@@ -2,25 +2,13 @@ import { recordStudentEvent } from "./utils/studentActivityStore.js";
 
 /**
  * securityLayer.js
- * ─────────────────────────────────────────────────────────────────
- * Browser-level content discouragement for the Cyber Python Lab.
- * Import ONCE at the top of main.jsx:  import "./securityLayer.js";
+ * Browser content discouragement for the Cyber Python Lab.
+ * Import once at the top of main.jsx: import "./securityLayer.js";
  *
- * What this covers (and what it honestly cannot cover):
+ * Mitigates: print styling, some shortcuts, right click and copy on static course text,
+ * blur when switching away. Cannot stop OS screenshots or screen recording.
  *
- *  ✅ DISCOURAGED / MITIGATED              ❌ IMPOSSIBLE IN ANY BROWSER
- *  ─────────────────────────────────      ─────────────────────────────
- *  Ctrl+P / print styling                 OS screenshots (PrtScr)
- *  Ctrl+S / Ctrl+U shortcuts                Phone camera
- *  Ctrl+Shift+I/J/C, F12 (best effort)     DevTools (always openable)
- *  Right-click on lesson / lab code       Screen recording (OBS)
- *  Copy from lesson & lab code blocks
- *  Tab-away blur overlay
- *  DevTools size heuristic banner
- * ─────────────────────────────────────────────────────────────────
- *
- * NOTE: Monaco lives in .monaco-editor — it is explicitly EXCLUDED from
- * selection/copy blocking so students can edit and copy their own code.
+ * Monaco (.monaco-editor) is excluded so students can edit their own code.
  */
 
 /** True when the event target is lesson/lab static code, not the live editor or console. */
@@ -36,7 +24,6 @@ function isProtectedCodeContext(node) {
   return Boolean(el.closest("pre") || el.closest("code"));
 }
 
-// ─── 1. CSS injected immediately — print blackout + scoped selection block ───
 (function injectCSS() {
   if (document.getElementById("security-layer-styles")) return;
   const style = document.createElement("style");
@@ -125,23 +112,6 @@ function isProtectedCodeContext(node) {
       font-family: ui-sans-serif, system-ui, sans-serif;
     }
 
-    #devtools-warning {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 99998;
-      background: rgba(255, 54, 88, 0.12);
-      border-bottom: 1px solid rgba(255, 54, 88, 0.35);
-      padding: 8px 20px;
-      font-size: 13px;
-      color: #ff6b6b;
-      font-family: ui-sans-serif, system-ui, sans-serif;
-      text-align: center;
-    }
-    #devtools-warning.active { display: block; }
-
     #security-toast {
       position: fixed;
       bottom: 28px;
@@ -166,7 +136,6 @@ function isProtectedCodeContext(node) {
   document.head.appendChild(style);
 })();
 
-// ─── 2. Blur overlay DOM ─────────────────────────────────────────
 (function createBlurOverlay() {
   function _buildOverlay() {
     if (document.getElementById("security-blur-overlay")) return;
@@ -179,7 +148,7 @@ function isProtectedCodeContext(node) {
         This lab pauses when you switch away to protect course content.<br>
         Click below to resume where you left off.
       </div>
-      <button type="button" class="overlay-btn" id="security-resume-btn">Resume Session →</button>
+      <button type="button" class="overlay-btn" id="security-resume-btn">Resume session</button>
     `;
     document.body.appendChild(overlay);
 
@@ -187,14 +156,6 @@ function isProtectedCodeContext(node) {
       overlay.classList.remove("active");
       _logSecurityEvent("session_resumed");
     });
-
-    if (!document.getElementById("devtools-warning")) {
-      const devBanner = document.createElement("div");
-      devBanner.id = "devtools-warning";
-      devBanner.textContent =
-        "⚠️  Developer tools may be open. Course text in Learn/Lab panels is copy-protected; type code in the editor yourself.";
-      document.body.appendChild(devBanner);
-    }
   }
 
   if (document.readyState === "loading") {
@@ -204,7 +165,6 @@ function isProtectedCodeContext(node) {
   }
 })();
 
-// ─── 3. Keyboard: block print, save, source, DevTools shortcuts ──
 (function blockKeyboard() {
   const BLOCKED = new Set(["p", "s", "u"]);
   const DEVTOOLS = new Set(["i", "j", "c"]);
@@ -227,7 +187,7 @@ function isProtectedCodeContext(node) {
       if (e.key === "F12") {
         e.preventDefault();
         e.stopImmediatePropagation();
-        _showToast("⛔  F12 is blocked here (DevTools).");
+        _showToast("⛔  F12 is blocked in this lab.");
         _logSecurityEvent("blocked_keyboard", { key: "F12" });
         return false;
       }
@@ -251,7 +211,6 @@ function isProtectedCodeContext(node) {
   );
 })();
 
-// ─── 4. Block right-click on protected code ────────────────────────
 (function blockContextMenu() {
   document.addEventListener(
     "contextmenu",
@@ -267,7 +226,6 @@ function isProtectedCodeContext(node) {
   );
 })();
 
-// ─── 5. Block copy when selection is inside protected code ────────
 (function blockCopy() {
   document.addEventListener(
     "copy",
@@ -280,14 +238,13 @@ function isProtectedCodeContext(node) {
       if (!isProtectedCodeContext(node)) return;
       e.preventDefault();
       if (e.clipboardData) e.clipboardData.setData("text/plain", "");
-      _showToast("⛔  Copying this course text is disabled — use the editor for your own code.");
+      _showToast("⛔  Copying this course text is disabled. Use the editor for your own code.");
       _logSecurityEvent("blocked_copy");
     },
     true
   );
 })();
 
-// ─── 6. Block drag from protected code ─────────────────────────────
 (function blockDrag() {
   document.addEventListener(
     "dragstart",
@@ -309,7 +266,6 @@ function hideSecurityOverlay() {
   }
 }
 
-// ─── 7. Tab-away / blur overlay ───────────────────────────────────
 (function handleVisibility() {
   let blurTimer = null;
   const BLUR_DELAY_MS = 800;
@@ -353,7 +309,6 @@ function hideSecurityOverlay() {
   window.addEventListener("pageshow", hideSecurityOverlay);
 })();
 
-// ─── 8. beforeprint ────────────────────────────────────────────────
 (function blockPrint() {
   window.addEventListener("beforeprint", (e) => {
     e.preventDefault();
@@ -362,34 +317,6 @@ function hideSecurityOverlay() {
   });
 })();
 
-// ─── 9. DevTools size heuristic ───────────────────────────────────
-(function detectDevTools() {
-  const THRESHOLD = 160;
-  let devOpen = false;
-
-  function check() {
-    const widthDiff = window.outerWidth - window.innerWidth;
-    const heightDiff = window.outerHeight - window.innerHeight;
-    const isOpen = widthDiff > THRESHOLD || heightDiff > THRESHOLD;
-
-    const banner = document.getElementById("devtools-warning");
-    if (!banner) return;
-
-    if (isOpen && !devOpen) {
-      devOpen = true;
-      banner.classList.add("active");
-      _logSecurityEvent("devtools_opened");
-    } else if (!isOpen && devOpen) {
-      devOpen = false;
-      banner.classList.remove("active");
-    }
-  }
-
-  window.addEventListener("resize", check);
-  setInterval(check, 1500);
-})();
-
-// ─── 10. selectstart on protected code only ───────────────────────
 (function disableCodeSelection() {
   document.addEventListener(
     "selectstart",
@@ -400,7 +327,6 @@ function hideSecurityOverlay() {
   );
 })();
 
-// ─── 11. Toast ─────────────────────────────────────────────────────
 let _toastTimeout = null;
 
 function _showToast(message) {
@@ -421,7 +347,6 @@ function _showToast(message) {
   }, 3000);
 }
 
-// ─── 12. sessionStorage + studentActivityStore ────────────────────
 function _logSecurityEvent(type, extra = {}) {
   try {
     const events = JSON.parse(sessionStorage.getItem("security_events") || "[]");

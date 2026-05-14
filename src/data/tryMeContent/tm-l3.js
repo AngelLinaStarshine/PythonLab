@@ -16,7 +16,7 @@ export const tryMeL3 = {
       id: "s2",
       icon: "🔀",
       heading: "if / elif / else Structure",
-      body: "Python uses indentation — four spaces — to define which code belongs inside each branch. A colon ends every condition line. Python evaluates from top to bottom and runs the first branch whose condition is True. Once a branch runs, all remaining branches are skipped.",
+      body: "Python uses indentation, four spaces, to define which code belongs inside each branch. A colon ends every condition line. Python evaluates from top to bottom and runs the first branch whose condition is True. Once a branch runs, all remaining branches are skipped.",
       code: `risk = 72
 
 if risk >= 70:
@@ -43,12 +43,12 @@ else:
       id: "s3",
       icon: "⚖️",
       heading: "Comparison Operators",
-      body: "Conditions use comparison operators. Greater than or equal checks if a value is at or above a threshold. Double equals checks exact equality — a single equals sign is assignment, not comparison. Not equal is written as exclamation mark equals.",
+      body: "Conditions use comparison operators. Greater than or equal checks if a value is at or above a threshold. Double equals checks exact equality, a single equals sign is assignment, not comparison. Not equal is written as exclamation mark equals.",
       code: `risk = 72
 print(risk >= 70)       # True
-print(risk > 70)        # False — strictly greater
-print(risk == 72)       # True — exactly equal
-print(risk != 50)       # True — not equal
+print(risk > 70)        # False, strictly greater
+print(risk == 72)       # True, exactly equal
+print(risk != 50)       # True, not equal
 print(risk <= 100)      # True`,
       tryMe: {
         starter: `x = 50
@@ -90,7 +90,7 @@ if risk >= 70 and malware:
 if risk >= 70 or malware:
     print("Line 3: ALERT")`,
         expectedOutput: "Line 1: ESCALATE\nLine 3: ALERT",
-        hint: "Line 2 uses 'and' — both must be True. malware is False so it does not print. Line 3 uses 'or' — only one needs to be True.",
+        hint: "Line 2 uses 'and', both must be True. malware is False so it does not print. Line 3 uses 'or', only one needs to be True.",
       },
       tip: null,
     },

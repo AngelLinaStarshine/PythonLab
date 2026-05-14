@@ -10,7 +10,7 @@ You must NOT fill blanks directly.
 You must:
 - explain the concept
 - point out mistakes in the student's code
-- give 1–3 hints
+- give 1 to 3 hints
 - ask 1 guiding question
 - provide a small unrelated example (different values/names)
 Keep it short and supportive.
@@ -113,13 +113,13 @@ function buildLocalHint({
 
   // Default safe coach reply for other lessons
   return [
-    "I can help — but I won’t paste the final answer.",
+    "I can help, but I won’t paste the final answer.",
     "",
     "Tell me:",
     "1) What output are you trying to get?",
     "2) What line confuses you most?",
     "",
     "Guiding question:",
-    "Which concept from this lesson do you think your code is missing (input / if / loop / list / dict / string / try-except)?",
+    "Which concept from this lesson do you think your code is missing (input / if / loop / list / dict / string / try except)?",
   ].join("\n");
 }

@@ -39,7 +39,7 @@ print("OS:", device["os"])
 print("Risk:", device["risk"])
 print("Patched:", device["patched"])`,
         expectedOutput: "Owner: Ava\nOS: Windows 11\nRisk: 42\nPatched: False",
-        hint: "Try device['Owner'] with a capital O — you will get a KeyError. Keys are case-sensitive.",
+        hint: "Try device['Owner'] with a capital O, you will get a KeyError. Keys are case-sensitive.",
       },
       tip: null,
     },
@@ -68,7 +68,7 @@ print(device.get("owner","unknown"))`,
       id: "s4",
       icon: "✏️",
       heading: "Updating Fields and Looping with .items()",
-      body: "Updating an existing key and adding a new one use the same syntax — square bracket assignment. If the key exists the value is replaced. If not a new key is added. Loop through all key-value pairs with the items method.",
+      body: "Updating an existing key and adding a new one use the same syntax, square bracket assignment. If the key exists the value is replaced. If not a new key is added. Loop through all key-value pairs with the items method.",
       code: `device = {"owner":"Ava","risk":42,"patched":False}
 
 device["risk"]    = 5

@@ -11,18 +11,18 @@ export const lab4 = {
   ],
   intro: `A security analyst can't manually review 10,000 log entries. Automated tools
 loop through every event, apply rules, and count matches. In this lab you build
-that scanning loop — first simple, then progressively more realistic.`,
+that scanning loop, first simple, then progressively more realistic.`,
   exercises: [
     {
       id: "e1",
-      title: "Exercise 1 — Scan and print event IDs",
+      title: "Exercise 1, Scan and print event IDs",
       prompt: `Write a for loop that iterates event IDs 1 through 10 and prints each one.
 Use range(). Remember: range(start, stop) does not include stop.`,
       starter: `# Exercise 1: Iterate event IDs 1 through 10
-for event_id in range(???, ???):
+for event_id in range(__BLANK__, __BLANK__):
     print("Scanning event:", event_id)`,
       hints: [
-        "range(1, 11) gives you 1, 2, 3 ... 10 — stop is exclusive.",
+        "range(1, 11) gives you 1, 2, 3 ... 10, stop is exclusive.",
         "The loop variable event_id takes each value in turn.",
       ],
       solution: `for event_id in range(1, 11):
@@ -42,25 +42,25 @@ Scanning event: 10`,
     },
     {
       id: "e2",
-      title: "Exercise 2 — Flag and count suspicious events",
+      title: "Exercise 2, Flag and count suspicious events",
       prompt: `Extend the loop: any event divisible by 3 is "suspicious" (our simple rule).
 Print those event IDs and count them.
 
 The modulo operator % gives the remainder: 9 % 3 = 0 means 9 is divisible by 3.`,
       starter: `# Exercise 2: Flag events divisible by 3
-suspicious_count = ???   # start the counter outside the loop
+suspicious_count = __BLANK__   # start the counter outside the loop
 
 for event_id in range(1, 11):
-    if event_id % ??? == 0:
+    if event_id % __BLANK__ == 0:
         print("Suspicious event:", event_id)
-        suspicious_count = suspicious_count + ???
+        suspicious_count = suspicious_count + __BLANK__
 
 print("Total suspicious:", suspicious_count)`,
       hints: [
-        "The counter starts at 0 — before the loop begins.",
+        "The counter starts at 0, before the loop begins.",
         "event_id % 3 == 0 checks divisibility by 3.",
         "Increment: suspicious_count = suspicious_count + 1  (or += 1).",
-        "Events 3, 6, 9 are divisible by 3 — expect count = 3.",
+        "Events 3, 6, 9 are divisible by 3, expect count = 3.",
       ],
       solution: `suspicious_count = 0
 
@@ -79,11 +79,11 @@ Total suspicious: 3`,
     },
     {
       id: "e3",
-      title: "Exercise 3 — Multiple rule tiers in one loop",
+      title: "Exercise 3, Multiple rule tiers in one loop",
       prompt: `Now apply two rules in the same loop:
-  • Divisible by 3 → SUSPICIOUS
-  • Divisible by 5 → CRITICAL
-  • Everything else → OK
+  • Divisible by 3: SUSPICIOUS
+  • Divisible by 5: CRITICAL
+  • Everything else: OK
 
 Count each tier separately. Print a summary at the end.`,
       starter: `# Exercise 3: Two rules, two counters
@@ -91,10 +91,10 @@ suspicious_count = 0
 critical_count   = 0
 
 for event_id in range(1, 21):     # scan 1 through 20
-    if event_id % ??? == 0:
+    if event_id % __BLANK__ == 0:
         print(f"Event {event_id}: CRITICAL")
         critical_count += 1
-    elif event_id % ??? == 0:
+    elif event_id % __BLANK__ == 0:
         print(f"Event {event_id}: SUSPICIOUS")
         suspicious_count += 1
     else:
@@ -102,10 +102,10 @@ for event_id in range(1, 21):     # scan 1 through 20
 
 print(f"\\nSuspicious: {suspicious_count} | Critical: {critical_count}")`,
       hints: [
-        "CRITICAL rule: divisible by 5 → use % 5 == 0.",
-        "SUSPICIOUS rule: divisible by 3 → use % 3 == 0.",
+        "CRITICAL rule: divisible by 5: use % 5 == 0.",
+        "SUSPICIOUS rule: divisible by 3: use % 3 == 0.",
         "Put the more severe rule (CRITICAL) in the if, the lesser in elif.",
-        "Event 15 is divisible by both 3 and 5 — it should be CRITICAL.",
+        "Event 15 is divisible by both 3 and 5, it should be CRITICAL.",
       ],
       solution: `suspicious_count = 0
 critical_count   = 0
@@ -144,35 +144,35 @@ Event 20: CRITICAL
 
 Suspicious: 5 | Critical: 4`,
       afterNote:
-        "Event 15 is divisible by both 3 and 5. Because 5 is checked first (if), it correctly becomes CRITICAL — not SUSPICIOUS. Rule order matters.",
+        "Event 15 is divisible by both 3 and 5. Because 5 is checked first (if), it correctly becomes CRITICAL, not SUSPICIOUS. Rule order matters.",
     },
     {
       id: "e4",
-      title: "Exercise 4 — While loop: login lockout simulation",
+      title: "Exercise 4, While loop: login lockout simulation",
       prompt: `A while loop repeats as long as a condition is True.
 Simulate a login lockout: allow up to 3 attempts.
 After 3 failures, print "Account locked."
 
-This is different from for — you don't know how many attempts in advance.`,
+This is different from for, you don't know how many attempts in advance.`,
       starter: `# Exercise 4: Login lockout with a while loop
 attempts  = 0
 max_tries = 3
 locked    = False
 
-while attempts < ???:
+while attempts < __BLANK__:
     attempts += 1
     print(f"Login attempt {attempts}: failed")
 
-    if attempts >= ???:
+    if attempts >= __BLANK__:
         locked = True
-        ???      # exit the loop immediately
+        __BLANK__      # exit the loop immediately
 
 if locked:
-    print("Account locked — too many failed attempts.")
+    print("Account locked, too many failed attempts.")
 else:
     print("Within attempt limit.")`,
       hints: [
-        "The while condition: attempts < max_tries  — or attempts < 3.",
+        "The while condition: attempts < max_tries , or attempts < 3.",
         "The lock check: if attempts >= max_tries (or >= 3).",
         "break exits the loop immediately when executed.",
       ],
@@ -189,25 +189,25 @@ while attempts < max_tries:
         break
 
 if locked:
-    print("Account locked — too many failed attempts.")
+    print("Account locked, too many failed attempts.")
 else:
     print("Within attempt limit.")`,
       expectedOutput: `Login attempt 1: failed
 Login attempt 2: failed
 Login attempt 3: failed
-Account locked — too many failed attempts.`,
+Account locked, too many failed attempts.`,
       afterNote:
-        "break is the escape hatch for while loops. Without it, you'd need to carefully design the condition to eventually become False — easy to get wrong and create an infinite loop.",
+        "break is the escape hatch for while loops. Without it, you'd need to carefully design the condition to eventually become False, easy to get wrong and create an infinite loop.",
     },
   ],
   wrapUp: {
     message:
       "Lab 4 complete! You can now scan collections of events, apply rules inside loops, count results, and control loop flow with break.",
-    nextLesson: "Next up: Lesson 5 — wrapping reusable logic in functions.",
+    nextLesson: "Next up: Lesson 5, wrapping reusable logic in functions.",
     keyTakeaways: [
-      "range(1, 11) gives 1 through 10 — stop is exclusive.",
+      "range(1, 11) gives 1 through 10, stop is exclusive.",
       "Counters start at 0 outside the loop, increment inside.",
-      "% (modulo) gives remainder — if x % n == 0, x is divisible by n.",
+      "% (modulo) gives remainder, if x % n == 0, x is divisible by n.",
       "while loops repeat until a condition becomes False.",
       "break exits a loop immediately.",
     ],

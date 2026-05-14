@@ -11,7 +11,7 @@ export default function EditorPane({
   unlocked,
   /** Increment when loading starter code from Learn / Lab so Monaco picks up `value` while read-only. */
   layoutKey = 0,
-  /** Try me loaded with editableToken — only that substring can be edited (enforced in App). */
+  /** Try me with `editableToken`: only the token slice may change in the editor. */
   tryMeConstrained = false,
 }) {
   const block = (e) => {
@@ -30,12 +30,6 @@ export default function EditorPane({
         </div>
       </div>
 
-      {tryMeConstrained && (
-        <div className="editor-tryme-constrained-banner" role="status">
-          Try me mode: change only the part described in Learn → Hint. Other edits snap back.
-        </div>
-      )}
-
       <div
         className="editor-wrap"
         onPaste={block}
@@ -44,6 +38,11 @@ export default function EditorPane({
         onDrop={block}
         onDragOver={(e) => antiPasteEnabled && e.preventDefault()}
       >
+        {tryMeConstrained && (
+          <div className="editor-tryme-constrained-banner">
+            Try me: only the part from the Hint may change here; the rest of the script is fixed.
+          </div>
+        )}
         <Editor
           key={layoutKey}
           height="70vh"

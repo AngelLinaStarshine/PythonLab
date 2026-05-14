@@ -18,8 +18,8 @@ export const tryMeL6 = {
       heading: "Creating and Accessing a List",
       body: "A list uses square brackets with values separated by commas. Each value has an index starting at zero. The last item is at index negative one. The len function returns the number of items.",
       code: `scores = [15, 42, 88, 73, 60, 95]
-print(scores[0])     # 15 — first
-print(scores[-1])    # 95 — last
+print(scores[0])     # 15, first
+print(scores[-1])    # 95, last
 print(len(scores))   # 6`,
       tryMe: {
         starter: `scores = [10, 45, 88, 73, 60, 95, 30]
@@ -56,7 +56,7 @@ print(f"Highest: {max(scores)}")
 print(f"Lowest : {min(scores)}")`,
         expectedOutput:
           "Total  : 373\nAverage: 62.2\nHighest: 95\nLowest : 15",
-        hint: "Try scores.append(100) before these lines and re-run — all four stats update automatically.",
+        hint: "Try scores.append(100) before these lines and re-run, all four stats update automatically.",
       },
       tip: null,
     },

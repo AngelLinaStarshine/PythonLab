@@ -8,15 +8,15 @@ function formatEvent(ev) {
   const student = (ev.studentId || "").slice(0, 20);
   switch (ev.type) {
     case "window_switch":
-      return { icon: "🪟", text: `Window/tab switch`, detail: `${student} — ${time}` };
+      return { icon: "🪟", text: `Window or tab switch`, detail: `${student}, ${time}` };
     case "active_time":
-      return { icon: "⏱", text: `Window active`, detail: `${student} — ${ev.minutes ?? 0} min — ${time}` };
+      return { icon: "⏱", text: `Window active`, detail: `${student}, ${ev.minutes ?? 0} min, ${time}` };
     case "correct_answer":
-      return { icon: "✅", text: `Right answer`, detail: `${student} — ${ev.lessonTitle || ev.lessonId || ""} — ${time}`, extra: ev.message };
+      return { icon: "✅", text: `Right answer`, detail: `${student}, ${ev.lessonTitle || ev.lessonId || ""}, ${time}`, extra: ev.message };
     case "student_question":
-      return { icon: "❓", text: `Student question`, detail: `${student} — ${ev.lessonTitle || ev.lessonId || ""} — ${time}`, extra: ev.explanation };
+      return { icon: "❓", text: `Student question`, detail: `${student}, ${ev.lessonTitle || ev.lessonId || ""}, ${time}`, extra: ev.explanation };
     default:
-      return { icon: "•", text: ev.type || "Event", detail: `${student} — ${time}` };
+      return { icon: "•", text: ev.type || "Event", detail: `${student}, ${time}` };
   }
 }
 

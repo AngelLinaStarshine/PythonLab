@@ -1,12 +1,12 @@
 export const tryMeL10 = {
   lessonId: "l10",
   ttsIntro:
-    "Welcome to Lesson 10: the Capstone. You will combine everything from Lessons 1 through 9 into a working Security Operations Center dashboard — a portfolio-ready project.",
+    "Welcome to Lesson 10: the Capstone. You will combine everything from Lessons 1 through 9 into a working Security Operations Center dashboard, a portfolio-ready project.",
   sections: [
     {
       id: "s1",
       icon: "🛡️",
-      heading: "You Have Built Every Piece — Now Connect Them",
+      heading: "You Have Built Every Piece, Now Connect Them",
       body: "A real SOC tool ingests log events, scores each one using keyword rules, stores them in structured records, and generates a summary report. You already know every technique required. This lesson is about connecting them intentionally into one complete, working system.",
       code: null,
       tryMe: null,
@@ -15,18 +15,18 @@ export const tryMeL10 = {
     {
       id: "s2",
       icon: "🗺️",
-      heading: "Architecture — Each Lesson's Role",
+      heading: "Architecture, Each Lesson's Role",
       body: "Lesson 1 variables store your counters and labels. Lesson 2 input collects live log lines. Lesson 3 conditionals power risk labeling. Lesson 4 while loop collects events until done. Lesson 5 functions encapsulate scoring and labeling. Lesson 6 list accumulates all records. Lesson 7 dictionaries structure each event. Lesson 8 strings normalize and detect keywords. Lesson 9 exceptions handle bad input.",
       code: `# Lesson contributions:
-# L1 → variables: risk, label, count
-# L2 → input(): collect log lines
-# L3 → if/elif: label_risk()
-# L4 → while True + break
-# L5 → def score_event(), label_risk()
-# L6 → events = [] accumulates records
-# L7 → {"raw","risk","label"} per event
-# L8 → .lower(), "in": keyword scoring
-# L9 → try/except: handle bad input`,
+# L1: variables: risk, label, count
+# L2: input(): collect log lines
+# L3: if/elif: label_risk()
+# L4: while True + break
+# L5: def score_event(), label_risk()
+# L6: events = [] accumulates records
+# L7: {"raw","risk","label"} per event
+# L8: .lower(), "in": keyword scoring
+# L9: try/except: handle bad input`,
       tryMe: null,
       tip: null,
     },
@@ -78,7 +78,7 @@ for log in logs:
       id: "s4",
       icon: "📊",
       heading: "Analytics Report and Ranked Output",
-      body: "After collecting events, loop through the list to sum risk scores, count tiers, and compute the average. The sorted function with a lambda key and reverse True produces a ranked list from highest to lowest risk — the view an analyst sees on their dashboard.",
+      body: "After collecting events, loop through the list to sum risk scores, count tiers, and compute the average. The sorted function with a lambda key and reverse True produces a ranked list from highest to lowest risk, the view an analyst sees on their dashboard.",
       code: `events = [...]   # list of dicts collected in the while loop
 
 risks = [e["risk"] for e in events]

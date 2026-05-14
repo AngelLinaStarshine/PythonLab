@@ -1,6 +1,6 @@
 // src/components/AgentARIA.jsx
 // ─────────────────────────────────────────────────────────────────
-// ARIA — Adaptive Response Intelligence Agent
+// ARIA, Adaptive Response Intelligence Agent
 //
 // Appears when a student makes 3+ incorrect mastery attempts.
 //
@@ -39,28 +39,28 @@ const btn = (extra = {}) => ({
 
 const ERROR_SECTION_MAP = {
   nameerror: { section: "Common Mistakes", reason: "You may have a missing quote or incorrect capitalisation." },
-  typeerror: { section: "The Four Types", reason: "You may be using the wrong type — e.g. a string where a number is needed." },
-  syntaxerror: { section: "Creating Variables", reason: "Check your syntax — equals signs, quotes, and colons." },
-  "invalid literal": { section: "Converting Types", reason: "int() received text it cannot convert — make sure the value is a number." },
+  typeerror: { section: "The Four Types", reason: "You may be using the wrong type, e.g. a string where a number is needed." },
+  syntaxerror: { section: "Creating Variables", reason: "Check your syntax, equals signs, quotes, and colons." },
+  "invalid literal": { section: "Converting Types", reason: "int() received text it cannot convert, make sure the value is a number." },
   valueerror: { section: "Converting Types", reason: "A type conversion failed. Re-read how int() and float() work." },
   indentationerror: { section: "if / elif / else", reason: "Python requires consistent indentation inside if/elif/else blocks." },
-  zerodivisionerror: { section: "Counting Inside a Loop", reason: "You divided by zero — check your counter or list length." },
-  indexerror: { section: "The for Loop", reason: "You accessed an index that doesn't exist — check your range." },
+  zerodivisionerror: { section: "Counting Inside a Loop", reason: "You divided by zero, check your counter or list length." },
+  indexerror: { section: "The for Loop", reason: "You accessed an index that doesn't exist, check your range." },
   return: { section: "Defining a Function", reason: "Make sure your function uses return, not just print." },
   "list index out of range": {
     section: "Creating and Accessing",
     reason: "Check how you're creating or accessing your list.",
   },
-  keyerror: { section: "Safe Access with .get()", reason: "A dictionary key doesn't exist — use .get() for safe access." },
+  keyerror: { section: "Safe Access with .get()", reason: "A dictionary key doesn't exist, use .get() for safe access." },
   attributeerror: { section: "Normalize with lower()", reason: "You called a method that doesn't exist on this type." },
   except: { section: "try / except Pattern", reason: "Check your try/except structure and exception type." },
   "no output": { section: "Your lesson objective", reason: "Your code ran without errors but produced no output." },
 };
 
 const LESSON_HINTS = {
-  l1: { section: "The Four Types — str, int, float, bool", hint: "Check that each variable uses the correct type and the correct syntax (quotes for strings, no quotes for numbers)." },
-  l2: { section: "Converting Types — int() and float()", hint: "Remember: input() always returns a string. Wrap it with int() or float() if you need a number." },
-  l3: { section: "if / elif / else Structure", hint: "Check the order of your conditions — highest threshold first. Don't forget the colon at the end of each line." },
+  l1: { section: "The Four Types, str, int, float, bool", hint: "Check that each variable uses the correct type and the correct syntax (quotes for strings, no quotes for numbers)." },
+  l2: { section: "Converting Types, int() and float()", hint: "Remember: input() always returns a string. Wrap it with int() or float() if you need a number." },
+  l3: { section: "if / elif / else Structure", hint: "Check the order of your conditions, highest threshold first. Don't forget the colon at the end of each line." },
   l4: { section: "Counting Inside a Loop", hint: "Make sure your counter starts at 0 before the loop, not inside it. Check your range() start and stop values." },
   l5: { section: "Composing Functions", hint: "Are you using return (not just print)? Can you call one function's output as another's input?" },
   l6: { section: "Analytics with Built-in Functions", hint: "Check you're using sum(), len(), max(), and min() correctly. Division needs len() as the denominator." },
@@ -139,9 +139,9 @@ export default function AgentARIA({
   }, [lessonId, wrongAttempts]);
 
   const MESSAGES = [
-    `Hi! I'm ARIA — your Adaptive Response Intelligence Agent. I see you've made ${wrongAttempts} attempts. No worries — let me help you find the answer.`,
+    `Hi! I'm ARIA, your Adaptive Response Intelligence Agent. I see you've made ${wrongAttempts} attempts. No worries, let me help you find the answer.`,
     `I've analysed your code and the error. It looks like the issue is related to: "${diagnosis.reason}"`,
-    `I recommend going back to the reading section titled "${diagnosis.section}" — the answer is explained there. Click the button below to jump straight to it.`,
+    `I recommend going back to the reading section titled "${diagnosis.section}", the answer is explained there. Click the button below to jump straight to it.`,
   ];
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 export const tryMeL8 = {
   lessonId: "l8",
   ttsIntro:
-    "Welcome to Lesson 8: Strings and Log Parsing. Security log analysis is text processing. In this lesson you will use lower to normalize, split to tokenize, and the in operator to detect threat keywords — the exact pipeline used in commercial security tools.",
+    "Welcome to Lesson 8: Strings and Log Parsing. Security log analysis is text processing. In this lesson you will use lower to normalize, split to tokenize, and the in operator to detect threat keywords, the exact pipeline used in commercial security tools.",
   sections: [
     {
       id: "s1",
@@ -16,11 +16,11 @@ export const tryMeL8 = {
       id: "s2",
       icon: "🔡",
       heading: "Normalize with lower()",
-      body: "FAILED in uppercase, Failed with a capital, and failed lowercase all mean the same thing but Python sees three different strings. lower() converts the entire string to lowercase. It returns a new string — the original is never changed because strings are immutable.",
+      body: "FAILED in uppercase, Failed with a capital, and failed lowercase all mean the same thing but Python sees three different strings. lower() converts the entire string to lowercase. It returns a new string, the original is never changed because strings are immutable.",
       code: `log   = "FAILED Login From IP 10.0.0.5"
 clean = log.lower()
 print(clean)  # "failed login from ip 10.0.0.5"
-print(log)    # unchanged — strings are immutable`,
+print(log)    # unchanged, strings are immutable`,
       tryMe: {
         starter: `log   = "FAILED Login From IP 10.0.0.5"
 clean = log.lower()
@@ -54,7 +54,7 @@ print("First:", words[0])
 print("IP:", words[-1])`,
         expectedOutput:
           "Tokens: ['failed', 'login', 'from', 'ip', '192.168.1.42']\nCount: 5\nFirst: failed\nIP: 192.168.1.42",
-        hint: "words[-1] always gives the last token — the IP address — regardless of line length.",
+        hint: "words[-1] always gives the last token, the IP address, regardless of line length.",
       },
       tip: null,
     },
@@ -85,7 +85,7 @@ for kw in keywords:
           "  [ OK  ] failed\n  [ALERT] blocked\n  [ OK  ] malware\n  [ALERT] root\n  [ OK  ] exploit",
         hint: "blocked and root are in the log. Detection only works because we normalized to lowercase first.",
       },
-      tip: "This pattern is used in Snort and Suricata — the two most widely deployed open-source IDS tools.",
+      tip: "This pattern is used in Snort and Suricata, the two most widely deployed open-source IDS tools.",
     },
   ],
 };

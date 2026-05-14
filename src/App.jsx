@@ -207,6 +207,7 @@ export default function App() {
     };
   }, [isTeacher]);
 
+  /** Try me only: when set, only the token slice may change in the Code editor. */
   const [editorTryMeConstraint, setEditorTryMeConstraint] = useState(null);
 
   const onChangeCode = (next) => {
@@ -394,47 +395,50 @@ export default function App() {
   );
 
   /**
-   * Leaving the tab or hiding the window: after a short delay, restart from lesson 1
-   * (cancel if the user comes back before the delay). Students always; teachers only
-   * when “Reset on tab switch” is enabled.
+   * Tab / window leave: restart from lesson 1 as soon as the page is hidden (no grace
+   * period; switching back still finds a fresh session). Students always; teachers
+   * only when “Reset on tab switch” is enabled. Also handle bfcache restores via pageshow.
    */
   useEffect(() => {
     const leaveResetEnabled = !isTeacher || antiCheatEnabled;
     if (!leaveResetEnabled) return;
 
-    const HIDDEN_DEBOUNCE_MS = 500;
     const MOUNT_GRACE_MS = 2000;
     const mountedAt = Date.now();
-    let tid;
+
+    const runLeaveReset = (reason) => {
+      if (Date.now() - mountedAt < MOUNT_GRACE_MS) return;
+      if (!isTeacher) {
+        recordStudentEvent({
+          type: "window_switch",
+          reason,
+        });
+      }
+      resetSessionToBeginning({
+        clearActivityLog: false,
+        progressHint:
+          "You left this tab or window. Starting again from the first lesson.",
+      });
+    };
 
     const onVisibility = () => {
       if (document.visibilityState === "hidden") {
-        if (Date.now() - mountedAt < MOUNT_GRACE_MS) return;
-        window.clearTimeout(tid);
-        tid = window.setTimeout(() => {
-          tid = undefined;
-          if (!isTeacher) {
-            recordStudentEvent({
-              type: "window_switch",
-              reason: "tab_or_window_hidden_session_reset",
-            });
-          }
-          resetSessionToBeginning({
-            clearActivityLog: false,
-            progressHint:
-              "You left this tab or window — starting again from the first lesson.",
-          });
-        }, HIDDEN_DEBOUNCE_MS);
-      } else {
-        window.clearTimeout(tid);
-        tid = undefined;
+        runLeaveReset("tab_or_window_hidden_session_reset");
+      }
+    };
+
+    /** Back/forward cache: page can reappear without a full reload; force a clean start. */
+    const onPageShow = (e) => {
+      if (e.persisted) {
+        runLeaveReset("bfcache_pageshow_session_reset");
       }
     };
 
     document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pageshow", onPageShow);
     return () => {
-      window.clearTimeout(tid);
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pageshow", onPageShow);
     };
   }, [isTeacher, antiCheatEnabled, resetSessionToBeginning]);
 
@@ -476,7 +480,7 @@ export default function App() {
             return;
           }
           runReset(
-            "Screen orientation changed — starting again from the first lesson."
+            "Screen orientation changed. Starting again from the first lesson."
           );
           return;
         }
@@ -488,7 +492,7 @@ export default function App() {
         }
 
         runReset(
-          "Window size changed a lot — starting again from the first lesson."
+          "Window size changed a lot. Starting again from the first lesson."
         );
       }, DEBOUNCE_MS);
     };
@@ -527,8 +531,8 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <div className="brand-title">Cyber/AI Python Lab (Grades 10–11)</div>
-          <div className="brand-subtitle">Learn → Practice → Mastery ✅ → Portfolio Capstone</div>
+          <div className="brand-title">Cyber/AI Python Lab (Grades 10 to 11)</div>
+          <div className="brand-subtitle">Learn, practice, mastery, portfolio capstone</div>
         </div>
 
         <div className="toggles">

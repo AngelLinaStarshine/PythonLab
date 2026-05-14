@@ -74,7 +74,7 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
 
   return (
     <div className="teacher-video-manager">
-      <div className="teacher-video-manager-title">Manage videos (min {MIN_VIDEOS_PER_LESSON}) — MP4, YouTube, NotebookLM</div>
+      <div className="teacher-video-manager-title">Manage videos (min {MIN_VIDEOS_PER_LESSON}), MP4, YouTube, NotebookLM</div>
       <div className="teacher-video-manager-form">
         <select
           className="video-select"

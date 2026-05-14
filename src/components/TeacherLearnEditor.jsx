@@ -49,7 +49,7 @@ export default function TeacherLearnEditor({ lesson, lessonId, onSave }) {
       </button>
       {open && (
         <div className="teacher-learn-editor-panel">
-          <div className="teacher-learn-editor-head">Modify Learn window — {lesson.title}</div>
+          <div className="teacher-learn-editor-head">Modify Learn window, {lesson.title}</div>
           <label className="teacher-learn-editor-label">Title</label>
           <input
             type="text"

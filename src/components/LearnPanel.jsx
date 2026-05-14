@@ -1,5 +1,5 @@
 // src/components/LearnPanel.jsx
-// Tabbed gated Learn (reading → video) + project integrations: merged videos,
+// Tabbed gated Learn (reading then video) + project integrations: merged videos,
 // TeacherLearnEditor, enrichment / Try me, forwardRef scrollToReading for ARIA.
 
 import {
@@ -184,7 +184,7 @@ function TimerBar({ totalSecs, elapsed, done }) {
         }}
       >
         <span style={{ color: C.t2 }}>
-          {done ? "✅ Reading complete" : `⏱ Minimum read time — ${formatTime(remaining)} remaining`}
+          {done ? "✅ Reading complete" : `⏱ Minimum read time, ${formatTime(remaining)} remaining`}
         </span>
         <span style={{ color: done ? C.green : C.amber, fontWeight: 600 }}>{Math.round(pct)}%</span>
       </div>
@@ -774,7 +774,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                       textAlign: "center",
                     }}
                   >
-                    ↓ Scroll to the bottom of the reading material to continue
+                    Scroll to the bottom of the reading material to continue
                   </div>
                 )}
 
@@ -790,7 +790,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                       textAlign: "center",
                     }}
                   >
-                    ✅ Reading complete — click <strong>Video</strong> tab to continue
+                    ✅ Reading complete, click <strong>Video</strong> tab to continue
                   </div>
                 )}
 
@@ -853,7 +853,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                         />
                         {!isTeacher && !progress?.videoDone && (
                           <button type="button" className="btn sun" onClick={onMarkWatched}>
-                            I watched this — unlock
+                            I watched this, unlock
                           </button>
                         )}
                       </div>
@@ -867,7 +867,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                         </a>
                         {!isTeacher && !progress?.videoDone && (
                           <button type="button" className="btn sun" onClick={onMarkWatched}>
-                            I watched this — unlock
+                            I watched this, unlock
                           </button>
                         )}
                       </div>
@@ -929,7 +929,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                         }}
                       >
                         <span style={{ fontSize: 40 }}>🎬</span>
-                        <span style={{ fontSize: 13, color: C.t2 }}>No video URL — add one in teacher mode</span>
+                        <span style={{ fontSize: 13, color: C.t2 }}>No video URL, add one in teacher mode</span>
                         {!isTeacher && !progress?.videoDone && (
                           <button
                             type="button"

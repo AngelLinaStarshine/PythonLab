@@ -1,22 +1,20 @@
 // src/components/TeacherDashboard.jsx
-// ─────────────────────────────────────────────────────────────────
 // Full teacher control panel.
 //
 // Sections:
-//   1. Live Alerts  — tab-switch, print, copy violations (from studentActivityStore)
-//   2. Progress     — per-lesson mastery/completion status
-//   3. Activity     — active time per lesson, attempt counts
-//   4. Quiz Results — correct_answer and mastery events
-//   5. Controls     — global toggles (copy/paste, anti-cheat, reset)
+//   1. Live Alerts: tab switch, print, copy violations (from studentActivityStore)
+//   2. Progress: per-lesson mastery/completion status
+//   3. Activity: active time per lesson, attempt counts
+//   4. Quiz Results: correct_answer and mastery events
+//   5. Controls: global toggles (copy paste, anti cheat, reset)
 //
 // Props:
-//   masteryByLesson   — { l1: bool, l2: bool, ... }
-//   onToggleCopy      — fn(bool)  parent sets noPasteEnabled
-//   onToggleAntiCheat — fn(bool)  parent sets antiCheatEnabled
-//   noPasteEnabled    — bool
-//   antiCheatEnabled  — bool
-//   onResetAll        — fn()
-// ─────────────────────────────────────────────────────────────────
+//   masteryByLesson: { l1: bool, l2: bool, ... }
+//   onToggleCopy: fn(bool) parent sets noPasteEnabled
+//   onToggleAntiCheat: fn(bool) parent sets antiCheatEnabled
+//   noPasteEnabled: bool
+//   antiCheatEnabled: bool
+//   onResetAll: fn()
 
 import { useState, useEffect, useCallback } from "react";
 import { getStudentEvents, clearStudentEvents } from "../utils/studentActivityStore.js";
@@ -52,7 +50,7 @@ const SECURITY_ALERT_TYPES = new Set([
   "session_resumed",
 ]);
 
-/** Maps `security_blocked_copy` → `blocked_copy` for matching and display. */
+/** Maps `security_blocked_copy` to `blocked_copy` for matching and display. */
 function normalizeSecurityEventType(type) {
   if (!type) return "";
   const s = String(type);
@@ -163,7 +161,7 @@ function AlertsTab({ events, onClear }) {
             padding:"24px", textAlign:"center",
             color:C.t2, fontSize:13,
           }}>
-            ✅ No alerts — all students are on task.
+            ✅ No alerts, all students are on task.
           </div>
         ) : (
           <>
@@ -184,7 +182,7 @@ function AlertsTab({ events, onClear }) {
               🗑 Clear all activity
             </button>
             <div style={{ fontSize: 11, color: C.t3, marginBottom: 12 }}>
-              Removes every stored student event (same data as Notifications → Clear).
+              Removes every stored student event (same data as clearing Notifications).
             </div>
 
             <div style={{display:"flex", flexDirection:"column", gap:6}}>
@@ -213,7 +211,7 @@ function AlertsTab({ events, onClear }) {
                     >
                       {normalizeSecurityEventType(ev.type).replace(/_/g, " ")}
                       {ev.key && (
-                        <span style={{ color: C.t2, fontWeight: 400 }}> — {ev.key}</span>
+                        <span style={{ color: C.t2, fontWeight: 400 }}>, {ev.key}</span>
                       )}
                     </div>
                     {ev.lessonId && (

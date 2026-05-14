@@ -979,20 +979,27 @@ a { color: inherit; }
 .pane-title { font-weight: 900; }
 .pane-actions { display: flex; gap: 8px; }
 
-.editor-tryme-constrained-banner {
-  padding: 8px 12px;
-  font-size: 12px;
-  line-height: 1.35;
-  color: var(--sun);
-  background: rgba(255, 173, 46, 0.1);
-  border-bottom: 1px solid rgba(255, 173, 46, 0.22);
-}
-
 /* ✅ Monaco container must have real height */
 .editor-wrap {
   position: relative;
   flex: 1;
   min-height: 520px;
+}
+
+.editor-tryme-constrained-banner {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  right: 12px;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  color: #c4b5fd;
+  pointer-events: none;
 }
 
 /* Locked overlay */

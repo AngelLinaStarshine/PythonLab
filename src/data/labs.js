@@ -3,7 +3,7 @@
 // Split across ./labs/*.js for maintainability; this module re-exports one array.
 // Each lab has: estimatedMinutes, objectives, exercises (prompt, starter, hints,
 // solution, expectedOutput), and wrapUp.
-// The PracticeLab component reads this file — no logic lives here.
+// The PracticeLab component reads this file, no logic lives here.
 
 import { lab1 } from "./labs/l1.js";
 import { lab2 } from "./labs/l2.js";

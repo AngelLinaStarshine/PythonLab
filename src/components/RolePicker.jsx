@@ -6,8 +6,8 @@ import { useState } from "react";
 export const ROLE_STORAGE_KEY = "py_learn_role";
 export const STUDENT_NAME_KEY = "py_learn_student_name";
 
-/** Teacher gate — change here if you need a different code. */
-const TEACHER_PASSCODE = "5555";
+/** From `.env.local` as VITE_TEACHER_PASSCODE (never show this value on the role screen). */
+const TEACHER_PASSCODE = String(import.meta.env.VITE_TEACHER_PASSCODE ?? "").trim();
 
 /** Teacher or student with saved name; otherwise null (show picker). */
 export function loadRole() {
@@ -86,6 +86,10 @@ export default function RolePicker({ onSelect }) {
 
   const submitTeacher = (e) => {
     e.preventDefault();
+    if (!TEACHER_PASSCODE) {
+      setError("Teacher passcode is not configured. Add VITE_TEACHER_PASSCODE to .env.local (see .env.example).");
+      return;
+    }
     if (passcode === TEACHER_PASSCODE) {
       onSelect("teacher", {});
       return;
@@ -99,7 +103,9 @@ export default function RolePicker({ onSelect }) {
         <div className="role-picker-card">
           <h1 className="role-picker-title">Teacher access</h1>
           <p className="role-picker-subtitle">
-            Enter the teacher passcode (demo: <strong>5555</strong>) to continue.
+            {TEACHER_PASSCODE
+              ? "Enter the teacher passcode you were given."
+              : "Teacher sign-in is not configured on this copy. The person hosting the lab must set VITE_TEACHER_PASSCODE in a .env.local file (see .env.example in the project folder)."}
           </p>
           <form className="role-picker-passcode-form" onSubmit={submitTeacher}>
             <label className="role-picker-passcode-label">
@@ -110,6 +116,7 @@ export default function RolePicker({ onSelect }) {
                 autoComplete="off"
                 className="role-picker-passcode-input"
                 value={passcode}
+                disabled={!TEACHER_PASSCODE}
                 onChange={(ev) => {
                   setPasscode(ev.target.value);
                   setError("");
@@ -121,7 +128,7 @@ export default function RolePicker({ onSelect }) {
               <button type="button" className="btn ghost" onClick={backToRoles}>
                 Back
               </button>
-              <button type="submit" className="btn">
+              <button type="submit" className="btn" disabled={!TEACHER_PASSCODE}>
                 Continue
               </button>
             </div>
@@ -172,7 +179,7 @@ export default function RolePicker({ onSelect }) {
     <div className="role-picker">
       <div className="role-picker-card">
         <h1 className="role-picker-title">Cyber/AI Python Lab</h1>
-        <p className="role-picker-subtitle">Grades 10–11 — Choose your access</p>
+        <p className="role-picker-subtitle">Grades 10 to 11. Choose your access</p>
         <div className="role-picker-buttons">
           <button
             type="button"
@@ -181,7 +188,7 @@ export default function RolePicker({ onSelect }) {
           >
             <span className="role-btn-icon">👩‍🏫</span>
             <span className="role-btn-label">Teacher</span>
-            <span className="role-btn-desc">Passcode required (demo: 5555)</span>
+            <span className="role-btn-desc">Passcode required (from your admin)</span>
           </button>
           <button
             type="button"
@@ -190,7 +197,7 @@ export default function RolePicker({ onSelect }) {
           >
             <span className="role-btn-icon">👩‍🎓</span>
             <span className="role-btn-label">Student</span>
-            <span className="role-btn-desc">Enter your name, then learn → practice → mastery</span>
+            <span className="role-btn-desc">Enter your name, then learn, practice, and mastery</span>
           </button>
         </div>
       </div>

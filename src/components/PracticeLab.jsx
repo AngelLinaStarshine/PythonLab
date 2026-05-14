@@ -275,7 +275,7 @@ function ExerciseCard({ exercise, index, totalExercises, onApplyStarter }) {
                 color: C.t2,
               }}
             >
-              Next hint →
+              Next hint
             </button>
           )}
 
@@ -366,7 +366,7 @@ function ExerciseCard({ exercise, index, totalExercises, onApplyStarter }) {
                   marginTop: i > 0 ? 4 : 0,
                 }}
               >
-                {i === hintStep ? "→ " : "   "}
+                {i === hintStep ? "• " : "   "}
                 {h}
               </div>
             ))}
@@ -645,7 +645,7 @@ export default function PracticeLab({ lessonId, unlocked, onApplyStarter, onComp
           </div>
           <div>
             <div style={{ fontSize: 12, color: C.t2 }}>Lab by</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: C.t1 }}>Cyber Python · Ontario Grade 10–11</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.t1 }}>Cyber Python · Ontario Grade 10 to 11</div>
           </div>
           <div style={{ marginLeft: "auto" }}>
             <Badge color={C.amber}>Mastery track</Badge>
@@ -671,7 +671,7 @@ export default function PracticeLab({ lessonId, unlocked, onApplyStarter, onComp
             letterSpacing: "0.04em",
           }}
         >
-          ✓ Complete Lab — Proceed to Quiz
+          ✓ Complete Lab, proceed to quiz
         </button>
       </div>
     </section>

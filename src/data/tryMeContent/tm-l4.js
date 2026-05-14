@@ -26,7 +26,7 @@ export const tryMeL4 = {
     print("Event:", i)
 print("Done")`,
         expectedOutput: "Event: 1\nEvent: 2\nEvent: 3\nEvent: 4\nEvent: 5\nDone",
-        hint: "range(1, 6) gives 1 through 5 — five values. Change 6 to 11 to scan 10 events.",
+        hint: "range(1, 6) gives 1 through 5, five values. Change 6 to 11 to scan 10 events.",
       },
       tip: null,
     },
@@ -34,18 +34,18 @@ print("Done")`,
       id: "s3",
       icon: "%",
       heading: "The Modulo Operator",
-      body: "Modulo gives you the remainder after division. If the remainder is zero, the number divides evenly — it is divisible. If event ID modulo three equals zero, every third event is flagged. This pattern appears constantly in data processing.",
-      code: `print(9 % 3)    # 0  — divisible
-print(10 % 3)   # 1  — not divisible
-print(7 % 2)    # 1  — odd number`,
+      body: "Modulo gives you the remainder after division. If the remainder is zero, the number divides evenly, it is divisible. If event ID modulo three equals zero, every third event is flagged. This pattern appears constantly in data processing.",
+      code: `print(9 % 3)    # 0 , divisible
+print(10 % 3)   # 1 , not divisible
+print(7 % 2)    # 1 , odd number`,
       tryMe: {
         starter: `for n in range(1, 11):
     if n % 3 == 0:
         print(f"{n} is divisible by 3")
     else:
-        print(f"{n} — skip")`,
+        print(f"{n}, skip")`,
         expectedOutput:
-          "1 — skip\n2 — skip\n3 is divisible by 3\n4 — skip\n5 — skip\n6 is divisible by 3\n7 — skip\n8 — skip\n9 is divisible by 3\n10 — skip",
+          "1, skip\n2, skip\n3 is divisible by 3\n4, skip\n5, skip\n6 is divisible by 3\n7, skip\n8, skip\n9 is divisible by 3\n10, skip",
         hint: "Try changing the rule to % 5 == 0 to find multiples of 5.",
       },
       tip: null,
@@ -54,7 +54,7 @@ print(7 % 2)    # 1  — odd number`,
       id: "s4",
       icon: "🔢",
       heading: "Counting Inside a Loop",
-      body: "Create a counter variable before the loop with a value of zero. Increment it inside the loop each time your condition is met. After the loop, the counter holds the total. A critical mistake is initialising the counter inside the loop — that resets it every iteration.",
+      body: "Create a counter variable before the loop with a value of zero. Increment it inside the loop each time your condition is met. After the loop, the counter holds the total. A critical mistake is initialising the counter inside the loop, that resets it every iteration.",
       code: `suspicious_count = 0   # BEFORE the loop
 
 for event_id in range(1, 11):
@@ -77,7 +77,7 @@ for score in scores:
 print(f"High: {high_count}")
 print(f"Low:  {low_count}")`,
         expectedOutput: "High: 3\nLow:  2",
-        hint: "88, 72, 95 are >= 70. 15, 22 are < 40. 43 and 67 are medium — neither counter changes.",
+        hint: "88, 72, 95 are >= 70. 15, 22 are < 40. 43 and 67 are medium, neither counter changes.",
       },
       tip: null,
     },

@@ -1,6 +1,6 @@
 // src/data/lessons.js
-// Cyber/AI-themed Python for teens (Grades 10–11)
-// IMPROVED LEARNING MATERIAL — v2
+// Cyber/AI-themed Python for teens (Grades 10 to 11)
+// IMPROVED LEARNING MATERIAL, v2
 // Pedagogy: IBM Coursera structure · Khan Academy scaffolding · Code.org hints · Codecademy flow
 
 const v = (name) => `/videos/${name}.mp4`;
@@ -13,32 +13,32 @@ const TDc = `padding:8px 12px;border:1px solid #1a2d44;font-size:12px;vertical-a
 export const lessons = [
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 1 — Variables & Types
+  // LESSON 1, Variables & Types
   // ═══════════════════════════════════════════════════════
   {
     id: "l1",
     title: "Lesson 1: Variables & Types (Cyber Profile Setup)",
     objective: "Declare variables with str, int, float, and bool types; verify with type(); print a formatted profile using f-strings.",
-    concept: "A variable is a named container for a value. Python detects the type automatically from what you assign — text in quotes becomes str, whole numbers become int, decimals become float, and True/False becomes bool. You'll build a mini user profile the way a real authentication system would store it.",
+    concept: "A variable is a named container for a value. Python detects the type automatically from what you assign, text in quotes becomes str, whole numbers become int, decimals become float, and True/False becomes bool. You'll build a mini user profile the way a real authentication system would store it.",
     steps: [
-      "Declare username (str) and grade (int) — check the type difference in your print.",
+      "Declare username (str) and grade (int), check the type difference in your print.",
       "Add risk_score (float) and two_factor_enabled (bool) to your profile.",
       "Print a clean summary line using print() with commas or an f-string.",
       "Call type() on one variable to verify Python's type detection.",
     ],
-    checkpoint: 'Output shows all four values — example: "user: Ava | grade: 10 | risk: 0.0 | 2FA: True". No NameErrors. All four variable types represented.',
+    checkpoint: 'Output shows all four values, example: "user: Ava | grade: 10 | risk: 0.0 | 2FA: True". No NameErrors. All four variable types represented.',
     materialHtml: `
 <h3>🛡️ Why variables matter in Cyber & AI</h3>
-<p>Every time you log in, a server creates dozens of variables in milliseconds: your username, session token, risk score, whether 2FA is active. These live in memory as typed values — not on paper. In Python, you create them with a single line.</p>
+<p>Every time you log in, a server creates dozens of variables in milliseconds: your username, session token, risk score, whether 2FA is active. These live in memory as typed values, not on paper. In Python, you create them with a single line.</p>
 
 <h3>1) Creating a variable</h3>
 <p>Use <code>=</code> to assign. Python reads the right side and automatically chooses the type:</p>
-<pre><code>username           = "Ava"    # str   — text always needs quotes
-grade              = 10       # int   — whole number, no quotes
-risk_score         = 0.0      # float — decimal number
-two_factor_enabled = True     # bool  — exactly True or False</code></pre>
+<pre><code>username           = "Ava"    # str: text always needs quotes
+grade              = 10       # int: whole number, no quotes
+risk_score         = 0.0      # float, decimal number
+two_factor_enabled = True     # bool: exactly True or False</code></pre>
 
-<h3>2) The four types — at a glance</h3>
+<h3>2) The four types, at a glance</h3>
 <table style="width:100%;border-collapse:collapse;margin:8px 0 14px">
   <tr><th style="${TH}">Type</th><th style="${TH}">Stores</th><th style="${TH}">Cyber use case</th><th style="${TH}">How to write it</th></tr>
   <tr><td style="${TD}"><code>str</code></td><td style="${TD}">Text</td><td style="${TD}">username, IP address, log message</td><td style="${TDc}">"Ava" or 'Ava'</td></tr>
@@ -48,13 +48,13 @@ two_factor_enabled = True     # bool  — exactly True or False</code></pre>
 </table>
 
 <h3>3) Verify types with <code>type()</code></h3>
-<p>Python's built-in <code>type()</code> is your sanity check — it tells you exactly what type a variable is:</p>
+<p>Python's built-in <code>type()</code> is your sanity check, it tells you exactly what type a variable is:</p>
 <pre><code>print(type(username))            # &lt;class 'str'&gt;
 print(type(grade))               # &lt;class 'int'&gt;
 print(type(risk_score))          # &lt;class 'float'&gt;
 print(type(two_factor_enabled))  # &lt;class 'bool'&gt;</code></pre>
 
-<h3>4) Printing clean output — two styles</h3>
+<h3>4) Printing clean output, two styles</h3>
 <pre><code># Style A: commas (adds a space between each value)
 print("user:", username, "| grade:", grade, "| risk:", risk_score, "| 2FA:", two_factor_enabled)
 
@@ -66,10 +66,10 @@ print(f"user: {username} | grade: {grade} | risk: {risk_score} | 2FA: {two_facto
 
 <h3>❌ Common mistakes</h3>
 <ul>
-  <li><b>Missing quotes for text:</b> <code>username = Ava</code> → Python looks for a variable named <code>Ava</code> → <b>NameError</b></li>
-  <li><b>Quoting a number:</b> <code>grade = "10"</code> stores text — <code>grade + 1</code> will crash with TypeError</li>
-  <li><b>Lowercase bool:</b> <code>true</code> or <code>TRUE</code> → NameError. Python requires exactly <code>True</code> / <code>False</code></li>
-  <li><b>Missing f before f-string:</b> <code>print("{username}")</code> → prints the literal text <code>{username}</code></li>
+  <li><b>Missing quotes for text:</b> <code>username = Ava</code>: Python looks for a variable named <code>Ava</code>: <b>NameError</b></li>
+  <li><b>Quoting a number:</b> <code>grade = "10"</code> stores text, <code>grade + 1</code> will crash with TypeError</li>
+  <li><b>Lowercase bool:</b> <code>true</code> or <code>TRUE</code>: NameError. Python requires exactly <code>True</code> / <code>False</code></li>
+  <li><b>Missing f before f-string:</b> <code>print("{username}")</code>: prints the literal text <code>{username}</code></li>
 </ul>
 
 <p><b>Your goal:</b> Build a four-variable cyber profile and print a clean, readable summary line.</p>
@@ -93,49 +93,49 @@ print(type(username))
 print("user:", username, "| grade:", grade, "| risk:", risk_score, "| 2FA:", two_factor_enabled)
 `,
     blanks: [
-      { key: "__BLANK1__", placeholder: 'String — e.g. "Ava"', expectedHint: 'Quotes required: "Ava"' },
-      { key: "__BLANK2__", placeholder: "Integer — 10 or 11", expectedHint: "No quotes: 10" },
-      { key: "__BLANK3__", placeholder: "Float — e.g. 0.0 or 7.5", expectedHint: "0.0" },
-      { key: "__BLANK4__", placeholder: "Boolean — True or False", expectedHint: "Exactly: True" },
+      { key: "__BLANK1__", placeholder: 'String, e.g. "Ava"', expectedHint: 'Quotes required: "Ava"' },
+      { key: "__BLANK2__", placeholder: "Integer, 10 or 11", expectedHint: "No quotes: 10" },
+      { key: "__BLANK3__", placeholder: "Float, e.g. 0.0 or 7.5", expectedHint: "0.0" },
+      { key: "__BLANK4__", placeholder: "Boolean, True or False", expectedHint: "Exactly: True" },
     ],
   },
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 2 — Input & Output
+  // LESSON 2, Input & Output
   // ═══════════════════════════════════════════════════════
   {
     id: "l2",
     title: "Lesson 2: Input & Output (Phishing Message Collector)",
     objective: "Collect user input with input(), convert types with int() and float(), and print formatted results.",
-    concept: "input() always returns a string — even if the user types a number. To do math with typed numbers, you must convert them. You'll collect a suspicious message and a numeric risk score like a real security intake tool.",
+    concept: "input() always returns a string, even if the user types a number. To do math with typed numbers, you must convert them. You'll collect a suspicious message and a numeric risk score like a real security intake tool.",
     steps: [
-      "Use input() to collect a suspicious message — store it as a string.",
+      "Use input() to collect a suspicious message, store it as a string.",
       "Use int(input()) to collect a risk score and convert it immediately.",
       "Print both values in a clean formatted summary.",
       "Bonus: add a float input for confidence percentage.",
     ],
-    checkpoint: 'Program prompts for input, user enters a message and a number, output shows both — example: "message: Buy Bitcoin now | risk: 72". The risk score must print as a number, not text.',
+    checkpoint: 'Program prompts for input, user enters a message and a number, output shows both, example: "message: Buy Bitcoin now | risk: 72". The risk score must print as a number, not text.',
     materialHtml: `
 <h3>🛡️ Security tools start with input</h3>
-<p>Every security form you've ever filled out — reporting a phishing email, flagging suspicious activity — is powered by code that reads what you typed. <code>input()</code> is Python's way of asking the user for information at runtime.</p>
+<p>Every security form you've ever filled out, reporting a phishing email, flagging suspicious activity, is powered by code that reads what you typed. <code>input()</code> is Python's way of asking the user for information at runtime.</p>
 
-<h3>1) <code>input()</code> — always returns a string</h3>
+<h3>1) <code>input()</code>, always returns a string</h3>
 <p>Whatever the user types, Python wraps it in quotes and stores it as <code>str</code>. Always.</p>
 <pre><code>msg = input("Paste suspicious message: ")
-print(type(msg))   # &lt;class 'str'&gt; — even if they typed a number</code></pre>
+print(type(msg))   # &lt;class 'str'&gt;, even if they typed a number</code></pre>
 
-<h3>2) Converting to numbers — the critical step</h3>
+<h3>2) Converting to numbers, the critical step</h3>
 <p>If you want to do math with typed input, you must convert it:</p>
-<pre><code># int() — for whole numbers (scores, counts, ports)
-risk = int(input("Risk score 0-100: "))
+<pre><code># int(), for whole numbers (scores, counts, ports)
+risk = int(input("Risk score 0 to 100: "))
 
-# float() — for decimals (probabilities, percentages)
-confidence = float(input("Confidence 0.0-1.0: "))
+# float(), for decimals (probabilities, percentages)
+confidence = float(input("Confidence 0.0 to 1.0: "))
 
-print(risk + 10)        # works — it's an int
-print(confidence * 100) # works — it's a float</code></pre>
+print(risk + 10)        # works, it's an int
+print(confidence * 100) # works, it's a float</code></pre>
 
-<h3>3) Input → convert → store — the pattern</h3>
+<h3>3) Input: convert: store, the pattern</h3>
 <table style="width:100%;border-collapse:collapse;margin:8px 0 14px">
   <tr><th style="${TH}">What user types</th><th style="${TH}">Store as</th><th style="${TH}">Code pattern</th></tr>
   <tr><td style="${TD}">A name or message</td><td style="${TD}">str (no conversion)</td><td style="${TDc}">x = input("...")</td></tr>
@@ -145,7 +145,7 @@ print(confidence * 100) # works — it's a float</code></pre>
 
 <h3>4) Print a clean summary</h3>
 <pre><code>msg  = input("Paste suspicious message: ")
-risk = int(input("Risk score 0-100: "))
+risk = int(input("Risk score 0 to 100: "))
 
 # Comma style
 print("message:", msg)
@@ -158,9 +158,9 @@ print(f"Risk    : {risk}/100")</code></pre>
 
 <h3>❌ Common mistakes</h3>
 <ul>
-  <li><b>Forgetting int():</b> <code>risk = input("Score: ")</code> — if you later write <code>risk &gt;= 70</code>, Python compares text to a number → <b>TypeError</b></li>
-  <li><b>int() on non-numeric input:</b> <code>int("hello")</code> → <b>ValueError</b>. We'll handle this safely in Lesson 9 (try/except).</li>
-  <li><b>int() on a float string:</b> <code>int("7.5")</code> → ValueError. Use <code>float()</code> first, then <code>int()</code> if needed.</li>
+  <li><b>Forgetting int():</b> <code>risk = input("Score: ")</code>, if you later write <code>risk &gt;= 70</code>, Python compares text to a number: <b>TypeError</b></li>
+  <li><b>int() on non-numeric input:</b> <code>int("hello")</code>: <b>ValueError</b>. We'll handle this safely in Lesson 9 (try/except).</li>
+  <li><b>int() on a float string:</b> <code>int("7.5")</code>: ValueError. Use <code>float()</code> first, then <code>int()</code> if needed.</li>
 </ul>
 
 <p><b>Your goal:</b> Collect a suspicious message (str) and a risk score (int), then print a clean summary report.</p>
@@ -177,7 +177,7 @@ print(f"Risk    : {risk}/100")</code></pre>
     template: `# Lesson 2: Input & Output (Phishing Message Collector)
 msg = input("Paste a suspicious message: ")
 
-risk = __BLANK1__(input("Risk score 0-100: "))
+risk = __BLANK1__(input("Risk score 0 to 100: "))
 
 print("message:", msg)
 print("risk:", risk)
@@ -192,7 +192,7 @@ else:
   },
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 3 — Conditionals
+  // LESSON 3, Conditionals
   // ═══════════════════════════════════════════════════════
   {
     id: "l3",
@@ -200,7 +200,7 @@ else:
     objective: "Write if / elif / else chains to label a numeric risk score as LOW, MEDIUM, or HIGH.",
     concept: "Conditionals let your program make decisions. Python evaluates a condition (True or False) and runs different code depending on the result. You'll replicate the rule engine that real security tools use to label events.",
     steps: [
-      "Create a numeric risk variable (0–100).",
+      "Create a numeric risk variable (0 to 100).",
       "Write if risk >= 70 to catch HIGH risk events.",
       "Add elif risk >= 40 for MEDIUM, and else for LOW.",
       "Test with three different risk values to confirm all three branches work.",
@@ -219,7 +219,7 @@ else:
     # runs when none of the above are True</code></pre>
 <p><b>Important:</b> Python uses <b>indentation</b> (4 spaces or 1 tab) to define which code belongs inside each branch. Missing indentation = <b>IndentationError</b>.</p>
 
-<h3>2) Comparison operators — the building blocks of conditions</h3>
+<h3>2) Comparison operators, the building blocks of conditions</h3>
 <table style="width:100%;border-collapse:collapse;margin:8px 0 14px">
   <tr><th style="${TH}">Operator</th><th style="${TH}">Meaning</th><th style="${TH}">Example</th><th style="${TH}">Result</th></tr>
   <tr><td style="${TDc}">&gt;=</td><td style="${TD}">Greater than or equal</td><td style="${TDc}">risk &gt;= 70</td><td style="${TD}">True if risk is 70 or more</td></tr>
@@ -229,15 +229,15 @@ else:
   <tr><td style="${TDc}">&lt;=</td><td style="${TD}">Less than or equal</td><td style="${TDc}">fails &lt;= 3</td><td style="${TD}">True if fails is 3 or fewer</td></tr>
 </table>
 
-<h3>3) Risk labeler — the full pattern</h3>
+<h3>3) Risk labeler, the full pattern</h3>
 <pre><code>risk = 72
 
 if risk >= 70:
-    print("🚨 HIGH RISK — immediate alert")
+    print("🚨 HIGH RISK, immediate alert")
 elif risk >= 40:
-    print("⚠️  MEDIUM — monitoring required")
+    print("⚠️  MEDIUM, monitoring required")
 else:
-    print("✓  LOW — within normal range")</code></pre>
+    print("✓  LOW, within normal range")</code></pre>
 
 <h3>4) Combining conditions with <code>and</code> / <code>or</code></h3>
 <p>Real security rules often check multiple things at once:</p>
@@ -251,9 +251,9 @@ if risk >= 70 or malware_found == True:
 
 <h3>❌ Common mistakes</h3>
 <ul>
-  <li><b>Using = instead of ==:</b> <code>if risk = 70</code> → <b>SyntaxError</b>. Use <code>==</code> to compare, <code>=</code> to assign.</li>
-  <li><b>Wrong elif order:</b> If you put <code>elif risk &gt;= 10</code> before <code>elif risk &gt;= 40</code>, everything hits the first branch. Order matters — most specific first, or highest threshold first.</li>
-  <li><b>Missing colon:</b> <code>if risk &gt;= 70</code> without <code>:</code> → SyntaxError.</li>
+  <li><b>Using = instead of ==:</b> <code>if risk = 70</code>: <b>SyntaxError</b>. Use <code>==</code> to compare, <code>=</code> to assign.</li>
+  <li><b>Wrong elif order:</b> If you put <code>elif risk &gt;= 10</code> before <code>elif risk &gt;= 40</code>, everything hits the first branch. Order matters, most specific first, or highest threshold first.</li>
+  <li><b>Missing colon:</b> <code>if risk &gt;= 70</code> without <code>:</code>: SyntaxError.</li>
 </ul>
 
 <p><b>Your goal:</b> Write an if/elif/else chain that prints the correct label for any risk score from 0 to 100.</p>
@@ -285,23 +285,23 @@ else:
   },
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 4 — Loops
+  // LESSON 4, Loops
   // ═══════════════════════════════════════════════════════
   {
     id: "l4",
     title: "Lesson 4: Loops (Log Scanner: Count Alerts)",
     objective: "Use for loops with range() to iterate over events; accumulate a count; understand the modulo operator.",
-    concept: "Loops repeat a block of code automatically. A for loop with range() gives you a sequence of numbers to iterate through — perfect for scanning event logs. You'll simulate scanning 10 security events and counting suspicious ones.",
+    concept: "Loops repeat a block of code automatically. A for loop with range() gives you a sequence of numbers to iterate through, perfect for scanning event logs. You'll simulate scanning 10 security events and counting suspicious ones.",
     steps: [
       "Write a for loop with range(1, 11) to iterate event IDs 1 through 10.",
       "Inside the loop, use if event_id % 3 == 0 to flag 'suspicious' events.",
-      "Maintain a counter variable — increment it each time a suspicious event is found.",
+      "Maintain a counter variable, increment it each time a suspicious event is found.",
       "After the loop, print the total suspicious count.",
     ],
     checkpoint: "Output lists event IDs 3, 6, 9 as suspicious and prints 'Total suspicious: 3'. The count is correct.",
     materialHtml: `
 <h3>🛡️ Loops = automated log scanning</h3>
-<p>A security analyst can't manually read 10,000 log entries every morning. Automated tools loop through every event and apply rules — exactly what you'll build here. A loop in Python lets you repeat the same check on every item without rewriting the code.</p>
+<p>A security analyst can't manually read 10,000 log entries every morning. Automated tools loop through every event and apply rules, exactly what you'll build here. A loop in Python lets you repeat the same check on every item without rewriting the code.</p>
 
 <h3>1) The <code>for</code> loop with <code>range()</code></h3>
 <p><code>range(start, stop)</code> generates a sequence of numbers from <code>start</code> up to (but not including) <code>stop</code>:</p>
@@ -313,15 +313,15 @@ for event_id in range(1, 11):
 
 <h3>2) The modulo operator <code>%</code></h3>
 <p>Modulo gives you the <b>remainder</b> after division. If the remainder is 0, the number divides evenly:</p>
-<pre><code>print(10 % 3)   # 1  — 10 ÷ 3 = 3 remainder 1
-print(9  % 3)   # 0  — 9 ÷ 3 = 3 exactly
-print(6  % 2)   # 0  — even number
+<pre><code>print(10 % 3)   # 1 , 10 ÷ 3 = 3 remainder 1
+print(9  % 3)   # 0 , 9 ÷ 3 = 3 exactly
+print(6  % 2)   # 0 , even number
 
 # Rule: if x % n == 0, then x is divisible by n</code></pre>
 
 <h3>3) Counting inside a loop</h3>
 <p>Create a counter <b>before</b> the loop, increment it <b>inside</b>:</p>
-<pre><code>suspicious_count = 0   # ← start at 0, outside the loop
+<pre><code>suspicious_count = 0   # #  start at 0, outside the loop
 
 for event_id in range(1, 11):
     if event_id % 3 == 0:          # divisible by 3 = "suspicious"
@@ -330,17 +330,17 @@ for event_id in range(1, 11):
 
 print("Total suspicious:", suspicious_count)  # prints 3</code></pre>
 
-<h3>4) Loop anatomy — key terms</h3>
+<h3>4) Loop anatomy, key terms</h3>
 <table style="width:100%;border-collapse:collapse;margin:8px 0 14px">
   <tr><th style="${TH}">Part</th><th style="${TH}">Purpose</th><th style="${TH}">Example</th></tr>
   <tr><td style="${TD}">Loop variable</td><td style="${TD}">Holds the current value each iteration</td><td style="${TDc}">event_id</td></tr>
-  <tr><td style="${TD}"><code>range(a, b)</code></td><td style="${TD}">Generates integers from a to b−1</td><td style="${TDc}">range(1, 11) → 1..10</td></tr>
+  <tr><td style="${TD}"><code>range(a, b)</code></td><td style="${TD}">Generates integers from a to b−1</td><td style="${TDc}">range(1, 11): 1..10</td></tr>
   <tr><td style="${TD}">Loop body</td><td style="${TD}">Indented code that runs each iteration</td><td style="${TDc}">    if event_id % 3 == 0:</td></tr>
   <tr><td style="${TD}"><code>+=</code></td><td style="${TD}">Increment shorthand</td><td style="${TDc}">count += 1</td></tr>
 </table>
 
 <h3>5) Bonus: <code>while</code> loops</h3>
-<p>A <code>while</code> loop repeats as long as a condition is True — useful when you don't know how many times to loop:</p>
+<p>A <code>while</code> loop repeats as long as a condition is True, useful when you don't know how many times to loop:</p>
 <pre><code>attempts = 0
 while attempts < 3:
     print("Login attempt:", attempts + 1)
@@ -349,12 +349,12 @@ while attempts < 3:
 
 <h3>❌ Common mistakes</h3>
 <ul>
-  <li><b>Off-by-one in range:</b> <code>range(1, 10)</code> gives 1–9, not 1–10. Use <code>range(1, 11)</code> for 1–10.</li>
-  <li><b>Resetting counter inside the loop:</b> <code>count = 0</code> inside the loop resets it every iteration → count always stays 0 or 1.</li>
-  <li><b>Infinite while loop:</b> forgetting to increment your counter inside a <code>while</code> loop → program runs forever. Press Ctrl+C to stop.</li>
+  <li><b>Off-by-one in range:</b> <code>range(1, 10)</code> gives 1 to 9, not 1 to 10. Use <code>range(1, 11)</code> for 1 to 10.</li>
+  <li><b>Resetting counter inside the loop:</b> <code>count = 0</code> inside the loop resets it every iteration: count always stays 0 or 1.</li>
+  <li><b>Infinite while loop:</b> forgetting to increment your counter inside a <code>while</code> loop: program runs forever. Press Ctrl+C to stop.</li>
 </ul>
 
-<p><b>Your goal:</b> Scan events 1–10, flag those divisible by 3, count them, and print the total.</p>
+<p><b>Your goal:</b> Scan events 1 to 10, flag those divisible by 3, count them, and print the total.</p>
 `,
     minReadSeconds: 65,
     videoUrl: v("l4_loops"),
@@ -377,19 +377,19 @@ print("Total suspicious:", suspicious_count)
 `,
     blanks: [
       { key: "__BLANK1__", placeholder: "Start value (1)", expectedHint: "1" },
-      { key: "__BLANK2__", placeholder: "Stop value — use 11 to include 10", expectedHint: "11" },
+      { key: "__BLANK2__", placeholder: "Stop value, use 11 to include 10", expectedHint: "11" },
       { key: "__BLANK3__", placeholder: "Divisor for the rule (3)", expectedHint: "3" },
     ],
   },
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 5 — Functions
+  // LESSON 5, Functions
   // ═══════════════════════════════════════════════════════
   {
     id: "l5",
     title: "Lesson 5: Functions (Risk Scoring Functions)",
     objective: "Define functions with parameters and return values; call functions with different arguments; compose two functions.",
-    concept: "Functions wrap reusable logic under a name. You define once, call many times — with different data. Real security systems have hundreds of functions like score_login(), detect_anomaly(), label_risk(). You'll build two of them.",
+    concept: "Functions wrap reusable logic under a name. You define once, call many times, with different data. Real security systems have hundreds of functions like score_login(), detect_anomaly(), label_risk(). You'll build two of them.",
     steps: [
       "Define score_login_attempt(fails, new_device) that calculates and returns a risk number.",
       "Define label_risk(risk) that returns 'LOW', 'MEDIUM', or 'HIGH' based on thresholds.",
@@ -399,7 +399,7 @@ print("Total suspicious:", suspicious_count)
     checkpoint: "score_login_attempt(2, True) returns 70. label_risk(70) returns 'HIGH'. Both functions use return (not just print). Results are correct for multiple test cases.",
     materialHtml: `
 <h3>🛡️ Functions = reusable security logic</h3>
-<p>A real security system doesn't copy-paste its risk-scoring code in 50 places. It defines a <code>score_login()</code> function once, then calls it wherever needed. Functions make code reusable, testable, and easy to update — change the function once, everything using it automatically improves.</p>
+<p>A real security system doesn't copy and paste its risk-scoring code in 50 places. It defines a <code>score_login()</code> function once, then calls it wherever needed. Functions make code reusable, testable, and easy to update, change the function once, everything using it automatically improves.</p>
 
 <h3>1) Defining a function</h3>
 <pre><code>def function_name(parameter1, parameter2):
@@ -417,7 +417,7 @@ print("Total suspicious:", suspicious_count)
 
 <h3>3) Building a risk scoring function</h3>
 <pre><code>def score_login_attempt(fails, new_device):
-    """Returns a risk score (0-100) based on login behavior."""
+    """Returns a risk score (0 to 100) based on login behavior."""
     risk = fails * 20        # each failed attempt adds 20 points
 
     if new_device:           # unknown device adds another 30
@@ -426,12 +426,12 @@ print("Total suspicious:", suspicious_count)
     if risk > 100:           # cap at 100
         risk = 100
 
-    return risk              # ← always return, don't just print
+    return risk              # #  always return, don't just print
 
 # Test calls
-print(score_login_attempt(1, False))   # 20  — low risk
-print(score_login_attempt(2, True))    # 70  — high risk
-print(score_login_attempt(4, True))    # 100 — maxed out</code></pre>
+print(score_login_attempt(1, False))   # 20 , low risk
+print(score_login_attempt(2, True))    # 70 , high risk
+print(score_login_attempt(4, True))    # 100, maxed out</code></pre>
 
 <h3>4) Composing functions (calling one inside another)</h3>
 <pre><code>def label_risk(risk):
@@ -446,20 +446,20 @@ print(score_login_attempt(4, True))    # 100 — maxed out</code></pre>
 # Compose: use one function's output as another's input
 risk = score_login_attempt(2, True)   # returns 70
 label = label_risk(risk)              # returns "HIGH"
-print(f"Risk: {risk} — Label: {label}")</code></pre>
+print(f"Risk: {risk}, Label: {label}")</code></pre>
 
-<h3>5) <code>return</code> vs <code>print</code> — crucial difference</h3>
+<h3>5) <code>return</code> vs <code>print</code>, crucial difference</h3>
 <table style="width:100%;border-collapse:collapse;margin:8px 0 14px">
   <tr><th style="${TH}"></th><th style="${TH}"><code>return</code></th><th style="${TH}"><code>print</code></th></tr>
   <tr><td style="${TD}">What it does</td><td style="${TD}">Sends a value back to the caller</td><td style="${TD}">Displays a value in the console</td></tr>
-  <tr><td style="${TD}">Reusable?</td><td style="${TD}">Yes — you can store it: <code>x = f()</code></td><td style="${TD}">No — it's display only</td></tr>
+  <tr><td style="${TD}">Reusable?</td><td style="${TD}">Yes, you can store it: <code>x = f()</code></td><td style="${TD}">No, it's display only</td></tr>
   <tr><td style="${TD}">Use in functions</td><td style="${TD}">Almost always prefer this</td><td style="${TD}">Only for user-facing output</td></tr>
 </table>
 
 <h3>❌ Common mistakes</h3>
 <ul>
-  <li><b>Forgetting return:</b> A function without <code>return</code> returns <code>None</code>. <code>label_risk(50) + " alert"</code> → TypeError if return is missing.</li>
-  <li><b>Returning a print:</b> <code>return print("HIGH")</code> — <code>print()</code> returns <code>None</code>, so you get None back.</li>
+  <li><b>Forgetting return:</b> A function without <code>return</code> returns <code>None</code>. <code>label_risk(50) + " alert"</code>: TypeError if return is missing.</li>
+  <li><b>Returning a print:</b> <code>return print("HIGH")</code>, <code>print()</code> returns <code>None</code>, so you get None back.</li>
   <li><b>Wrong indentation:</b> <code>return</code> must be inside the function (indented). If it's at the wrong level, it returns early or causes a SyntaxError.</li>
 </ul>
 
@@ -501,15 +501,15 @@ print("label:", label_risk(test_risk))
   },
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 6 — Lists
+  // LESSON 6, Lists
   // ═══════════════════════════════════════════════════════
   {
     id: "l6",
     title: "Lesson 6: Lists (Threat Feed + Basic Analytics)",
     objective: "Create and iterate over lists; use sum(), len(), and min()/max(); count items matching a condition.",
-    concept: "Lists store multiple values in order under one variable name. You'll analyze a threat feed of risk scores — computing totals, averages, and high-alert counts exactly like a dashboard analytics module would.",
+    concept: "Lists store multiple values in order under one variable name. You'll analyze a threat feed of risk scores, computing totals, averages, and high-alert counts exactly like a dashboard analytics module would.",
     steps: [
-      "Create a list of 5–6 risk scores representing recent alerts.",
+      "Create a list of 5 to 6 risk scores representing recent alerts.",
       "Use sum() and len() to compute the total and average.",
       "Loop through the list and count how many scores are high risk (>= 70).",
       "Print a clean analytics summary with all three stats.",
@@ -517,16 +517,16 @@ print("label:", label_risk(test_risk))
     checkpoint: "Output shows total, average (correct decimal), and high-risk count. The count matches the number of scores >= 70 in your list.",
     materialHtml: `
 <h3>🛡️ Lists = collections of security events</h3>
-<p>A threat intelligence feed might deliver 200 risk scores per hour. You need one variable to hold all of them, then compute stats across the whole collection. That's exactly what Python lists do — store many values in one container and let you process them together.</p>
+<p>A threat intelligence feed might deliver 200 risk scores per hour. You need one variable to hold all of them, then compute stats across the whole collection. That's exactly what Python lists do, store many values in one container and let you process them together.</p>
 
 <h3>1) Creating a list</h3>
 <pre><code># A list holds multiple values, separated by commas, inside []
 risk_scores = [15, 42, 88, 73, 60, 95]
 
 # Access by index (starts at 0)
-print(risk_scores[0])    # 15 — first item
-print(risk_scores[-1])   # 95 — last item
-print(len(risk_scores))  # 6  — number of items</code></pre>
+print(risk_scores[0])    # 15, first item
+print(risk_scores[-1])   # 95, last item
+print(len(risk_scores))  # 6 , number of items</code></pre>
 
 <h3>2) Built-in list analytics</h3>
 <pre><code>scores = [15, 42, 88, 73, 60, 95]
@@ -557,7 +557,7 @@ print("Total high-risk events:", high_count)   # 3</code></pre>
   <tr><td style="${TDc}">.remove(x)</td><td style="${TD}">Removes the first occurrence of x</td><td style="${TDc}">scores.remove(15)</td></tr>
   <tr><td style="${TDc}">.sort()</td><td style="${TD}">Sorts the list in place</td><td style="${TDc}">scores.sort()</td></tr>
   <tr><td style="${TDc}">.reverse()</td><td style="${TD}">Reverses the list in place</td><td style="${TDc}">scores.reverse()</td></tr>
-  <tr><td style="${TDc}">x in list</td><td style="${TD}">True if x is in the list</td><td style="${TDc}">95 in scores → True</td></tr>
+  <tr><td style="${TDc}">x in list</td><td style="${TD}">True if x is in the list</td><td style="${TDc}">95 in scores: True</td></tr>
 </table>
 
 <h3>5) Building an analytics function</h3>
@@ -572,8 +572,8 @@ print(f"Events: {len(risk_scores)} | Avg: {avg:.1f} | HIGH: {highs}")</code></pr
 
 <h3>❌ Common mistakes</h3>
 <ul>
-  <li><b>Dividing by zero:</b> if your list is empty, <code>total / len(scores)</code> → <b>ZeroDivisionError</b>. Check <code>if len(scores) &gt; 0</code> first.</li>
-  <li><b>Index out of range:</b> <code>scores[10]</code> on a 6-item list → <b>IndexError</b>. Last valid index is <code>len(scores) - 1</code>.</li>
+  <li><b>Dividing by zero:</b> if your list is empty, <code>total / len(scores)</code>: <b>ZeroDivisionError</b>. Check <code>if len(scores) &gt; 0</code> first.</li>
+  <li><b>Index out of range:</b> <code>scores[10]</code> on a 6-item list: <b>IndexError</b>. Last valid index is <code>len(scores) - 1</code>.</li>
   <li><b>Modifying a list while looping through it:</b> can cause skipped items. Loop a copy: <code>for s in scores[:]</code>.</li>
 </ul>
 
@@ -611,13 +611,13 @@ print("High risk count:", high_count)
   },
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 7 — Dictionaries
+  // LESSON 7, Dictionaries
   // ═══════════════════════════════════════════════════════
   {
     id: "l7",
     title: "Lesson 7: Dictionaries (Device Inventory Records)",
     objective: "Create dictionaries with key-value pairs; access and update fields; loop through .items().",
-    concept: "A dictionary stores labeled fields — like a database row or a JSON record. Each key maps to a value. You'll model a device record: owner, OS, risk score, patched status — exactly the data a network inventory system would track.",
+    concept: "A dictionary stores labeled fields, like a database row or a JSON record. Each key maps to a value. You'll model a device record: owner, OS, risk score, patched status, exactly the data a network inventory system would track.",
     steps: [
       "Create a device dictionary with keys: owner, os, risk, patched.",
       "Access and print specific fields using device['key'] notation.",
@@ -627,7 +627,7 @@ print("High risk count:", high_count)
     checkpoint: "Original values print correctly. After update, risk shows the new value and patched shows True. The .items() loop prints every key-value pair.",
     materialHtml: `
 <h3>🛡️ Dictionaries = structured records</h3>
-<p>A security dashboard tracks thousands of devices. Each device has a profile: who owns it, what OS it runs, its current risk score, whether it's been patched. This is a dictionary — a structured collection of labeled fields. It's the Python equivalent of a database row or a JSON object from an API.</p>
+<p>A security dashboard tracks thousands of devices. Each device has a profile: who owns it, what OS it runs, its current risk score, whether it's been patched. This is a dictionary, a structured collection of labeled fields. It's the Python equivalent of a database row or a JSON object from an API.</p>
 
 <h3>1) Creating a dictionary</h3>
 <pre><code># Keys are strings. Values can be any type.
@@ -644,12 +644,12 @@ device = {
 print(device["risk"])     # 42
 print(device["patched"])  # False
 
-# Safe access — returns None if key doesn't exist (no crash)
+# Safe access, returns None if key doesn't exist (no crash)
 print(device.get("ip_address"))   # None
 print(device.get("ip_address", "unknown"))  # "unknown"</code></pre>
 
 <h3>3) Updating fields</h3>
-<pre><code># Patch the device — update risk and patched status
+<pre><code># Patch the device, update risk and patched status
 device["risk"]    = 5      # new risk score after patch
 device["patched"] = True   # mark as patched
 
@@ -681,9 +681,9 @@ for key, value in device.items():
 
 <h3>❌ Common mistakes</h3>
 <ul>
-  <li><b>KeyError:</b> <code>device["ip"]</code> when "ip" doesn't exist → crash. Use <code>.get()</code> for uncertain keys.</li>
-  <li><b>Using = instead of ==:</b> <code>if device["patched"] = True</code> → SyntaxError. Use <code>==</code> to compare.</li>
-  <li><b>Forgetting quotes around keys:</b> <code>device[owner]</code> → Python looks for a variable named <code>owner</code>. Keys need quotes: <code>device["owner"]</code>.</li>
+  <li><b>KeyError:</b> <code>device["ip"]</code> when "ip" doesn't exist: crash. Use <code>.get()</code> for uncertain keys.</li>
+  <li><b>Using = instead of ==:</b> <code>if device["patched"] = True</code>: SyntaxError. Use <code>==</code> to compare.</li>
+  <li><b>Forgetting quotes around keys:</b> <code>device[owner]</code>: Python looks for a variable named <code>owner</code>. Keys need quotes: <code>device["owner"]</code>.</li>
 </ul>
 
 <p><b>Your goal:</b> Create a device record, access its fields, simulate a patch update, and print the full updated record.</p>
@@ -719,7 +719,7 @@ print("Updated:", device)
       { key: "__BLANK1__",  placeholder: 'Owner name string', expectedHint: '"Ava"' },
       { key: "__BLANK2__",  placeholder: 'OS string',         expectedHint: '"Windows"' },
       { key: "__BLANK3__",  placeholder: "Risk number",       expectedHint: "42" },
-      { key: "__BLANK4__",  placeholder: "Bool — not yet patched", expectedHint: "False" },
+      { key: "__BLANK4__",  placeholder: "Bool, not yet patched", expectedHint: "False" },
       { key: "__BLANK5__",  placeholder: 'Key: "owner"',      expectedHint: '"owner"' },
       { key: "__BLANK6__",  placeholder: 'Key: "os"',         expectedHint: '"os"' },
       { key: "__BLANK7__",  placeholder: 'Key: "risk"',       expectedHint: '"risk"' },
@@ -730,13 +730,13 @@ print("Updated:", device)
   },
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 8 — Strings
+  // LESSON 8, Strings
   // ═══════════════════════════════════════════════════════
   {
     id: "l8",
     title: "Lesson 8: Strings (Log Parsing + Keyword Detection)",
     objective: "Use lower(), split(), and the 'in' operator to normalize log lines and detect threat keywords.",
-    concept: "Security log analysis starts with text processing. Log lines arrive in inconsistent formats — mixed case, varying spacing. You'll normalize with lower(), tokenize with split(), then detect keywords with 'in'. This is how real IDS tools work.",
+    concept: "Security log analysis starts with text processing. Log lines arrive in inconsistent formats, mixed case, varying spacing. You'll normalize with lower(), tokenize with split(), then detect keywords with 'in'. This is how real IDS tools work.",
     steps: [
       "Convert a log line to lowercase using .lower().",
       "Split it into a list of words using .split().",
@@ -746,35 +746,35 @@ print("Updated:", device)
     checkpoint: 'For "FAILED Login From IP 10.0.0.5": clean prints all lowercase, words is a 5-item list, and "ALERT: failed login detected" prints. No crashes.',
     materialHtml: `
 <h3>🛡️ Why strings power threat detection</h3>
-<p>Every login attempt, network packet, and file access leaves a text record — a log line. Security tools parse thousands of these every second. Before you can detect anything, you need to <b>normalize</b> the text (same case, same format) and <b>tokenize</b> it (split into searchable parts). That's what this lesson covers.</p>
+<p>Every login attempt, network packet, and file access leaves a text record, a log line. Security tools parse thousands of these every second. Before you can detect anything, you need to <b>normalize</b> the text (same case, same format) and <b>tokenize</b> it (split into searchable parts). That's what this lesson covers.</p>
 
 <h3>1) Strings are sequences of characters</h3>
 <pre><code>log = "FAILED Login From IP 10.0.0.5"
 
-print(log[0])       # 'F'  — first character
-print(log[-1])      # '5'  — last character
-print(log[0:6])     # 'FAILED'  — slice characters 0 through 5
-print(len(log))     # 31 — total characters</code></pre>
+print(log[0])       # 'F' , first character
+print(log[-1])      # '5' , last character
+print(log[0:6])     # 'FAILED' , slice characters 0 through 5
+print(len(log))     # 31, total characters</code></pre>
 
 <h3>2) Normalize with <code>.lower()</code></h3>
-<p>Log lines arrive inconsistently. <code>"FAILED"</code>, <code>"Failed"</code>, and <code>"failed"</code> all mean the same threat — but Python sees three different strings. <code>lower()</code> standardizes everything.</p>
+<p>Log lines arrive inconsistently. <code>"FAILED"</code>, <code>"Failed"</code>, and <code>"failed"</code> all mean the same threat, but Python sees three different strings. <code>lower()</code> standardizes everything.</p>
 <pre><code>log   = "FAILED Login From IP 10.0.0.5"
 clean = log.lower()
 print(clean)
-# → "failed login from ip 10.0.0.5"
+# output: "failed login from ip 10.0.0.5"
 
-# The original log is unchanged — strings are immutable
+# The original log is unchanged, strings are immutable
 print(log)   # still "FAILED Login From IP 10.0.0.5"</code></pre>
 
 <h3>3) Tokenize with <code>.split()</code></h3>
-<p><code>split()</code> breaks a string at whitespace and returns a list of tokens — individual words you can inspect one by one.</p>
+<p><code>split()</code> breaks a string at whitespace and returns a list of tokens, individual words you can inspect one by one.</p>
 <pre><code>clean = "failed login from ip 10.0.0.5"
 words = clean.split()
 print(words)
-# → ['failed', 'login', 'from', 'ip', '10.0.0.5']
+# output: ['failed', 'login', 'from', 'ip', '10.0.0.5']
 
 print(words[0])   # 'failed'
-print(words[-1])  # '10.0.0.5' — the IP address</code></pre>
+print(words[-1])  # '10.0.0.5', the IP address</code></pre>
 
 <h3>4) Detect keywords with <code>in</code></h3>
 <p>The <code>in</code> operator checks membership in a sequence. Returns <code>True</code> or <code>False</code>.</p>
@@ -786,7 +786,7 @@ if "malware" in words:
 else:
     print("✓ No malware keyword found")</code></pre>
 
-<h3>5) String methods — full reference</h3>
+<h3>5) String methods, full reference</h3>
 <table style="width:100%;border-collapse:collapse;margin:8px 0 14px">
   <tr><th style="${TH}">Method</th><th style="${TH}">What it returns</th><th style="${TH}">Cyber use</th></tr>
   <tr><td style="${TDc}">.lower()</td><td style="${TD}">New string, all lowercase</td><td style="${TD}">Normalize before keyword matching</td></tr>
@@ -798,22 +798,22 @@ else:
   <tr><td style="${TDc}">len(s)</td><td style="${TD}">Number of characters</td><td style="${TD}">Validate input length, detect padding</td></tr>
 </table>
 
-<h3>6) Immutability — strings never change in place</h3>
-<p>Every string method returns a <b>new string</b>. The original is never modified — naturally tamper-resistant, like an audit log.</p>
+<h3>6) Immutability, strings never change in place</h3>
+<p>Every string method returns a <b>new string</b>. The original is never modified, naturally tamper-resistant, like an audit log.</p>
 <pre><code>log   = "FAILED Login"
 clean = log.lower()   # creates a NEW string
 
-print(log)    # "FAILED Login" — unchanged
-print(clean)  # "failed login" — new variable</code></pre>
+print(log)    # "FAILED Login", unchanged
+print(clean)  # "failed login", new variable</code></pre>
 
 <h3>❌ Common mistakes</h3>
 <ul>
-  <li><b>Not saving the result:</b> <code>log.lower()</code> without assigning → the normalized version is lost. Always: <code>clean = log.lower()</code>.</li>
-  <li><b>Checking before normalizing:</b> <code>"failed" in log</code> on the original (uppercase) string → False. Always <code>lower()</code> first.</li>
+  <li><b>Not saving the result:</b> <code>log.lower()</code> without assigning: the normalized version is lost. Always: <code>clean = log.lower()</code>.</li>
+  <li><b>Checking before normalizing:</b> <code>"failed" in log</code> on the original (uppercase) string: False. Always <code>lower()</code> first.</li>
   <li><b>Checking a string instead of a list:</b> <code>"failed" in clean</code> also works but checks for the substring anywhere. <code>"failed" in words</code> checks for an exact token. Both are useful but different.</li>
 </ul>
 
-<p><b>Your goal:</b> Normalize a log line → tokenize it → detect a keyword → print the results.</p>
+<p><b>Your goal:</b> Normalize a log line: tokenize it: detect a keyword: print the results.</p>
 `,
     minReadSeconds: 70,
     videoUrl: v("l8_strings_parsing"),
@@ -841,43 +841,43 @@ else:
     blanks: [
       { key: "__BLANK1__", placeholder: "Lowercase method", expectedHint: "lower" },
       { key: "__BLANK2__", placeholder: "Split into list",  expectedHint: "split" },
-      { key: "__BLANK3__", placeholder: 'Keyword check — "failed" in words', expectedHint: '"failed" in words' },
+      { key: "__BLANK3__", placeholder: 'Keyword check, "failed" in words', expectedHint: '"failed" in words' },
     ],
   },
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 9 — Exceptions
+  // LESSON 9, Exceptions
   // ═══════════════════════════════════════════════════════
   {
     id: "l9",
     title: "Lesson 9: Debugging & Exceptions (Safe Data Cleaning)",
     objective: "Use try/except to catch errors; handle specific exception types; keep programs running on bad input.",
-    concept: "Real data is messy — user input can be empty, CSV fields can say 'N/A', sensors can return null. A production tool must handle these without crashing. try/except is how Python catches errors and responds gracefully.",
+    concept: "Real data is messy, user input can be empty, CSV fields can say 'N/A', sensors can return null. A production tool must handle these without crashing. try/except is how Python catches errors and responds gracefully.",
     steps: [
       "Write a try block that converts a text value to int.",
       "Write an except block that catches the ValueError and prints a friendly message.",
-      "Test with a valid number ('10') — program should compute x * 5.",
-      "Test with an invalid value ('N/A') — program should print the error message, not crash.",
+      "Test with a valid number ('10'), program should compute x * 5.",
+      "Test with an invalid value ('N/A'), program should print the error message, not crash.",
     ],
-    checkpoint: 'value = "10" → prints "x*5 = 50". value = "N/A" → prints a friendly error message (not a stack trace). Program does not crash on either input.',
+    checkpoint: 'value = "10": prints "x*5 = 50". value = "N/A": prints a friendly error message (not a stack trace). Program does not crash on either input.',
     materialHtml: `
-<h3>🛡️ Real data is messy — your code needs armor</h3>
+<h3>🛡️ Real data is messy, your code needs armor</h3>
 <p>Security dashboards ingest data from dozens of sources: network scanners, user forms, CSV exports, third-party APIs. That data is often incomplete, misformatted, or missing entirely. A tool that crashes on bad input is a tool that stops protecting. <code>try/except</code> keeps your program running no matter what arrives.</p>
 
 <h3>1) What happens without exception handling</h3>
 <pre><code># This crashes if value is not a number
 value = "N/A"
-x = int(value)         # ← ValueError here
+x = int(value)         # #  ValueError here
 print("x * 5 =", x * 5)
 # Output: ValueError: invalid literal for int() with base 10: 'N/A'
-# Program stops immediately — nothing after this runs</code></pre>
+# Program stops immediately, nothing after this runs</code></pre>
 
 <h3>2) The <code>try / except</code> pattern</h3>
 <pre><code>try:
-    x = int(value)         # try this — may fail
+    x = int(value)         # try this, may fail
     print("x * 5 =", x * 5)
 except ValueError:
-    print("Invalid number — expected digits, got:", value)
+    print("Invalid number, expected digits, got:", value)
 # Program continues here regardless</code></pre>
 <p>Python tries the <code>try</code> block. If an error occurs, it jumps to the matching <code>except</code> block instead of crashing.</p>
 
@@ -904,7 +904,7 @@ except ZeroDivisionError:
 except Exception as e:
     print("Unexpected error:", e)   # catch-all safety net</code></pre>
 
-<h3>5) <code>finally</code> — code that always runs</h3>
+<h3>5) <code>finally</code>, code that always runs</h3>
 <pre><code>try:
     x = int(value)
     print("Converted:", x)
@@ -913,11 +913,11 @@ except ValueError:
     x = 0
 finally:
     print("Processing complete")   # runs whether error or not</code></pre>
-<p><code>finally</code> is useful for cleanup — closing files, logging, resetting state — regardless of success or failure.</p>
+<p><code>finally</code> is useful for cleanup, closing files, logging, resetting state, regardless of success or failure.</p>
 
 <h3>❌ Common mistakes</h3>
 <ul>
-  <li><b>Bare except:</b> <code>except:</code> with no type catches everything silently — including bugs you should see. Be specific: <code>except ValueError</code>.</li>
+  <li><b>Bare except:</b> <code>except:</code> with no type catches everything silently, including bugs you should see. Be specific: <code>except ValueError</code>.</li>
   <li><b>Catching too broadly:</b> putting 20 lines in one <code>try</code> block makes it hard to know which line failed. Keep try blocks small and targeted.</li>
   <li><b>Swallowing errors:</b> <code>except: pass</code> makes errors completely invisible. At minimum, print a message so you know something went wrong.</li>
 </ul>
@@ -945,30 +945,30 @@ except ValueError:
     blanks: [
       { key: "__BLANK1__", placeholder: "Convert value to int", expectedHint: "int(value)" },
       { key: "__BLANK2__", placeholder: "Multiply x by 5",      expectedHint: "x * 5" },
-      { key: "__BLANK3__", placeholder: "Friendly error message string", expectedHint: '"Invalid number — expected digits"' },
+      { key: "__BLANK3__", placeholder: "Friendly error message string", expectedHint: '"Invalid number, expected digits"' },
     ],
   },
 
   // ═══════════════════════════════════════════════════════
-  // LESSON 10 — Capstone
+  // LESSON 10, Capstone
   // ═══════════════════════════════════════════════════════
   {
     id: "l10",
     title: "Lesson 10: Capstone (Portfolio Mini SOC Dashboard)",
     objective: "Combine all prior concepts into a working SOC tool: input collection, parsing, scoring, storage, and analytics.",
-    concept: "This capstone integrates everything from Lessons 1–9: variables, input, conditionals, loops, functions, lists, dicts, strings, and exceptions. You'll build a mini Security Operations Center dashboard — real enough to put in your portfolio.",
+    concept: "This capstone integrates everything from Lessons 1 to 9: variables, input, conditionals, loops, functions, lists, dicts, strings, and exceptions. You'll build a mini Security Operations Center dashboard, real enough to put in your portfolio.",
     steps: [
       "Use a while loop to collect log lines from the user until they type 'done'.",
-      "Call score_event() and label_risk() on each line — the functions you learned in L5.",
-      "Store each event as a dictionary in a list — combining L6 and L7 skills.",
+      "Call score_event() and label_risk() on each line, the functions you learned in L5.",
+      "Store each event as a dictionary in a list, combining L6 and L7 skills.",
       "After input ends, print a report: total events, high alert count, average risk.",
     ],
     checkpoint: "Enter 3+ log lines including one with 'failed' or 'malware'. Type 'done'. Report shows correct total, high-risk count, and average. Each event prints with number, label, risk, and raw text.",
     materialHtml: `
-<h3>🛡️ You've built every piece — now connect them</h3>
+<h3>🛡️ You've built every piece, now connect them</h3>
 <p>A real Security Operations Center tool does exactly what you're about to build: it ingests log events, scores each one, stores them, then generates a summary report for the analyst. You already know every technique this requires. This lesson is about combining them intentionally.</p>
 
-<h3>Concept map — what each lesson contributes</h3>
+<h3>Concept map, what each lesson contributes</h3>
 <table style="width:100%;border-collapse:collapse;margin:8px 0 14px">
   <tr><th style="${TH}">Skill</th><th style="${TH}">From lesson</th><th style="${TH}">Role in the capstone</th></tr>
   <tr><td style="${TD}">Variables & types</td><td style="${TD}">L1</td><td style="${TD}">Store counts, totals, labels</td></tr>
