@@ -1,16 +1,14 @@
 // src/components/RolePicker.jsx
 // Students enter their name; teachers enter with passcode (VITE_TEACHER_PASSCODE).
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { setStudentName, getStudentName } from "../utils/studentActivityStore.js";
+import { resolveTeacherPasscode } from "../utils/teacherPasscode.js";
 
 export const ROLE_STORAGE_KEY = "py_learn_role";
 export const STUDENT_NAME_KEY = "py_learn_student_name";
 /** Set only after a successful passcode this browser session (prevents stale teacher role). */
 export const TEACHER_SESSION_KEY = "py_learn_teacher_session";
-
-/** From `.env.local` / Netlify env at build time (never show on screen). */
-const TEACHER_PASSCODE = String(import.meta.env.VITE_TEACHER_PASSCODE ?? "").trim();
 
 export function markTeacherSession() {
   try {
@@ -125,6 +123,21 @@ export default function RolePicker({ onSelect }) {
   const [passcode, setPasscode] = useState("");
   const [nameError, setNameError] = useState("");
   const [passcodeError, setPasscodeError] = useState("");
+  const [teacherPasscode, setTeacherPasscode] = useState("");
+  const [passcodeReady, setPasscodeReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    resolveTeacherPasscode().then(({ passcode: resolved }) => {
+      if (!cancelled) {
+        setTeacherPasscode(resolved);
+        setPasscodeReady(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleStudentSubmit = () => {
     const trimmed = name.trim();
@@ -142,13 +155,11 @@ export default function RolePicker({ onSelect }) {
   };
 
   const handleTeacherSubmit = () => {
-    if (!TEACHER_PASSCODE) {
-      setPasscodeError(
-        "Teacher passcode is not configured. Set VITE_TEACHER_PASSCODE in .env.local and rebuild (see .env.example).",
-      );
+    if (!passcodeReady || !teacherPasscode) {
+      setPasscodeError("Loading teacher sign-in, please wait a moment and try again.");
       return;
     }
-    if (passcode !== TEACHER_PASSCODE) {
+    if (passcode !== teacherPasscode) {
       setPasscodeError("Incorrect passcode.");
       return;
     }
@@ -164,9 +175,9 @@ export default function RolePicker({ onSelect }) {
             <div style={{ fontSize: 32, marginBottom: 10 }}>👩‍🏫</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: C.t1 }}>Teacher access</div>
             <div style={{ fontSize: 13, color: C.t2, marginTop: 6, lineHeight: 1.6 }}>
-              {TEACHER_PASSCODE
+              {passcodeReady
                 ? "Enter the teacher passcode you were given."
-                : "This copy of the lab does not have a passcode configured yet."}
+                : "Loading sign-in settings…"}
             </div>
           </div>
 
@@ -175,7 +186,7 @@ export default function RolePicker({ onSelect }) {
             autoFocus
             autoComplete="off"
             value={passcode}
-            disabled={!TEACHER_PASSCODE}
+            disabled={!passcodeReady}
             onChange={(e) => {
               setPasscode(e.target.value);
               setPasscodeError("");
@@ -206,7 +217,7 @@ export default function RolePicker({ onSelect }) {
           <button
             type="button"
             onClick={handleTeacherSubmit}
-            disabled={!TEACHER_PASSCODE}
+            disabled={!passcodeReady}
             style={{
               ...btn(),
               width: "100%",
@@ -218,7 +229,7 @@ export default function RolePicker({ onSelect }) {
               color: C.purple,
               fontSize: 15,
               fontWeight: 700,
-              opacity: TEACHER_PASSCODE ? 1 : 0.5,
+              opacity: passcodeReady ? 1 : 0.5,
             }}
           >
             Enter as Teacher →
