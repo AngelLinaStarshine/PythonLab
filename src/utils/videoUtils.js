@@ -1,23 +1,26 @@
 // src/utils/videoUtils.js
-// Helpers for multiple video sources: MP4, YouTube, NotebookLM
+// Bridges lesson video UI to videoStore.js (canonical storage).
+
+import {
+  getVideosForLesson,
+  addVideoToLesson,
+  clearVideosForLesson,
+  detectUrlType,
+  toEmbedUrl,
+  LESSON_VIDEOS_KEY,
+} from "./videoStore.js";
 
 export const VIDEO_SOURCE_TYPES = ["mp4", "youtube", "notebooklm"];
+export const TEACHER_VIDEOS_KEY = LESSON_VIDEOS_KEY;
+export const MIN_VIDEOS_PER_LESSON = 5;
 
-export const TEACHER_VIDEOS_KEY = "py_learn_teacher_videos";
-const MIN_VIDEOS_PER_LESSON = 5;
+const LEGACY_TEACHER_KEY = "py_learn_teacher_videos";
+const MIGRATE_FLAG = "py_learn_videos_migrated_v1";
 
-/** Get YouTube embed URL from watch or share URL */
 export function getYouTubeEmbedUrl(url) {
-  if (!url || typeof url !== "string") return "";
-  const u = url.trim();
-  const m = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
-  return m ? `https://www.youtube.com/embed/${m[1]}` : u;
+  return toEmbedUrl(url) || "";
 }
 
-/**
- * Student-facing YouTube embed: keep playback in-page where the player supports it
- * (fs=0 turns off the full-screen control on many embeds).
- */
 export function getYouTubeStudentEmbedUrl(url) {
   const embed = getYouTubeEmbedUrl(url);
   if (!embed || !embed.includes("youtube.com/embed")) return embed || "";
@@ -33,7 +36,6 @@ export function getYouTubeStudentEmbedUrl(url) {
   }
 }
 
-/** Drop slots with missing/invalid URLs (prevents empty rows in student & teacher pickers). */
 export function filterVideosWithUrls(list) {
   if (!Array.isArray(list)) return [];
   return list.filter((s) => {
@@ -44,7 +46,6 @@ export function filterVideosWithUrls(list) {
   });
 }
 
-/** Normalize lesson videoOptions to source shape { id, type, url, label } */
 export function lessonOptionsToSources(lesson, lessonId) {
   const opts = lesson?.videoOptions ?? (lesson?.videoUrl ? [{ label: "Video", url: lesson.videoUrl }] : []);
   return opts.map((o, i) => ({
@@ -55,23 +56,53 @@ export function lessonOptionsToSources(lesson, lessonId) {
   }));
 }
 
-/** Load teacher-saved videos for a lesson */
-export function loadTeacherVideos(lessonId) {
+function migrateLegacyVideos() {
   try {
-    const raw = localStorage.getItem(TEACHER_VIDEOS_KEY);
-    const all = raw ? JSON.parse(raw) : {};
-    return Array.isArray(all[lessonId]) ? all[lessonId] : [];
-  } catch {
-    return [];
+    if (localStorage.getItem(MIGRATE_FLAG)) return;
+    const raw = localStorage.getItem(LEGACY_TEACHER_KEY);
+    if (!raw) {
+      localStorage.setItem(MIGRATE_FLAG, "1");
+      return;
+    }
+    const legacy = JSON.parse(raw);
+    if (legacy && typeof legacy === "object") {
+      for (const [lessonId, arr] of Object.entries(legacy)) {
+        if (!Array.isArray(arr)) continue;
+        for (const s of arr) {
+          const url = String(s?.url ?? "").trim();
+          const label = String(s?.label ?? "Video").trim();
+          if (url && label && isPersistableVideoUrl(url)) {
+            addVideoToLesson(lessonId, label, url);
+          }
+        }
+      }
+    }
+    localStorage.setItem(MIGRATE_FLAG, "1");
+  } catch (e) {
+    console.warn("migrateLegacyVideos", e);
   }
 }
 
-/** True when the teacher explicitly added this slot (not a lesson default or UI pad row). */
+function sourceTypeFromUrl(url) {
+  const t = detectUrlType(url);
+  if (t === "youtube") return "youtube";
+  if (t === "notebooklm") return "notebooklm";
+  return "mp4";
+}
+
+function videoEntryToSource(v, lessonId, index) {
+  return {
+    id: `t-${lessonId}-${index}-${String(v.addedAt || index).slice(-8)}`,
+    type: sourceTypeFromUrl(v.url),
+    url: v.url,
+    label: v.label,
+  };
+}
+
 export function isTeacherAddedSource(source) {
   return Boolean(source?.id && String(source.id).startsWith("t-"));
 }
 
-/** URLs that survive reload and work for another learner on the same machine (localStorage). */
 export function isPersistableVideoUrl(url) {
   const u = String(url ?? "").trim();
   if (!u || u === "undefined" || u === "null") return false;
@@ -79,7 +110,6 @@ export function isPersistableVideoUrl(url) {
   return true;
 }
 
-/** Only teacher-added sources with durable URLs are written for students. */
 export function sourcesForPersistence(sources) {
   if (!Array.isArray(sources)) return [];
   return filterVideosWithUrls(sources).filter(
@@ -87,33 +117,33 @@ export function sourcesForPersistence(sources) {
   );
 }
 
-/** Save teacher videos for a lesson (explicit teacher entries only). */
+export function loadTeacherVideos(lessonId) {
+  migrateLegacyVideos();
+  return getVideosForLesson(lessonId).map((v, i) => videoEntryToSource(v, lessonId, i));
+}
+
 export function saveTeacherVideos(lessonId, sources) {
-  try {
-    const raw = localStorage.getItem(TEACHER_VIDEOS_KEY);
-    const all = raw ? JSON.parse(raw) : {};
-    all[lessonId] = sources;
-    localStorage.setItem(TEACHER_VIDEOS_KEY, JSON.stringify(all));
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("py-learn-teacher-videos-updated", { detail: { lessonId } }),
-      );
-    }
-  } catch (e) {
-    console.error("saveTeacherVideos", e);
+  clearVideosForLesson(lessonId);
+  for (const s of sourcesForPersistence(sources)) {
+    addVideoToLesson(lessonId, s.label || "Video", s.url);
   }
 }
 
-/** Get list for students: teacher-added entries with a real, durable URL. */
+/** Students: only teacher-saved videos (no placeholder URLs from lessons.js). */
 export function getStudentVideoSources(lessonId) {
-  return sourcesForPersistence(loadTeacherVideos(lessonId));
+  migrateLegacyVideos();
+  return filterVideosWithUrls(
+    getVideosForLesson(lessonId).map((v, i) => videoEntryToSource(v, lessonId, i)),
+  ).filter((s) => isPersistableVideoUrl(s.url));
 }
 
-/** Teacher UI + preview: teacher list if ≥ MIN valid entries, else lesson defaults; pad only from valid defaults. */
+/** Teacher preview: saved videos, or lesson defaults padded for the manager UI. */
 export function getMergedVideoSources(lesson, lessonId) {
-  const teacher = getStudentVideoSources(lessonId);
+  const saved = getStudentVideoSources(lessonId);
+  if (saved.length > 0) return saved;
+
   const defaultSources = filterVideosWithUrls(lessonOptionsToSources(lesson, lessonId));
-  let merged = teacher.length >= MIN_VIDEOS_PER_LESSON ? [...teacher] : [...defaultSources];
+  let merged = [...defaultSources];
   while (merged.length < MIN_VIDEOS_PER_LESSON && defaultSources.length > 0) {
     merged.push({
       ...defaultSources[merged.length % defaultSources.length],
@@ -123,4 +153,4 @@ export function getMergedVideoSources(lesson, lessonId) {
   return filterVideosWithUrls(merged);
 }
 
-export { MIN_VIDEOS_PER_LESSON };
+export { detectUrlType, toEmbedUrl, getVideosForLesson };

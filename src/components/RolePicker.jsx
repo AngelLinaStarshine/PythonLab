@@ -1,15 +1,34 @@
 // src/components/RolePicker.jsx
-// Entry screen: choose Teacher (passcode) or Student to access the app.
+// Students enter their name; teachers enter with one click (no env passcode required).
 
 import { useState } from "react";
+import { setStudentName, getStudentName } from "../utils/studentActivityStore.js";
 
 export const ROLE_STORAGE_KEY = "py_learn_role";
 export const STUDENT_NAME_KEY = "py_learn_student_name";
 
-/** Optional: set `VITE_TEACHER_PASSCODE` in `.env.local` to require one shared passcode. If unset, any non-empty passcode works (Netlify-friendly). */
-const TEACHER_PASSCODE = String(import.meta.env.VITE_TEACHER_PASSCODE ?? "").trim();
+const C = {
+  bg: "#040c18",
+  card: "#0a1627",
+  border: "rgba(0,195,255,0.12)",
+  cyan: "#00c8ff",
+  purple: "#a78bfa",
+  t1: "#c0ddf0",
+  t2: "#4e7090",
+  t3: "#243850",
+  code: "#020a16",
+  sans: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
+};
 
-/** Teacher or student with saved name; otherwise null (show picker). */
+const btn = (x = {}) => ({
+  border: "none",
+  cursor: "pointer",
+  fontFamily: C.sans,
+  transition: "all 0.2s",
+  outline: "none",
+  ...x,
+});
+
 export function loadRole() {
   try {
     const r = localStorage.getItem(ROLE_STORAGE_KEY);
@@ -30,176 +49,242 @@ export function saveRole(role) {
 }
 
 export function loadStudentName() {
-  try {
-    const n = localStorage.getItem(STUDENT_NAME_KEY);
-    return typeof n === "string" ? n.trim() : "";
-  } catch {
-    return "";
-  }
+  return getStudentName();
 }
 
 export function saveStudentName(name) {
-  try {
-    localStorage.setItem(STUDENT_NAME_KEY, String(name || "").trim());
-  } catch {
-    /* ignore */
-  }
+  setStudentName(name);
 }
 
 export default function RolePicker({ onSelect }) {
-  const [teacherStep, setTeacherStep] = useState(false);
-  const [studentStep, setStudentStep] = useState(false);
-  const [passcode, setPasscode] = useState("");
-  const [studentName, setStudentName] = useState("");
-  const [error, setError] = useState("");
+  const [hovered, setHovered] = useState(null);
+  const [showName, setShowName] = useState(false);
+  const [name, setName] = useState(() => loadStudentName() || "");
+  const [nameError, setNameError] = useState("");
 
-  const openTeacherGate = () => {
-    setTeacherStep(true);
-    setPasscode("");
-    setError("");
-  };
-
-  const backToRoles = () => {
-    setTeacherStep(false);
-    setStudentStep(false);
-    setPasscode("");
-    setStudentName("");
-    setError("");
-  };
-
-  const openStudentGate = () => {
-    setStudentStep(true);
-    setStudentName(loadStudentName() || "");
-    setError("");
-  };
-
-  const submitStudent = (e) => {
-    e.preventDefault();
-    const trimmed = studentName.trim();
+  const handleStudentSubmit = () => {
+    const trimmed = name.trim();
     if (!trimmed) {
-      setError("Please enter your name.");
+      setNameError("Please enter your name to continue.");
+      return;
+    }
+    if (trimmed.length < 2) {
+      setNameError("Name must be at least 2 characters.");
       return;
     }
     saveStudentName(trimmed);
     onSelect("student", { displayName: trimmed });
   };
 
-  const submitTeacher = (e) => {
-    e.preventDefault();
-    const trimmed = passcode.trim();
-    if (!trimmed) {
-      setError("Please enter a passcode.");
-      return;
-    }
-    if (TEACHER_PASSCODE && trimmed !== TEACHER_PASSCODE) {
-      setError("Incorrect passcode.");
-      return;
-    }
+  const handleTeacherClick = () => {
     onSelect("teacher", {});
   };
 
-  if (teacherStep) {
-    return (
-      <div className="role-picker">
-        <div className="role-picker-card">
-          <h1 className="role-picker-title">Teacher access</h1>
-          <p className="role-picker-subtitle">
-            {TEACHER_PASSCODE
-              ? "Enter the teacher passcode you were given."
-              : "Enter any passcode you choose (for example: teacher or your school name)."}
-          </p>
-          <form className="role-picker-passcode-form" onSubmit={submitTeacher}>
-            <label className="role-picker-passcode-label">
-              Passcode
-              <input
-                type="password"
-                name="teacher-passcode"
-                autoComplete="off"
-                className="role-picker-passcode-input"
-                value={passcode}
-                onChange={(ev) => {
-                  setPasscode(ev.target.value);
-                  setError("");
-                }}
-              />
-            </label>
-            {error ? <p className="role-picker-passcode-error">{error}</p> : null}
-            <div className="role-picker-passcode-actions">
-              <button type="button" className="btn ghost" onClick={backToRoles}>
-                Back
-              </button>
-              <button type="submit" className="btn">
-                Continue
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  if (studentStep) {
-    return (
-      <div className="role-picker">
-        <div className="role-picker-card">
-          <h1 className="role-picker-title">Student sign-in</h1>
-          <p className="role-picker-subtitle">Enter your name so your teacher can recognize your work.</p>
-          <form className="role-picker-passcode-form" onSubmit={submitStudent}>
-            <label className="role-picker-passcode-label">
-              Your name
-              <input
-                type="text"
-                name="student-name"
-                autoComplete="name"
-                className="role-picker-passcode-input"
-                value={studentName}
-                onChange={(ev) => {
-                  setStudentName(ev.target.value);
-                  setError("");
-                }}
-                placeholder="e.g. Jordan Lee"
-              />
-            </label>
-            {error ? <p className="role-picker-passcode-error">{error}</p> : null}
-            <div className="role-picker-passcode-actions">
-              <button type="button" className="btn ghost" onClick={backToRoles}>
-                Back
-              </button>
-              <button type="submit" className="btn">
-                Continue
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="role-picker">
-      <div className="role-picker-card">
-        <h1 className="role-picker-title">Cyber/AI Python Lab</h1>
-        <p className="role-picker-subtitle">Grades 10 to 11. Choose your access</p>
-        <div className="role-picker-buttons">
+    <div
+      style={{
+        minHeight: "100vh",
+        background: `radial-gradient(ellipse at 30% 20%, ${C.cyan}08 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, ${C.purple}08 0%, transparent 50%),
+                  ${C.bg}`,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: C.sans,
+        padding: 24,
+      }}
+    >
+      <div style={{ textAlign: "center", marginBottom: 48 }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>🛡️</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: C.t1 }}>Cyber/AI Python Lab</div>
+        <div style={{ fontSize: 13, color: C.t2, marginTop: 4 }}>Ontario · Grades 10–11 · Mastery Track</div>
+      </div>
+
+      {showName ? (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            background: C.card,
+            borderRadius: 16,
+            border: `1px solid ${C.cyan}50`,
+            padding: "32px",
+            boxShadow: `0 0 40px ${C.cyan}12`,
+          }}
+        >
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <div style={{ fontSize: 32, marginBottom: 10 }}>👩‍🎓</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: C.t1 }}>What&apos;s your name?</div>
+            <div style={{ fontSize: 13, color: C.t2, marginTop: 6, lineHeight: 1.6 }}>
+              Your teacher uses this to track your progress. It&apos;s saved on this device only.
+            </div>
+          </div>
+
+          <input
+            autoFocus
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setNameError("");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleStudentSubmit();
+            }}
+            placeholder="First name or full name"
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "13px 16px",
+              marginBottom: 8,
+              background: C.code,
+              border: `1.5px solid ${nameError ? "#ff3658" : C.border}`,
+              borderRadius: 9,
+              color: C.t1,
+              fontSize: 15,
+              fontFamily: C.sans,
+              outline: "none",
+            }}
+          />
+
+          {nameError ? (
+            <div style={{ fontSize: 12, color: "#ff3658", marginBottom: 12, paddingLeft: 4 }}>{nameError}</div>
+          ) : null}
+
           <button
             type="button"
-            className="btn role-btn role-btn-teacher"
-            onClick={openTeacherGate}
+            onClick={handleStudentSubmit}
+            style={{
+              ...btn(),
+              width: "100%",
+              padding: "13px",
+              borderRadius: 10,
+              marginTop: 4,
+              background: `linear-gradient(135deg, ${C.cyan}25, ${C.cyan}15)`,
+              border: `1px solid ${C.cyan}70`,
+              color: C.cyan,
+              fontSize: 15,
+              fontWeight: 700,
+            }}
           >
-            <span className="role-btn-icon">👩‍🏫</span>
-            <span className="role-btn-label">Teacher</span>
-            <span className="role-btn-desc">Enter any teacher passcode</span>
+            Start Learning →
           </button>
+
           <button
             type="button"
-            className="btn role-btn role-btn-student"
-            onClick={openStudentGate}
+            onClick={() => setShowName(false)}
+            style={{
+              ...btn(),
+              width: "100%",
+              padding: "10px",
+              marginTop: 8,
+              borderRadius: 9,
+              background: "transparent",
+              border: `1px solid ${C.border}`,
+              color: C.t3,
+              fontSize: 13,
+            }}
           >
-            <span className="role-btn-icon">👩‍🎓</span>
-            <span className="role-btn-label">Student</span>
-            <span className="role-btn-desc">Enter your name, then learn, practice, and mastery</span>
+            ← Back
           </button>
         </div>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            gap: 20,
+            flexWrap: "wrap",
+            justifyContent: "center",
+            width: "100%",
+            maxWidth: 680,
+          }}
+        >
+          <div
+            role="button"
+            tabIndex={0}
+            onMouseEnter={() => setHovered("student")}
+            onMouseLeave={() => setHovered(null)}
+            onClick={() => setShowName(true)}
+            onKeyDown={(e) => e.key === "Enter" && setShowName(true)}
+            style={{
+              flex: "1 1 280px",
+              maxWidth: 320,
+              background: C.card,
+              borderRadius: 16,
+              padding: "36px 28px",
+              border: `1px solid ${hovered === "student" ? `${C.cyan}80` : C.border}`,
+              cursor: "pointer",
+              textAlign: "center",
+              transform: hovered === "student" ? "translateY(-3px)" : "none",
+              transition: "all 0.2s",
+            }}
+          >
+            <div style={{ fontSize: 44, marginBottom: 14 }}>👩‍🎓</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: C.t1, marginBottom: 8 }}>Student</div>
+            <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.7, marginBottom: 24 }}>
+              Follow the lesson plan, complete exercises, and earn mastery badges.
+            </div>
+            <div
+              style={{
+                padding: "10px 20px",
+                borderRadius: 8,
+                background: `${C.cyan}15`,
+                border: `1px solid ${C.cyan}40`,
+                color: C.cyan,
+                fontSize: 13,
+                fontWeight: 600,
+                display: "inline-block",
+              }}
+            >
+              Enter as Student
+            </div>
+          </div>
+
+          <div
+            role="button"
+            tabIndex={0}
+            onMouseEnter={() => setHovered("teacher")}
+            onMouseLeave={() => setHovered(null)}
+            onClick={handleTeacherClick}
+            onKeyDown={(e) => e.key === "Enter" && handleTeacherClick()}
+            style={{
+              flex: "1 1 280px",
+              maxWidth: 320,
+              background: C.card,
+              borderRadius: 16,
+              padding: "36px 28px",
+              border: `1px solid ${hovered === "teacher" ? `${C.purple}80` : C.border}`,
+              cursor: "pointer",
+              textAlign: "center",
+              transform: hovered === "teacher" ? "translateY(-3px)" : "none",
+              transition: "all 0.2s",
+            }}
+          >
+            <div style={{ fontSize: 44, marginBottom: 14 }}>👩‍🏫</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: C.t1, marginBottom: 8 }}>Teacher</div>
+            <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.7, marginBottom: 24 }}>
+              View student progress, activity logs, alerts, and grade book.
+            </div>
+            <div
+              style={{
+                padding: "10px 20px",
+                borderRadius: 8,
+                background: `${C.purple}15`,
+                border: `1px solid ${C.purple}40`,
+                color: C.purple,
+                fontSize: 13,
+                fontWeight: 600,
+                display: "inline-block",
+              }}
+            >
+              Enter as Teacher
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: 36, fontSize: 11, color: C.t3, textAlign: "center" }}>
+        All data is stored locally on this device only.
       </div>
     </div>
   );

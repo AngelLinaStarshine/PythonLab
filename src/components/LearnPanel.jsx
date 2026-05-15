@@ -1,263 +1,628 @@
 // src/components/LearnPanel.jsx
-// Tabbed gated Learn (reading then video) + project integrations: merged videos,
-// TeacherLearnEditor, enrichment / Try me, forwardRef scrollToReading for ARIA.
+// ─────────────────────────────────────────────────────────────────
+// Gated Learn panel.
+//
+// VIDEO BEHAVIOUR:
+//   Teacher mode → "Manage Videos" panel: add/edit/delete video URLs
+//                  per lesson. Saved to localStorage via videoStore.
+//   Student mode → VideoPanel reads ONLY from videoStore.
+//                  Empty placeholder URLs from lessons.js are ignored.
+//                  If no videos saved for this lesson → "No videos
+//                  uploaded yet" notice + "Continue without video" button.
+//
+// Gate order (student):
+//   1. Read material (scroll to bottom + timer)
+//   2. Watch video or skip via notice if none uploaded
+//   3. Practice unlocks
+// ─────────────────────────────────────────────────────────────────
 
 import {
-  useCallback,
   useEffect,
-  useImperativeHandle,
-  useMemo,
   useRef,
   useState,
+  useCallback,
+  useMemo,
   forwardRef,
+  useImperativeHandle,
 } from "react";
 import {
-  getMergedVideoSources,
-  getStudentVideoSources,
-  getYouTubeEmbedUrl,
-  getYouTubeStudentEmbedUrl,
-  filterVideosWithUrls,
-  TEACHER_VIDEOS_KEY,
-} from "../utils/videoUtils.js";
+  getVideosForLesson,
+  addVideoToLesson,
+  removeVideoFromLesson,
+  updateVideoInLesson,
+  toEmbedUrl,
+  detectUrlType,
+} from "../utils/videoStore.js";
 import { getMergedLessonContent } from "../data/lessonTryMe.js";
-import { splitTryMeStarter, previewTryMeExpected } from "../utils/tryMeConstraint.js";
-import TeacherVideoManager from "./TeacherVideoManager.jsx";
 import TeacherLearnEditor from "./TeacherLearnEditor.jsx";
 import InlineTryMe from "./InlineTryMe.jsx";
 import { getInlineTryMe } from "../data/lessonInlineTryMe.js";
 
 const C = {
-  bg: "#040c18",
-  card: "#0a1627",
-  cardAlt: "#081120",
-  border: "rgba(0,195,255,0.12)",
-  cyan: "#00c8ff",
-  green: "#00e87a",
-  amber: "#ffad2e",
-  red: "#ff3658",
-  purple: "#a78bfa",
-  t1: "#c0ddf0",
-  t2: "#4e7090",
-  t3: "#243850",
-  code: "#020a16",
-  mono: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
-  sans: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
+  bg:"#040c18", card:"#0a1627", cardAlt:"#081120",
+  border:"rgba(0,195,255,0.12)", bHov:"rgba(0,195,255,0.28)",
+  cyan:"#00c8ff", green:"#00e87a", amber:"#ffad2e",
+  red:"#ff3658", purple:"#a78bfa",
+  t1:"#c0ddf0", t2:"#4e7090", t3:"#243850",
+  code:"#020a16",
+  mono:"'JetBrains Mono','Courier New',monospace",
+  sans:"'DM Sans',-apple-system,sans-serif",
 };
-
-const btn = (extra = {}) => ({
-  border: "none",
-  cursor: "pointer",
-  fontFamily: C.sans,
-  transition: "all 0.18s",
-  outline: "none",
-  ...extra,
+const btn = (x={}) => ({
+  border:"none", cursor:"pointer", fontFamily:C.sans,
+  transition:"all 0.18s", outline:"none", ...x,
 });
-
-function speakText(text) {
-  const t = typeof text === "string" ? text.trim() : "";
-  if (!t || typeof window === "undefined" || !window.speechSynthesis) return;
-
-  const synth = window.speechSynthesis;
-
-  const run = () => {
-    try {
-      synth.resume();
-    } catch {
-      /* ignore */
-    }
-    try {
-      if (synth.speaking) synth.cancel();
-    } catch {
-      /* ignore */
-    }
-    try {
-      if (synth.paused) synth.resume();
-    } catch {
-      /* ignore */
-    }
-
-    const voices = synth.getVoices();
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = "en-US";
-    u.rate = 0.95;
-    u.volume = 1;
-    if (voices?.length) {
-      const en =
-        voices.find((v) => /^en-US$/i.test(v.lang)) ||
-        voices.find((v) => /^en(-|$)/i.test(v.lang)) ||
-        voices[0];
-      if (en) {
-        try {
-          u.voice = en;
-        } catch {
-          /* ignore */
-        }
-      }
-    }
-    u.onerror = (ev) => {
-      console.warn("SpeechSynthesis error:", ev?.error ?? ev);
-    };
-
-    requestAnimationFrame(() => {
-      try {
-        synth.speak(u);
-      } catch (e) {
-        console.warn("LearnPanel TTS speak:", e);
-      }
-    });
-  };
-
-  /* Prime during user gesture (Chrome). */
-  synth.getVoices();
-
-  if (synth.getVoices().length > 0) {
-    run();
-    return;
-  }
-
-  let done = false;
-  const finish = () => {
-    if (done) return;
-    done = true;
-    synth.removeEventListener("voiceschanged", onVoices);
-    window.clearTimeout(tid);
-    run();
-  };
-  const onVoices = () => finish();
-  const tid = window.setTimeout(finish, 1200);
-  synth.addEventListener("voiceschanged", onVoices);
-}
-
-function normHeading(s) {
-  return (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-}
-
-function formatTime(secs) {
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
-}
 
 function GateBadge({ done, label, index }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 7,
-        padding: "6px 12px",
-        borderRadius: 20,
-        background: done ? `${C.green}15` : `${C.amber}10`,
-        border: `1px solid ${done ? C.green : C.amber}40`,
-      }}
-    >
-      <div
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: "50%",
-          background: done ? C.green : `${C.amber}20`,
-          border: `1px solid ${done ? C.green : C.amber}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 10,
-          fontWeight: 700,
-          color: done ? "#000" : C.amber,
-        }}
-      >
-        {done ? "✓" : index}
+    <div style={{
+      display:"flex", alignItems:"center", gap:7,
+      padding:"5px 11px", borderRadius:20,
+      background: done?`${C.green}15`:`${C.amber}10`,
+      border:`1px solid ${done?C.green:C.amber}40`,
+    }}>
+      <div style={{
+        width:20, height:20, borderRadius:"50%", flexShrink:0,
+        background: done?C.green:`${C.amber}20`,
+        border:`1px solid ${done?C.green:C.amber}`,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        fontSize:10, fontWeight:700,
+        color: done?"#000":C.amber,
+      }}>
+        {done?"✓":index}
       </div>
-      <span style={{ fontSize: 12, fontWeight: 600, color: done ? C.green : C.amber }}>{label}</span>
+      <span style={{fontSize:12, fontWeight:600, color:done?C.green:C.amber}}>
+        {label}
+      </span>
     </div>
   );
 }
 
-function TimerBar({ totalSecs, elapsed, done }) {
-  const pct = Math.min((elapsed / totalSecs) * 100, 100);
-  const remaining = Math.max(totalSecs - elapsed, 0);
+function formatTime(secs) {
+  const m = Math.floor(secs/60);
+  const s = secs%60;
+  return m>0?`${m}m ${s}s`:`${s}s`;
+}
+
+function normHeading(s) {
+  return String(s ?? "")
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// ── Reading section (legacy; prefer scrollRef container in main panel) ──
+function ReadingSection({ materialHtml, onScrolledToBottom }) {
+  const ref  = useRef(null);
+  const done = useRef(false);
+
+  const onScroll = useCallback(() => {
+    const el = ref.current;
+    if (!el || done.current) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) {
+      done.current = true;
+      onScrolledToBottom?.();
+    }
+  }, [onScrolledToBottom]);
+
   return (
-    <div
-      style={{
-        padding: "10px 22px 12px",
-        borderTop: `1px solid ${C.border}`,
-        background: C.cardAlt,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: 6,
-          fontSize: 12,
-        }}
-      >
-        <span style={{ color: C.t2 }}>
-          {done ? "✅ Reading complete" : `⏱ Minimum read time, ${formatTime(remaining)} remaining`}
+    <div ref={ref} onScroll={onScroll} style={{
+      maxHeight:420, overflowY:"auto",
+      padding:"18px 22px",
+      fontSize:13.5, lineHeight:1.78, color:C.t1,
+      scrollbarWidth:"thin", scrollbarColor:`${C.border} transparent`,
+    }}>
+      <div className="material-html"
+        dangerouslySetInnerHTML={{__html:materialHtml||"<p>No reading material.</p>"}}/>
+      <div style={{height:1, marginTop:12}}/>
+    </div>
+  );
+}
+
+// ── Timer bar ─────────────────────────────────────────────────────
+function TimerBar({ totalSecs, elapsed, done }) {
+  const pct       = Math.min((elapsed/totalSecs)*100, 100);
+  const remaining = Math.max(totalSecs-elapsed, 0);
+  return (
+    <div style={{padding:"10px 22px 12px", borderTop:`1px solid ${C.border}`, background:C.cardAlt}}>
+      <div style={{display:"flex", justifyContent:"space-between", marginBottom:6, fontSize:12}}>
+        <span style={{color:C.t2}}>
+          {done?"✅ Reading time complete":`⏱ Minimum read time — ${formatTime(remaining)} remaining`}
         </span>
-        <span style={{ color: done ? C.green : C.amber, fontWeight: 600 }}>{Math.round(pct)}%</span>
+        <span style={{color:done?C.green:C.amber, fontWeight:600}}>{Math.round(pct)}%</span>
       </div>
-      <div style={{ height: 4, background: C.border, borderRadius: 2, overflow: "hidden" }}>
-        <div
-          style={{
-            height: "100%",
-            borderRadius: 2,
-            width: `${pct}%`,
-            background: done ? C.green : `linear-gradient(90deg, ${C.amber}, ${C.cyan})`,
-            transition: "width 0.5s ease",
-          }}
-        />
+      <div style={{height:4, background:C.border, borderRadius:2, overflow:"hidden"}}>
+        <div style={{
+          height:"100%", borderRadius:2, width:`${pct}%`,
+          background:done?C.green:`linear-gradient(90deg,${C.amber},${C.cyan})`,
+          transition:"width 0.5s ease",
+        }}/>
       </div>
     </div>
   );
 }
 
+// ── Smart video player: YouTube embed / Vimeo embed / <video> ────
+function VideoPlayer({ url, onProgress }) {
+  const videoRef = useRef(null);
+  const type     = detectUrlType(url);
+  const embedUrl = toEmbedUrl(url);
+
+  // For direct <video> files we can track progress
+  const onTimeUpdate = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.duration && v.currentTime/v.duration >= 0.9) onProgress?.();
+  };
+
+  if (type === "youtube" || type === "vimeo" || type === "iframe") {
+    return (
+      <div style={{position:"relative", paddingTop:"56.25%", borderRadius:10, overflow:"hidden", background:"#000"}}>
+        <iframe
+          src={embedUrl}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{
+            position:"absolute", top:0, left:0,
+            width:"100%", height:"100%",
+            border:"none",
+          }}
+          title="Lesson video"
+        />
+        {/* For iframes we can't track progress — show manual confirm */}
+        <button
+          onClick={onProgress}
+          style={{
+            position:"absolute", bottom:10, right:10,
+            ...btn(),
+            padding:"7px 16px", borderRadius:8,
+            background:"rgba(0,0,0,0.7)",
+            border:`1px solid ${C.green}80`,
+            color:C.green, fontSize:12, fontWeight:600,
+          }}>
+          ✓ Mark as watched
+        </button>
+      </div>
+    );
+  }
+
+  // Direct video file
+  return (
+    <video
+      ref={videoRef}
+      src={url}
+      controls
+      onTimeUpdate={onTimeUpdate}
+      style={{width:"100%", display:"block", borderRadius:10, background:"#000"}}
+    />
+  );
+}
+
+// ── Student video panel ───────────────────────────────────────────
+function StudentVideoPanel({ lessonId, onVideoDone, videoDone }) {
+  const [saved, setSaved] = useState(() => getVideosForLesson(lessonId));
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [watched, setWatched] = useState(videoDone);
+
+  useEffect(() => {
+    const reload = () => setSaved(getVideosForLesson(lessonId));
+    reload();
+    setActiveIdx(0);
+    setWatched(false);
+    window.addEventListener("py-learn-teacher-videos-updated", reload);
+    return () => window.removeEventListener("py-learn-teacher-videos-updated", reload);
+  }, [lessonId]);
+
+  const markWatched = () => {
+    if (watched) return;
+    setWatched(true);
+    onVideoDone();
+  };
+
+  const isDone = videoDone || watched;
+  const hasVideos = saved.length > 0;
+
+  return (
+    <div style={{padding:"16px 22px"}}>
+
+      {/* ── No videos uploaded yet ── */}
+      {!hasVideos && (
+        <div style={{
+          padding:"32px 24px", borderRadius:12,
+          border:`1px dashed ${C.amber}40`,
+          background:`${C.amber}05`,
+          textAlign:"center",
+          display:"flex", flexDirection:"column", alignItems:"center", gap:14,
+        }}>
+          <span style={{fontSize:36}}>🎬</span>
+          <div>
+            <div style={{fontSize:14, fontWeight:600, color:C.amber, marginBottom:6}}>
+              No videos uploaded yet
+            </div>
+            <div style={{fontSize:12, color:C.t2, lineHeight:1.65, maxWidth:280}}>
+              Your teacher will add video resources here shortly.
+              You can continue to practice without watching a video.
+            </div>
+          </div>
+          {!isDone && (
+            <button onClick={markWatched} style={{...btn(),
+              padding:"9px 24px", borderRadius:8,
+              background:`${C.cyan}15`, border:`1px solid ${C.cyan}50`,
+              color:C.cyan, fontSize:13, fontWeight:600,
+            }}>
+              Continue without video →
+            </button>
+          )}
+          {isDone && (
+            <span style={{fontSize:13, color:C.green, fontWeight:600}}>
+              ✅ Continued — Practice unlocked
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* ── Video tabs — only saved videos ── */}
+      {hasVideos && (
+        <>
+          {saved.length > 1 && (
+            <div style={{display:"flex", flexWrap:"wrap", gap:6, marginBottom:12}}>
+              {saved.map((v,i) => (
+                <button key={i} onClick={()=>setActiveIdx(i)} style={{...btn(),
+                  padding:"5px 12px", borderRadius:6, fontSize:12,
+                  background: activeIdx===i?`${C.cyan}18`:"transparent",
+                  border:`1px solid ${activeIdx===i?C.cyan:C.border}`,
+                  color: activeIdx===i?C.cyan:C.t2,
+                }}>
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <VideoPlayer
+            url={saved[activeIdx]?.url || ""}
+            onProgress={markWatched}
+          />
+
+          {/* Watch progress note */}
+          {!isDone && (
+            <p style={{fontSize:12, color:C.t3, marginTop:8}}>
+              Watch the video, then click "✓ Mark as watched" to unlock Practice.
+            </p>
+          )}
+          {isDone && (
+            <p style={{fontSize:12, color:C.green, marginTop:8, fontWeight:600}}>
+              ✅ Video complete — Practice is now unlocked.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Teacher video manager ─────────────────────────────────────────
+function TeacherVideoManager({ lessonId }) {
+  const [videos,    setVideos]    = useState(() => getVideosForLesson(lessonId));
+  const [newLabel,  setNewLabel]  = useState("");
+  const [newUrl,    setNewUrl]    = useState("");
+  const [error,     setError]     = useState("");
+  const [editIdx,   setEditIdx]   = useState(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editUrl,   setEditUrl]   = useState("");
+
+  // Reload on lesson change
+  useEffect(() => {
+    setVideos(getVideosForLesson(lessonId));
+    setError(""); setNewLabel(""); setNewUrl("");
+    setEditIdx(null);
+  }, [lessonId]);
+
+  const refresh = () => setVideos(getVideosForLesson(lessonId));
+
+  const handleAdd = () => {
+    const label = newLabel.trim();
+    const url   = newUrl.trim();
+    if (!label) { setError("Enter a display label for this video."); return; }
+    if (!url)   { setError("Enter a video URL."); return; }
+    if (!url.startsWith("http")) { setError("URL must start with http:// or https://"); return; }
+
+    const added = addVideoToLesson(lessonId, label, url);
+    if (!added) { setError("This URL is already saved for this lesson."); return; }
+
+    setNewLabel(""); setNewUrl(""); setError("");
+    refresh();
+  };
+
+  const handleRemove = (i) => {
+    removeVideoFromLesson(lessonId, i);
+    refresh();
+  };
+
+  const startEdit = (i) => {
+    setEditIdx(i);
+    setEditLabel(videos[i].label);
+    setEditUrl(videos[i].url);
+  };
+
+  const saveEdit = () => {
+    updateVideoInLesson(lessonId, editIdx, editLabel, editUrl);
+    setEditIdx(null);
+    refresh();
+  };
+
+  const urlHint = (url) => {
+    const t = detectUrlType(url);
+    return {
+      youtube: "✓ YouTube — will embed automatically",
+      vimeo:   "✓ Vimeo — will embed automatically",
+      video:   "✓ Direct video file (.mp4)",
+      iframe:  "✓ Web URL — will open in iframe",
+      unknown: "",
+    }[t] || "";
+  };
+
+  return (
+    <div style={{padding:"16px 22px"}}>
+
+      {/* Header */}
+      <div style={{
+        fontSize:12, fontWeight:700, color:C.purple,
+        letterSpacing:"0.07em", textTransform:"uppercase",
+        marginBottom:14,
+      }}>
+        📹 Manage Videos for this Lesson
+      </div>
+
+      {/* Saved videos list */}
+      {videos.length === 0 ? (
+        <div style={{
+          padding:"14px 16px", borderRadius:9,
+          background:`${C.amber}07`, border:`1px solid ${C.amber}25`,
+          fontSize:12, color:C.t2, marginBottom:14,
+        }}>
+          No videos saved for this lesson yet. Add one below.
+        </div>
+      ) : (
+        <div style={{display:"flex", flexDirection:"column", gap:8, marginBottom:16}}>
+          {videos.map((v,i) => (
+            <div key={i} style={{
+              background:C.cardAlt, borderRadius:10,
+              border:`1px solid ${C.border}`,
+              overflow:"hidden",
+            }}>
+              {editIdx === i ? (
+                /* Edit mode */
+                <div style={{padding:"12px 14px", display:"flex", flexDirection:"column", gap:8}}>
+                  <input
+                    value={editLabel}
+                    onChange={e=>setEditLabel(e.target.value)}
+                    placeholder="Display label"
+                    style={{
+                      background:C.code, border:`1px solid ${C.border}`,
+                      borderRadius:6, padding:"7px 10px",
+                      color:C.t1, fontSize:12, fontFamily:C.sans,
+                      outline:"none",
+                    }}
+                  />
+                  <input
+                    value={editUrl}
+                    onChange={e=>setEditUrl(e.target.value)}
+                    placeholder="Video URL"
+                    style={{
+                      background:C.code, border:`1px solid ${C.border}`,
+                      borderRadius:6, padding:"7px 10px",
+                      color:C.t1, fontSize:12, fontFamily:C.mono,
+                      outline:"none",
+                    }}
+                  />
+                  <div style={{display:"flex", gap:8}}>
+                    <button onClick={saveEdit} style={{...btn(),
+                      padding:"6px 14px", borderRadius:6, fontSize:11, fontWeight:600,
+                      background:`${C.green}15`, border:`1px solid ${C.green}50`,
+                      color:C.green,
+                    }}>Save</button>
+                    <button onClick={()=>setEditIdx(null)} style={{...btn(),
+                      padding:"6px 12px", borderRadius:6, fontSize:11,
+                      background:"transparent", border:`1px solid ${C.border}`,
+                      color:C.t2,
+                    }}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                /* Display mode */
+                <div style={{
+                  padding:"10px 14px",
+                  display:"flex", alignItems:"center", gap:10,
+                }}>
+                  <div style={{flex:1, minWidth:0}}>
+                    <div style={{
+                      fontSize:13, fontWeight:600, color:C.t1,
+                      whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
+                    }}>
+                      {v.label}
+                    </div>
+                    <div style={{
+                      fontSize:10, color:C.t3, fontFamily:C.mono, marginTop:2,
+                      whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
+                    }}>
+                      {v.url}
+                    </div>
+                    <div style={{fontSize:10, color:C.cyan, marginTop:2}}>
+                      {urlHint(v.url)}
+                    </div>
+                  </div>
+                  <button onClick={()=>startEdit(i)} style={{...btn(),
+                    padding:"5px 10px", borderRadius:6, fontSize:11,
+                    background:`${C.cyan}10`, border:`1px solid ${C.cyan}30`,
+                    color:C.cyan, flexShrink:0,
+                  }}>Edit</button>
+                  <button onClick={()=>handleRemove(i)} style={{...btn(),
+                    padding:"5px 10px", borderRadius:6, fontSize:11,
+                    background:`${C.red}10`, border:`1px solid ${C.red}30`,
+                    color:C.red, flexShrink:0,
+                  }}>✕</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add new video form */}
+      <div style={{
+        background:C.cardAlt, borderRadius:12,
+        border:`1px solid ${C.purple}30`,
+        padding:"14px 16px",
+      }}>
+        <div style={{
+          fontSize:11, fontWeight:700, color:C.purple,
+          letterSpacing:"0.07em", textTransform:"uppercase", marginBottom:10,
+        }}>
+          + Add Video
+        </div>
+
+        <div style={{display:"flex", flexDirection:"column", gap:8}}>
+          <input
+            value={newLabel}
+            onChange={e=>{setNewLabel(e.target.value); setError("");}}
+            placeholder='Display label  e.g. "Full Lesson" or "Quick Overview"'
+            style={{
+              background:C.code, border:`1px solid ${C.border}`,
+              borderRadius:7, padding:"8px 12px",
+              color:C.t1, fontSize:12, fontFamily:C.sans,
+              outline:"none",
+            }}
+          />
+
+          <div>
+            <input
+              value={newUrl}
+              onChange={e=>{setNewUrl(e.target.value); setError("");}}
+              onKeyDown={e=>{ if(e.key==="Enter") handleAdd(); }}
+              placeholder="Video URL — YouTube, Vimeo, or direct .mp4 link"
+              style={{
+                width:"100%", boxSizing:"border-box",
+                background:C.code, border:`1px solid ${C.border}`,
+                borderRadius:7, padding:"8px 12px",
+                color:C.t1, fontSize:12, fontFamily:C.mono,
+                outline:"none",
+              }}
+            />
+            {newUrl && (
+              <div style={{fontSize:10, color:C.cyan, marginTop:3, paddingLeft:2}}>
+                {urlHint(newUrl)}
+              </div>
+            )}
+          </div>
+
+          {error && (
+            <div style={{fontSize:11, color:C.red, paddingLeft:2}}>{error}</div>
+          )}
+
+          <button onClick={handleAdd} style={{...btn(),
+            padding:"9px 20px", borderRadius:8, alignSelf:"flex-start",
+            background:`${C.purple}18`, border:`1px solid ${C.purple}50`,
+            color:C.purple, fontSize:12, fontWeight:600,
+          }}>
+            + Save Video
+          </button>
+        </div>
+
+        {/* URL format tips */}
+        <div style={{
+          marginTop:12, padding:"10px 12px", borderRadius:8,
+          background:`${C.cyan}06`, border:`1px solid ${C.border}`,
+          fontSize:11, color:C.t2, lineHeight:1.7,
+        }}>
+          <div style={{fontWeight:600, color:C.cyan, marginBottom:4}}>Supported formats:</div>
+          <div>🎬 YouTube: <code style={{fontFamily:C.mono,color:C.amber}}>https://youtube.com/watch?v=ID</code></div>
+          <div>🎥 Vimeo: <code style={{fontFamily:C.mono,color:C.amber}}>https://vimeo.com/12345678</code></div>
+          <div>📹 Direct MP4: <code style={{fontFamily:C.mono,color:C.amber}}>https://yoursite.com/video.mp4</code></div>
+          <div style={{marginTop:4, color:C.t3}}>
+            YouTube and Vimeo embed automatically. MP4 uses a native video player.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Steps list ────────────────────────────────────────────────────
 function StepsList({ steps }) {
   if (!steps?.length) return null;
   return (
-    <div style={{ padding: "14px 22px", borderTop: `1px solid ${C.border}` }}>
-      <div
-        style={{
-          fontSize: 12,
-          color: C.t2,
-          fontWeight: 700,
-          letterSpacing: "0.07em",
-          textTransform: "uppercase",
-          marginBottom: 10,
-        }}
-      >
-        What you&apos;ll do
+    <div style={{padding:"14px 22px", borderTop:`1px solid ${C.border}`}}>
+      <div style={{
+        fontSize:12, color:C.t2, fontWeight:700,
+        letterSpacing:"0.07em", textTransform:"uppercase", marginBottom:10,
+      }}>
+        What you'll do
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-        {steps.map((step, i) => (
-          <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-            <div
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: "50%",
-                flexShrink: 0,
-                marginTop: 1,
-                background: `${C.cyan}12`,
-                border: `1px solid ${C.border}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 11,
-                color: C.cyan,
-                fontWeight: 700,
-              }}
-            >
-              {i + 1}
-            </div>
-            <span style={{ fontSize: 13, color: C.t1, lineHeight: 1.6 }}>{step}</span>
-          </div>
-        ))}
+      {steps.map((step,i) => (
+        <div key={i} style={{display:"flex", gap:10, alignItems:"flex-start", marginBottom:7}}>
+          <div style={{
+            width:22, height:22, borderRadius:"50%", flexShrink:0, marginTop:1,
+            background:`${C.cyan}12`, border:`1px solid ${C.border}`,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:11, color:C.cyan, fontWeight:700,
+          }}>{i+1}</div>
+          <span style={{fontSize:13, color:C.t1, lineHeight:1.6}}>{step}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Teacher meta editor ───────────────────────────────────────────
+function TeacherEditBanner({ lesson, onLessonOverride }) {
+  const [editing, setEditing]   = useState(false);
+  const [title,   setTitle]     = useState(lesson?.title||"");
+  const [obj,     setObj]       = useState(lesson?.objective||"");
+
+  const save = () => {
+    try {
+      const raw = localStorage.getItem("py_learn_teacher_lesson_overrides")||"{}";
+      const ov  = JSON.parse(raw);
+      ov[lesson.id] = {title, objective:obj};
+      localStorage.setItem("py_learn_teacher_lesson_overrides", JSON.stringify(ov));
+      onLessonOverride?.();
+      setEditing(false);
+    } catch(e){ console.error(e); }
+  };
+
+  if (!editing) return (
+    <div style={{
+      padding:"8px 22px", background:`${C.purple}08`,
+      borderBottom:`1px solid ${C.purple}30`,
+      display:"flex", alignItems:"center", gap:10,
+    }}>
+      <span style={{fontSize:12, color:C.purple}}>👩‍🏫 Teacher mode</span>
+      <button onClick={()=>setEditing(true)} style={{...btn(),
+        fontSize:11, padding:"3px 10px", borderRadius:5,
+        background:`${C.purple}15`, border:`1px solid ${C.purple}40`,
+        color:C.purple,
+      }}>Edit title / objective</button>
+    </div>
+  );
+
+  return (
+    <div style={{padding:"14px 22px", background:`${C.purple}08`, borderBottom:`1px solid ${C.purple}30`}}>
+      <div style={{fontSize:12, color:C.purple, fontWeight:700, marginBottom:10}}>✏️ Editing lesson meta</div>
+      <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Lesson title"
+        style={{width:"100%",boxSizing:"border-box",marginBottom:8,background:C.code,border:`1px solid ${C.border}`,borderRadius:6,padding:"7px 12px",color:C.t1,fontSize:13,fontFamily:C.sans}}/>
+      <textarea value={obj} onChange={e=>setObj(e.target.value)} rows={2} placeholder="Objective"
+        style={{width:"100%",boxSizing:"border-box",marginBottom:8,background:C.code,border:`1px solid ${C.border}`,borderRadius:6,padding:"7px 12px",color:C.t1,fontSize:13,fontFamily:C.sans,resize:"vertical"}}/>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={save} style={{...btn(),padding:"7px 18px",borderRadius:6,background:`${C.purple}20`,border:`1px solid ${C.purple}`,color:C.purple,fontSize:13,fontWeight:600}}>Save</button>
+        <button onClick={()=>setEditing(false)} style={{...btn(),padding:"7px 14px",borderRadius:6,background:"transparent",border:`1px solid ${C.border}`,color:C.t2,fontSize:12}}>Cancel</button>
       </div>
     </div>
   );
 }
 
+// ── MAIN LearnPanel ───────────────────────────────────────────────
 const LearnPanel = forwardRef(function LearnPanel(
   {
     lesson,
@@ -269,53 +634,28 @@ const LearnPanel = forwardRef(function LearnPanel(
     onTryMeApply,
     tryMeRunPreview,
     liveEditorCode = "",
-    /** Bumps when teacher saves Learn overrides so Try me / walkthrough JSON reloads. */
     lessonOverridesVersion = 0,
   },
   ref,
 ) {
   const scrollRef = useRef(null);
-  const videoRef = useRef(null);
-  const lastTimeRef = useRef(0);
-  const intervalRef = useRef(null);
   const pendingScrollRef = useRef(null);
   const scrollRequestIdRef = useRef(0);
-  /** When there are zero playable videos, auto-complete the video gate once so Run can unlock. */
+  const [scrollRequestId, setScrollRequestId] = useState(0);
   const autoVideoDoneForLessonRef = useRef(null);
 
   const [open, setOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("read");
-  const [scrollRequestId, setScrollRequestId] = useState(0);
 
-  const [videoSourcesVersion, setVideoSourcesVersion] = useState(0);
-  const videoOptions = useMemo(() => {
-    const lid = lessonId ?? lesson?.id;
-    const raw = isTeacher ? getMergedVideoSources(lesson, lid) : getStudentVideoSources(lid);
-    return filterVideosWithUrls(raw);
-  }, [lesson, lessonId, lesson?.id, isTeacher, videoSourcesVersion]);
-  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
-  const currentSource = videoOptions[selectedVideoIndex];
-  const isEmbed = currentSource?.type === "youtube" || currentSource?.type === "notebooklm";
-
-  const youtubeIframeSrc = useMemo(() => {
-    if (currentSource?.type !== "youtube" || !currentSource?.url) return "";
-    const raw = currentSource.url;
-    if (isTeacher) return getYouTubeEmbedUrl(raw) || raw;
-    return getYouTubeStudentEmbedUrl(raw) || getYouTubeEmbedUrl(raw) || raw;
-  }, [currentSource?.type, currentSource?.url, isTeacher]);
-
-  /** First completion only: block scrub on MP4; after `videoDone`, full controls. */
-  const mp4Restricted = !isTeacher && !progress?.videoDone;
-  const [mp4Volume, setMp4Volume] = useState(1);
-
-  const scrolled = isTeacher || Boolean(progress?.scrolled);
-  const timed = isTeacher || Boolean(progress?.timed);
+  const scrolled  = isTeacher || Boolean(progress?.scrolled);
+  const timed     = isTeacher || Boolean(progress?.timed);
   const videoDone = isTeacher || Boolean(progress?.videoDone);
-  const readDone = scrolled && timed;
-  const allDone = readDone && videoDone;
+  const readDone  = scrolled && timed;
+  const allDone   = readDone && videoDone;
 
-  const minSecs = lesson?.minReadSeconds ?? 30;
   const [elapsed, setElapsed] = useState(0);
+  const intervalRef = useRef(null);
+  const minSecs = lesson?.minReadSeconds ?? 45;
 
   const enrichment = useMemo(
     () => getMergedLessonContent(lessonId ?? lesson?.id ?? ""),
@@ -323,157 +663,56 @@ const LearnPanel = forwardRef(function LearnPanel(
   );
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    const s = window.speechSynthesis;
-    s.getVoices();
-    const prime = () => {
-      s.getVoices();
-    };
-    s.addEventListener("voiceschanged", prime);
-    return () => s.removeEventListener("voiceschanged", prime);
-  }, []);
-
-  const learnComplete = useMemo(
-    () => Boolean(progress?.scrolled && progress?.timed && progress?.videoDone),
-    [progress],
-  );
-
-  useEffect(() => {
+    setElapsed(0);
+    setActiveTab("read");
     autoVideoDoneForLessonRef.current = null;
   }, [lessonId]);
 
   useEffect(() => {
-    const bump = () => setVideoSourcesVersion((v) => v + 1);
-    const onCustom = (e) => {
-      const lid = lessonId ?? lesson?.id;
-      if (!lid || e.detail?.lessonId === lid) bump();
-    };
-    const onStorage = (e) => {
-      if (e.key === TEACHER_VIDEOS_KEY) bump();
-    };
-    window.addEventListener("py-learn-teacher-videos-updated", onCustom);
-    window.addEventListener("storage", onStorage);
-    return () => {
-      window.removeEventListener("py-learn-teacher-videos-updated", onCustom);
-      window.removeEventListener("storage", onStorage);
-    };
-  }, [lessonId, lesson?.id]);
-
-  useEffect(() => {
-    if (isTeacher || !readDone || progress?.videoDone) return;
-    if (videoOptions.length > 0) return;
+    if (isTeacher || !readDone || videoDone) return;
+    if (getVideosForLesson(lessonId).length > 0) return;
     if (autoVideoDoneForLessonRef.current === lessonId) return;
     autoVideoDoneForLessonRef.current = lessonId;
     onProgressChange?.({ ...(progress ?? {}), videoDone: true });
-  }, [
-    isTeacher,
-    readDone,
-    progress?.videoDone,
-    videoOptions.length,
-    lessonId,
-    onProgressChange,
-    progress,
-  ]);
+  }, [isTeacher, readDone, videoDone, lessonId, onProgressChange, progress]);
 
   useEffect(() => {
-    setElapsed(0);
-    setActiveTab("read");
-  }, [lessonId]);
-
-  useEffect(() => {
-    lastTimeRef.current = 0;
-    setSelectedVideoIndex(0);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.pause();
-    }
-  }, [lesson?.id]);
-
-  useEffect(() => {
-    setSelectedVideoIndex((idx) => {
-      if (videoOptions.length === 0) return 0;
-      return idx >= videoOptions.length ? 0 : idx;
-    });
-  }, [videoOptions.length]);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v || !currentSource?.url) return;
-    if (currentSource.type === "youtube" || currentSource.type === "notebooklm") return;
-    try {
-      v.load();
-    } catch {
-      /* ignore */
-    }
-  }, [currentSource?.url, currentSource?.type]);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v || currentSource?.type === "youtube" || currentSource?.type === "notebooklm") return;
-    v.volume = mp4Volume;
-  }, [mp4Volume, currentSource?.url, currentSource?.type, selectedVideoIndex]);
-
-  useEffect(() => {
-    if (isTeacher) return;
-    if (!open || activeTab !== "read") return;
-    if (timed) return;
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (isTeacher||!open||activeTab!=="read"||timed) return;
     intervalRef.current = setInterval(() => {
-      setElapsed((e) => {
-        const next = e + 1;
+      setElapsed(e => {
+        const next = e+1;
         if (next >= minSecs) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          onProgressChange?.({ ...(progress ?? {}), timed: true });
+          clearInterval(intervalRef.current);
+          onProgressChange?.({...(progress??{}), timed:true});
         }
         return next;
       });
     }, 1000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [open, activeTab, isTeacher, timed, minSecs, lessonId, onProgressChange, progress]);
+    return () => clearInterval(intervalRef.current);
+  }, [open, activeTab, isTeacher, timed, minSecs, lessonId]);
+
+  const onScrolledToBottom = useCallback(() => {
+    if (isTeacher||scrolled) return;
+    onProgressChange?.({...(progress??{}), scrolled:true});
+  }, [isTeacher, scrolled, progress, onProgressChange]);
+
+  const onVideoDone = useCallback(() => {
+    if (isTeacher || videoDone) return;
+    onProgressChange?.({ ...(progress ?? {}), videoDone: true });
+  }, [isTeacher, videoDone, progress, onProgressChange]);
 
   const checkScrollBottom = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
-    if (bottom && !progress?.scrolled && !isTeacher) {
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40 && !scrolled && !isTeacher) {
       onProgressChange?.({ ...(progress ?? {}), scrolled: true });
     }
-  }, [progress, isTeacher, onProgressChange]);
-
-  /** Track position for seek guard only; avoid clamping on slow timeupdate (that used to freeze playback). */
-  const onTimeUpdate = () => {
-    const v = videoRef.current;
-    if (!v || isTeacher || progress?.videoDone) return;
-    if (!v.seeking) lastTimeRef.current = v.currentTime;
-  };
-
-  const onSeeking = () => {
-    const v = videoRef.current;
-    if (!v || isTeacher || progress?.videoDone) return;
-    if (v.currentTime > lastTimeRef.current + 0.2) {
-      v.currentTime = lastTimeRef.current;
-    }
-  };
-
-  const onEnded = () => {
-    if (!progress?.videoDone) {
-      onProgressChange?.({ ...(progress ?? {}), videoDone: true });
-    }
-  };
-
-  const onMarkWatched = () => {
-    if (!progress?.videoDone) {
-      onProgressChange?.({ ...(progress ?? {}), videoDone: true });
-    }
-  };
+  }, [scrolled, isTeacher, progress, onProgressChange]);
 
   const runScrollToHint = useCallback((sectionHint) => {
     const root = scrollRef.current;
     if (!root) return;
-    const hint = normHeading(sectionHint);
-    const words = hint.split(/\s+/).filter((w) => w.length > 2);
+    const words = normHeading(sectionHint).split(/\s+/).filter((w) => w.length > 2);
     const headings = root.querySelectorAll("h2, h3, h4, .lesson-enrichment-heading");
     for (const h of headings) {
       const t = normHeading(h.textContent || "");
@@ -506,644 +745,236 @@ const LearnPanel = forwardRef(function LearnPanel(
     pendingScrollRef.current = null;
     const id = window.setTimeout(() => runScrollToHint(hint), 50);
     return () => clearTimeout(id);
-  }, [activeTab, open, lesson?.id, scrollRequestId, runScrollToHint]);
+  }, [activeTab, open, lessonId, scrollRequestId, runScrollToHint]);
 
+  useEffect(() => {
+    if (readDone && !videoDone && activeTab === "read") setActiveTab("video");
+  }, [readDone, videoDone, activeTab]);
+
+  // Teacher sees an extra tab to manage videos
   const tabs = [
-    { id: "read", label: "📖 Reading", locked: false },
-    { id: "video", label: "🎬 Video", locked: !readDone && !isTeacher },
+    {id:"read",   label:"📖 Reading",        locked:false},
+    {id:"video",  label:"🎬 Video",           locked:!readDone},
+    ...(isTeacher?[{id:"manage",label:"📹 Manage Videos",locked:false}]:[]),
   ];
 
   return (
-    <div className="learn-panel learn-panel-tabbed">
-      <div
-        style={{
-          background: C.card,
-          borderRadius: 12,
-          border: `1px solid ${C.border}`,
-          overflow: "hidden",
-        }}
-      >
+    <div style={{
+      background:C.card, borderRadius:12,
+      border:`1px solid ${C.border}`,
+      marginBottom:16, overflow:"hidden",
+    }}>
+      {isTeacher && (
         <div
-          role="button"
-          tabIndex={0}
-          onClick={() => setOpen((o) => !o)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              setOpen((o) => !o);
-            }
-          }}
           style={{
-            padding: "14px 22px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-            background: C.cardAlt,
-            borderBottom: open ? `1px solid ${C.border}` : "none",
+            padding: "8px 22px",
+            background: `${C.purple}08`,
+            borderBottom: `1px solid ${C.purple}30`,
           }}
+          onClick={(e) => e.stopPropagation()}
         >
-          <span style={{ fontSize: 18 }}>📚</span>
-          <span style={{ fontSize: 15, fontWeight: 700, color: C.t1, flex: 1, minWidth: 120 }}>Learn</span>
-          {isTeacher && (
-            <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-              <TeacherLearnEditor lesson={lesson} lessonId={lessonId ?? lesson?.id} onSave={onLessonOverride} />
+          <TeacherLearnEditor lesson={lesson} lessonId={lessonId} onSave={onLessonOverride} />
+        </div>
+      )}
+
+      {/* Panel header */}
+      <div onClick={()=>setOpen(o=>!o)} style={{
+        padding:"14px 22px", cursor:"pointer",
+        display:"flex", alignItems:"center", gap:12,
+        background:C.cardAlt, borderBottom:open?`1px solid ${C.border}`:"none",
+      }}>
+        <span style={{fontSize:18}}>📚</span>
+        <span style={{fontSize:15, fontWeight:700, color:C.t1, flex:1}}>Learn</span>
+        <div style={{display:"flex", gap:6}}>
+          <GateBadge done={readDone}  label="Read"     index={1}/>
+          <GateBadge done={videoDone} label="Video"    index={2}/>
+          <GateBadge done={allDone}   label="Unlocked" index={3}/>
+        </div>
+        <span style={{fontSize:12, color:C.t3, marginLeft:8}}>{open?"▲":"▼"}</span>
+      </div>
+
+      {open && (
+        <>
+          {/* Tab bar */}
+          <div style={{
+            display:"flex", borderBottom:`1px solid ${C.border}`,
+            background:C.cardAlt,
+          }}>
+            {tabs.map(tab => {
+              const isActive = activeTab===tab.id;
+              const locked   = tab.locked && !isTeacher;
+              return (
+                <button key={tab.id} onClick={()=>!locked&&setActiveTab(tab.id)}
+                  style={{...btn(),
+                    padding:"11px 18px", fontSize:13,
+                    fontWeight:isActive?600:400,
+                    background:"transparent",
+                    borderBottom:`2px solid ${isActive?C.cyan:"transparent"}`,
+                    color:locked?C.t3:tab.id==="manage"?C.purple:isActive?C.cyan:C.t2,
+                    cursor:locked?"not-allowed":"pointer",
+                    opacity:locked?0.45:1,
+                    display:"flex", alignItems:"center", gap:6,
+                  }}>
+                  {tab.label}
+                  {locked && <span style={{fontSize:11}}>🔒</span>}
+                  {tab.id==="read"  && readDone  && <span style={{fontSize:11,color:C.green}}>✓</span>}
+                  {tab.id==="video" && videoDone && <span style={{fontSize:11,color:C.green}}>✓</span>}
+                </button>
+              );
+            })}
+            <div style={{marginLeft:"auto",padding:"0 16px",display:"flex",alignItems:"center"}}>
+              <span style={{
+                fontSize:12,
+                color:allDone?C.green:C.t3,
+                fontWeight:allDone?600:400,
+              }}>
+                {allDone?"✅ Practice unlocked":
+                 !readDone?"Step 1: Read & wait for timer":
+                 "Step 2: Watch video"}
+              </span>
+            </div>
+          </div>
+
+          {/* ── READ TAB ── */}
+          {activeTab==="read" && (
+            <>
+              {lesson?.concept && (
+                <div style={{
+                  padding:"12px 22px", background:`${C.cyan}07`,
+                  borderBottom:`1px solid ${C.border}`,
+                  fontSize:13, color:C.t2, lineHeight:1.65,
+                }}>
+                  <strong style={{color:C.cyan}}>🎯 Concept: </strong>{lesson.concept}
+                </div>
+              )}
+              <div
+                ref={scrollRef}
+                onScroll={() => {
+                  checkScrollBottom();
+                  const el = scrollRef.current;
+                  if (!el || isTeacher || scrolled) return;
+                  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) {
+                    onScrolledToBottom();
+                  }
+                }}
+                className="learn-reading-scroll"
+                style={{
+                  maxHeight: 420,
+                  overflowY: "auto",
+                  padding: "18px 22px",
+                  fontSize: 13.5,
+                  lineHeight: 1.78,
+                  color: C.t1,
+                  scrollbarWidth: "thin",
+                  scrollbarColor: `${C.border} transparent`,
+                }}
+              >
+                <div
+                  className="material material-inner"
+                  dangerouslySetInnerHTML={{
+                    __html: lesson?.materialHtml || "<p>No reading material.</p>",
+                  }}
+                />
+                {enrichment?.sections?.length ? (
+                  <div className="lesson-enrichment" style={{ marginTop: 16 }}>
+                    <h3 className="lesson-enrichment-title">Guided walkthrough</h3>
+                    <ol className="lesson-enrichment-sections">
+                      {enrichment.sections.map((sec) => {
+                        const lid = lessonId ?? lesson?.id ?? "";
+                        const inlineSpec = getInlineTryMe(lid, sec.id);
+                        return (
+                          <li key={sec.id} className="lesson-enrichment-section">
+                            <h4 className="lesson-enrichment-heading">{sec.heading}</h4>
+                            {sec.body ? <p className="lesson-enrichment-body">{sec.body}</p> : null}
+                            {inlineSpec ? <InlineTryMe {...inlineSpec} /> : null}
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </div>
+                ) : null}
+              </div>
+              {!isTeacher && (
+                <TimerBar totalSecs={minSecs} elapsed={elapsed} done={timed}/>
+              )}
+              {!isTeacher && !scrolled && (
+                <div style={{
+                  padding:"8px 22px", background:`${C.amber}08`,
+                  borderTop:`1px solid ${C.amber}20`,
+                  fontSize:12, color:C.amber, textAlign:"center",
+                }}>
+                  ↓ Scroll to the bottom of the reading to continue
+                </div>
+              )}
+              {!isTeacher && readDone && (
+                <div style={{
+                  padding:"12px 22px", background:`${C.green}08`,
+                  borderTop:`1px solid ${C.green}20`,
+                  fontSize:13, color:C.green, fontWeight:600, textAlign:"center",
+                }}>
+                  ✅ Reading complete — click <strong>Video</strong> tab to continue
+                </div>
+              )}
+              <StepsList steps={lesson?.steps}/>
+            </>
+          )}
+
+          {/* ── VIDEO TAB ── */}
+          {activeTab==="video" && (
+            !readDone && !isTeacher ? (
+              <div style={{
+                padding:"48px 22px", textAlign:"center",
+                display:"flex", flexDirection:"column", alignItems:"center", gap:12,
+              }}>
+                <span style={{fontSize:36}}>🔒</span>
+                <span style={{fontSize:14, color:C.t2}}>
+                  Complete the reading first.
+                </span>
+              </div>
+            ) : (
+              /* Teacher in video tab sees the player + a hint to use Manage tab */
+              isTeacher ? (
+                <div>
+                  <StudentVideoPanel
+                    lessonId={lessonId}
+                    onVideoDone={()=>{}}
+                    videoDone={true}
+                  />
+                  <div style={{
+                    margin:"0 22px 16px",
+                    padding:"10px 14px", borderRadius:8,
+                    background:`${C.purple}08`, border:`1px solid ${C.purple}30`,
+                    fontSize:12, color:C.purple,
+                  }}>
+                    👩‍🏫 Switch to the <strong>Manage Videos</strong> tab to add or edit videos for this lesson.
+                  </div>
+                </div>
+              ) : (
+                <StudentVideoPanel
+                  lessonId={lessonId}
+                  onVideoDone={onVideoDone}
+                  videoDone={videoDone}
+                />
+              )
+            )
+          )}
+
+          {/* ── MANAGE VIDEOS TAB (teacher only) ── */}
+          {activeTab==="manage" && isTeacher && (
+            <TeacherVideoManager lessonId={lessonId}/>
+          )}
+
+          {lesson?.checkpoint && allDone && (
+            <div style={{
+              padding:"12px 22px", borderTop:`1px solid ${C.border}`,
+              background:`${C.green}08`,
+            }}>
+              <span style={{fontSize:12, color:C.green, fontWeight:700}}>✓ Checkpoint: </span>
+              <span style={{fontSize:12, color:C.t1}}>{lesson.checkpoint}</span>
             </div>
           )}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            <GateBadge done={readDone} label="Read" index={1} />
-            <GateBadge done={videoDone} label="Video" index={2} />
-            <GateBadge done={allDone} label="Unlocked" index={3} />
-          </div>
-          <span style={{ fontSize: 12, color: C.t3 }}>{open ? "▲" : "▼"}</span>
-        </div>
-
-        <div
-          className={`learn-banner ${learnComplete ? "ok" : ""}`}
-          role="status"
-          aria-live="polite"
-          style={{ margin: "10px 14px 0", borderRadius: 10 }}
-        >
-          {learnComplete ? "Practice Unlocked ✅" : "Complete all gates to unlock practice"}
-        </div>
-
-        {open && (
-          <>
-            <div
-              style={{
-                display: "flex",
-                borderBottom: `1px solid ${C.border}`,
-                background: C.cardAlt,
-                flexWrap: "wrap",
-              }}
-            >
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                const isLocked = tab.locked && !isTeacher;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => !isLocked && setActiveTab(tab.id)}
-                    title={isLocked ? "Complete reading first" : ""}
-                    style={{
-                      ...btn(),
-                      padding: "11px 20px",
-                      fontSize: 13,
-                      fontWeight: isActive ? 600 : 400,
-                      background: "transparent",
-                      borderBottom: `2px solid ${isActive ? C.cyan : "transparent"}`,
-                      color: isLocked ? C.t3 : isActive ? C.cyan : C.t2,
-                      cursor: isLocked ? "not-allowed" : "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      opacity: isLocked ? 0.5 : 1,
-                    }}
-                  >
-                    {tab.label}
-                    {isLocked && <span style={{ fontSize: 11 }}>🔒</span>}
-                    {tab.id === "read" && readDone && <span style={{ fontSize: 11, color: C.green }}>✓</span>}
-                    {tab.id === "video" && videoDone && <span style={{ fontSize: 11, color: C.green }}>✓</span>}
-                  </button>
-                );
-              })}
-              <div
-                style={{
-                  marginLeft: "auto",
-                  padding: "0 16px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                {allDone ? (
-                  <span style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>✅ Practice unlocked</span>
-                ) : (
-                  <span style={{ fontSize: 12, color: C.t3 }}>
-                    {!readDone ? "Step 1: Read & wait" : "Step 2: Watch video"}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {activeTab === "read" && (
-              <>
-                {lesson?.concept && (
-                  <div
-                    style={{
-                      padding: "12px 22px",
-                      background: `${C.cyan}07`,
-                      borderBottom: `1px solid ${C.border}`,
-                      fontSize: 13,
-                      color: C.t2,
-                      lineHeight: 1.65,
-                    }}
-                  >
-                    <strong style={{ color: C.cyan }}>🎯 Concept: </strong>
-                    {lesson.concept}
-                  </div>
-                )}
-
-                <div
-                  ref={scrollRef}
-                  onScroll={checkScrollBottom}
-                  className="learn-reading-scroll"
-                  style={{
-                    height: "auto",
-                    maxHeight: 420,
-                    overflowY: "auto",
-                    padding: "18px 22px",
-                    fontSize: 13.5,
-                    lineHeight: 1.78,
-                    color: C.t1,
-                    scrollbarWidth: "thin",
-                    scrollbarColor: `${C.border} transparent`,
-                  }}
-                >
-                  <div
-                    className="material material-inner"
-                    dangerouslySetInnerHTML={{
-                      __html: lesson?.materialHtml || "<p>No reading material for this lesson.</p>",
-                    }}
-                  />
-                  <div style={{ height: 1, marginTop: 12 }} />
-
-                  {enrichment && (
-                    <div className="lesson-enrichment">
-                      <div className="lesson-enrichment-head">
-                        <h3 className="lesson-enrichment-title">Guided walkthrough</h3>
-                        {enrichment.ttsIntro && (
-                          <button
-                            type="button"
-                            className="btn ghost small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              speakText(enrichment.ttsIntro);
-                            }}
-                          >
-                            Play intro (TTS)
-                          </button>
-                        )}
-                      </div>
-                      <ol className="lesson-enrichment-sections">
-                        {enrichment.sections.map((sec) => {
-                          const lid = lessonId ?? lesson?.id ?? "";
-                          const inlineSpec = getInlineTryMe(lid, sec.id);
-                          return (
-                          <li key={sec.id} className="lesson-enrichment-section">
-                            <div className="lesson-enrichment-section-head">
-                              <span className="lesson-enrichment-icon" aria-hidden>
-                                {sec.icon}
-                              </span>
-                              <h4 className="lesson-enrichment-heading">{sec.heading}</h4>
-                              {sec.body && (
-                                <button
-                                  type="button"
-                                  className="btn ghost small"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    speakText(sec.body);
-                                  }}
-                                  title="Read this section aloud"
-                                >
-                                  TTS
-                                </button>
-                              )}
-                            </div>
-                            {sec.body && <p className="lesson-enrichment-body">{sec.body}</p>}
-                            {sec.code && (
-                              <pre className="lesson-enrichment-code">
-                                <code>{sec.code}</code>
-                              </pre>
-                            )}
-                            {inlineSpec ? <InlineTryMe {...inlineSpec} /> : null}
-                            {sec.tryMe && (() => {
-                              const token =
-                                typeof sec.tryMe.editableToken === "string"
-                                  ? sec.tryMe.editableToken.trim()
-                                  : "";
-                              const split = token
-                                ? splitTryMeStarter(sec.tryMe.starter, token)
-                                : null;
-                              const midForPreview = (() => {
-                                if (
-                                  !split ||
-                                  tryMeRunPreview?.sectionId !== sec.id ||
-                                  typeof liveEditorCode !== "string"
-                                ) {
-                                  return split ? split.token : "";
-                                }
-                                const c = liveEditorCode;
-                                if (c.startsWith(split.before) && c.endsWith(split.after)) {
-                                  return c.slice(
-                                    split.before.length,
-                                    c.length - split.after.length,
-                                  );
-                                }
-                                return split.token;
-                              })();
-                              const expectedShown = split
-                                ? previewTryMeExpected(
-                                    sec.tryMe.expectedOutput,
-                                    split.token,
-                                    midForPreview,
-                                  )
-                                : sec.tryMe.expectedOutput;
-                              const constraint =
-                                split != null
-                                  ? {
-                                      before: split.before,
-                                      after: split.after,
-                                      maxLength: Number(sec.tryMe.editableMaxLength) || 64,
-                                      defaultMid: split.token,
-                                    }
-                                  : null;
-
-                              const loadSubtle = Boolean(inlineSpec);
-
-                              return (
-                                <div className="lesson-enrichment-tryme practice-lab">
-                                  <div className="lesson-enrichment-tryme-label">Try me</div>
-                                  <p className="lesson-enrichment-tryme-locked-note">
-                                    {loadSubtle ? (
-                                      <>
-                                        Use the <strong>Try Me</strong> block above first. When you are ready for the
-                                        full runnable starter, open it in the <strong>Code</strong> editor (after Read +
-                                        Video gates).{" "}
-                                        {split ? (
-                                          <>
-                                            You may still change only <strong>{split.token}</strong> in the editor
-                                            when a token is shown.
-                                          </>
-                                        ) : null}
-                                      </>
-                                    ) : split ? (
-                                      <>
-                                        Change only <strong>{split.token}</strong> in the <strong>Code</strong> editor
-                                        after <strong>Load in editor</strong> (see Hint). Other text is fixed
-                                        automatically.
-                                      </>
-                                    ) : (
-                                      <>
-                                        Starter is read-only here. Use <strong>Load in editor</strong>, then edit and
-                                        run in the Code panel.
-                                      </>
-                                    )}
-                                  </p>
-                                  <pre className="lesson-enrichment-code">
-                                    <code>{sec.tryMe.starter}</code>
-                                  </pre>
-                                  {onTryMeApply && (
-                                    <div
-                                      className={
-                                        loadSubtle
-                                          ? "lesson-enrichment-tryme-actions lesson-enrichment-tryme-actions--subtle"
-                                          : "lesson-enrichment-tryme-actions"
-                                      }
-                                    >
-                                      <button
-                                        type="button"
-                                        className={loadSubtle ? "btn ghost small" : "btn small"}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onTryMeApply(sec.tryMe.starter, sec.id, { constraint });
-                                        }}
-                                      >
-                                        {loadSubtle ? "Load full example in code editor" : "Load in editor"}
-                                      </button>
-                                      {loadSubtle ? (
-                                        <span className="lesson-enrichment-tryme-gate-note">
-                                          Available after Read + Video gates
-                                        </span>
-                                      ) : null}
-                                    </div>
-                                  )}
-                                  <details className="lesson-enrichment-details">
-                                    <summary>Hint</summary>
-                                    <p className="lesson-enrichment-hint">{sec.tryMe.hint}</p>
-                                  </details>
-                                  <details className="lesson-enrichment-details">
-                                    <summary>Expected output</summary>
-                                    <pre className="lesson-enrichment-expected">
-                                      <code>{expectedShown}</code>
-                                    </pre>
-                                    {tryMeRunPreview?.sectionId === sec.id && (
-                                      <div className="lesson-enrichment-tryme-runout">
-                                        <div className="lesson-enrichment-tryme-runout-label">
-                                          Your run (Code panel)
-                                        </div>
-                                        {(() => {
-                                          const err = (tryMeRunPreview.error || "").trim();
-                                          const out = (tryMeRunPreview.stdout || "").trim();
-                                          const combined = [err, out].filter(Boolean).join("\n\n");
-                                          if (!combined) {
-                                            return (
-                                              <p className="lesson-enrichment-tryme-runout-placeholder">
-                                                {split ? (
-                                                  <>
-                                                    Edit <strong>{split.token}</strong> in the Code editor, then{" "}
-                                                    <strong>Run</strong>; your output appears here.
-                                                  </>
-                                                ) : (
-                                                  <>
-                                                    Press <strong>Run</strong> after loading; your program output will
-                                                    show here.
-                                                  </>
-                                                )}
-                                              </p>
-                                            );
-                                          }
-                                          return (
-                                            <pre className="lesson-enrichment-tryme-runout-pre">
-                                              <code>{combined}</code>
-                                            </pre>
-                                          );
-                                        })()}
-                                      </div>
-                                    )}
-                                  </details>
-                                </div>
-                              );
-                            })()}
-                            {sec.tip && <p className="lesson-enrichment-tip">Tip: {sec.tip}</p>}
-                          </li>
-                          );
-                        })}
-                      </ol>
-                    </div>
-                  )}
-                </div>
-
-                {!isTeacher && <TimerBar totalSecs={minSecs} elapsed={elapsed} done={timed} />}
-
-                {!isTeacher && !scrolled && (
-                  <div
-                    style={{
-                      padding: "8px 22px",
-                      background: `${C.amber}08`,
-                      borderTop: `1px solid ${C.amber}20`,
-                      fontSize: 12,
-                      color: C.amber,
-                      textAlign: "center",
-                    }}
-                  >
-                    Scroll to the bottom of the reading material to continue
-                  </div>
-                )}
-
-                {!isTeacher && readDone && (
-                  <div
-                    style={{
-                      padding: "12px 22px",
-                      background: `${C.green}08`,
-                      borderTop: `1px solid ${C.green}20`,
-                      fontSize: 13,
-                      color: C.green,
-                      fontWeight: 600,
-                      textAlign: "center",
-                    }}
-                  >
-                    ✅ Reading complete, click <strong>Video</strong> tab to continue
-                  </div>
-                )}
-
-                <StepsList steps={lesson?.steps} />
-              </>
-            )}
-
-            {activeTab === "video" && (
-              <>
-                {!readDone && !isTeacher ? (
-                  <div
-                    style={{
-                      padding: "48px 22px",
-                      textAlign: "center",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: 12,
-                    }}
-                  >
-                    <span style={{ fontSize: 36 }}>🔒</span>
-                    <span style={{ fontSize: 14, color: C.t2 }}>Complete the reading first to unlock this video.</span>
-                  </div>
-                ) : (
-                  <div style={{ padding: "16px 22px" }}>
-                    {videoOptions.length > 0 && (
-                      <div className="video-options" style={{ marginBottom: 12 }}>
-                        <span className="video-options-label">Video:</span>
-                        <select
-                          className="video-select"
-                          value={selectedVideoIndex}
-                          onChange={(e) => {
-                            const idx = Number(e.target.value);
-                            setSelectedVideoIndex(idx);
-                            lastTimeRef.current = 0;
-                            if (videoRef.current) {
-                              videoRef.current.currentTime = 0;
-                              videoRef.current.pause();
-                            }
-                          }}
-                          aria-label="Choose video"
-                        >
-                          {videoOptions.map((opt, i) => (
-                            <option key={opt.id || i} value={i}>
-                              {opt.label} ({opt.type})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    {currentSource?.type === "youtube" && youtubeIframeSrc && (
-                      <div className="video-shell-col">
-                        <div className="video-stage">
-                          <iframe
-                            key={youtubeIframeSrc}
-                            className="video-embed video-stage-fill"
-                            src={youtubeIframeSrc}
-                            title={currentSource.label}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            {...(isTeacher ? { allowFullScreen: true } : {})}
-                          />
-                        </div>
-                        {!isTeacher && !progress?.videoDone && (
-                          <button type="button" className="btn sun" onClick={onMarkWatched}>
-                            I watched this, unlock
-                          </button>
-                        )}
-                      </div>
-                    )}
-
-                    {currentSource?.type === "notebooklm" && currentSource?.url && (
-                      <div className="video-shell-col">
-                        <div className="video-stage">
-                          <iframe
-                            className="video-embed video-stage-fill"
-                            src={currentSource.url}
-                            title={currentSource.label}
-                          />
-                        </div>
-                        <a href={currentSource.url} target="_blank" rel="noopener noreferrer" className="video-external-link">
-                          Open NotebookLM in new tab
-                        </a>
-                        {!isTeacher && !progress?.videoDone && (
-                          <button type="button" className="btn sun" onClick={onMarkWatched}>
-                            I watched this, unlock
-                          </button>
-                        )}
-                      </div>
-                    )}
-
-                    {(currentSource?.type === "mp4" || !currentSource?.type) && currentSource?.url && (
-                      <div className="video-shell-col">
-                        <div className="video-stage">
-                          <video
-                            key={`${currentSource?.id || "v"}-${currentSource?.url || ""}`}
-                            className="video video-stage-fill"
-                            ref={videoRef}
-                            src={currentSource?.url}
-                            playsInline
-                            controls={!mp4Restricted}
-                            controlsList={
-                              isTeacher ? "nodownload noplaybackrate" : "nofullscreen nodownload noplaybackrate"
-                            }
-                            disablePictureInPicture
-                            onTimeUpdate={onTimeUpdate}
-                            onSeeking={onSeeking}
-                            onEnded={onEnded}
-                            onDoubleClick={(e) => {
-                              if (mp4Restricted) e.preventDefault();
-                            }}
-                          />
-                        </div>
-                        {mp4Restricted ? (
-                          <div className="video-controls video-controls-student">
-                            <button type="button" className="btn" onClick={() => videoRef.current?.play()}>
-                              Play
-                            </button>
-                            <button type="button" className="btn ghost" onClick={() => videoRef.current?.pause()}>
-                              Pause
-                            </button>
-                            <button
-                              type="button"
-                              className="btn ghost"
-                              onClick={() => {
-                                const v = videoRef.current;
-                                if (!v) return;
-                                v.currentTime = 0;
-                                lastTimeRef.current = 0;
-                                v.pause();
-                              }}
-                            >
-                              Restart
-                            </button>
-                            <label className="video-volume">
-                              <span className="video-volume-label">Volume</span>
-                              <input
-                                type="range"
-                                min={0}
-                                max={1}
-                                step={0.05}
-                                value={mp4Volume}
-                                onChange={(e) => setMp4Volume(Number(e.target.value))}
-                              />
-                            </label>
-                          </div>
-                        ) : null}
-                      </div>
-                    )}
-
-                    {currentSource?.type === "youtube" && currentSource?.url && mp4Restricted && (
-                      <div className="video-note">
-                        Playback stays in this page. If the player does not mark completion, use the button under the
-                        video when you have watched it.
-                      </div>
-                    )}
-
-                    {!isEmbed && currentSource?.url && mp4Restricted && (
-                      <div className="video-note">Skipping is disabled until you finish once. Watch to the end to unlock.</div>
-                    )}
-
-                    {!currentSource?.url && (
-                      <div
-                        style={{
-                          height: 200,
-                          background: C.code,
-                          borderRadius: 10,
-                          border: `1px solid ${C.border}`,
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 12,
-                        }}
-                      >
-                        <span style={{ fontSize: 40 }}>🎬</span>
-                        <span
-                          style={{
-                            fontSize: 13,
-                            color: C.t2,
-                            textAlign: "center",
-                            padding: "0 16px",
-                            maxWidth: 420,
-                            lineHeight: 1.45,
-                          }}
-                        >
-                          {!isTeacher && videoOptions.length === 0
-                            ? "Your teacher has not added any videos for this lesson on this device yet. They should add YouTube, NotebookLM, or public MP4/WebM links in teacher mode (uploaded files only work on the same browser where they were added unless hosted on a web URL)."
-                            : "No video URL, add one in teacher mode"}
-                        </span>
-                        {!isTeacher && !progress?.videoDone && videoOptions.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={onMarkWatched}
-                            style={{
-                              ...btn(),
-                              padding: "8px 20px",
-                              borderRadius: 8,
-                              background: `${C.cyan}15`,
-                              border: `1px solid ${C.cyan}50`,
-                              color: C.cyan,
-                              fontSize: 13,
-                              fontWeight: 600,
-                            }}
-                          >
-                            ✓ Mark video watched
-                          </button>
-                        )}
-                      </div>
-                    )}
-
-                    {isTeacher && (
-                      <TeacherVideoManager
-                        lessonId={lessonId ?? lesson?.id}
-                        lesson={lesson}
-                        onVideosChange={() => setVideoSourcesVersion((v) => v + 1)}
-                      />
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-
-            {lesson?.checkpoint && allDone && (
-              <div
-                style={{
-                  padding: "12px 22px",
-                  borderTop: `1px solid ${C.border}`,
-                  background: `${C.green}08`,
-                }}
-              >
-                <span style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>✓ Checkpoint: </span>
-                <span style={{ fontSize: 12, color: C.t1 }}>{lesson.checkpoint}</span>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 });
