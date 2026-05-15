@@ -29,6 +29,9 @@ export function getLessonWithOverrides(lesson, overrides) {
     ...lesson,
     title: o.title !== undefined ? o.title : lesson.title,
     objective: o.objective !== undefined ? o.objective : lesson.objective,
-    materialHtml: o.materialHtml !== undefined ? o.materialHtml : lesson.materialHtml,
+    materialHtml:
+      o.materialHtml !== undefined && String(o.materialHtml).trim()
+        ? o.materialHtml
+        : lesson.materialHtml,
   };
 }

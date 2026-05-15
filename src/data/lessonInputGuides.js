@@ -11,7 +11,7 @@ export const LESSON_INPUT_GUIDES = {
     fields: [
       {
         label: "Message",
-        hint: "Suspicious text — any words or sentence (letters only, not a number).",
+        hint: "Suspicious text any words or sentence (letters only, not a number).",
         example: "Click this now!",
         placeholder: "e.g. Click this now!",
       },

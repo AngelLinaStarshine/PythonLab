@@ -1,6 +1,6 @@
 // src/data/lessonInlineTryMe.js
 // ─────────────────────────────────────────────────────────────────
-// Inline Try-Me data — one editable «BLANK» per reading section.
+// Inline Try-Me data one editable «BLANK» per reading section.
 // Every section that has a concept to test has an entry here.
 // Key format: "l{lessonNum}-{sectionId}"
 //
@@ -16,7 +16,7 @@
 export const inlineTryMeData = {
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 1 — Variables & Types
+  // LESSON 1 Variables & Types
   // ══════════════════════════════════════════════════════════════
 
   // s1 — Why Variables Matter (no code to fill in, intro section)
@@ -62,7 +62,7 @@ print("User:", username)`,
   },
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 2 — Input & Output
+  // LESSON 2 Input & Output
   // ══════════════════════════════════════════════════════════════
 
   "l2-s2": {
@@ -96,7 +96,7 @@ print(f"Confidence: {conf * 100:.«BLANK»f}%")`,
   },
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 3 — Conditionals
+  // LESSON 3 Conditionals
   // ══════════════════════════════════════════════════════════════
 
   // s1 — intro, no code blank
@@ -152,7 +152,7 @@ print(label_risk(65, malware=«BLANK»))`,
   },
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 4 — Loops
+  // LESSON 4 Loops
   // ══════════════════════════════════════════════════════════════
 
   // s1 — intro, no code blank

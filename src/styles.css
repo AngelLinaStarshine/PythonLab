@@ -276,6 +276,53 @@ a { color: inherit; }
   background: rgba(0, 0, 0, 0.2);
 }
 
+/* Lesson HTML lives inside .learn-reading-scroll — do not clip to 280px */
+.learn-reading-scroll .material,
+.learn-reading-scroll .material-inner {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.learn-reading-scroll .material h1,
+.learn-reading-scroll .material h2,
+.learn-reading-scroll .material h3,
+.learn-reading-scroll .material-inner h1,
+.learn-reading-scroll .material-inner h2,
+.learn-reading-scroll .material-inner h3 {
+  margin: 10px 0 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.learn-reading-scroll .material p,
+.learn-reading-scroll .material li,
+.learn-reading-scroll .material-inner p,
+.learn-reading-scroll .material-inner li {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.learn-reading-scroll .material pre,
+.learn-reading-scroll .material-inner pre {
+  margin: 8px 0 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border);
+  overflow: auto;
+}
+
+.learn-reading-scroll .material table,
+.learn-reading-scroll .material-inner table {
+  width: 100%;
+  margin: 8px 0 14px;
+}
+
 .learn-panel {
   margin: 12px 16px 0 16px;
   border: 1px solid var(--border);
