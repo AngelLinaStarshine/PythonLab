@@ -30,6 +30,8 @@ import QuizPanel from "./components/QuizPanel.jsx";
 import { getQuiz } from "./data/quizData.js";
 import InputPromptModal from "./components/InputPromptModal.jsx";
 import { getLessonInputGuide, getLessonInputPrompts } from "./data/lessonInputGuides.js";
+import { AppGuide } from "./components/AppGuide.jsx";
+import { useStudentSession } from "./hooks/useStudentSession.js";
 
 const STORAGE_KEY = "py_learn_progress_v4"; // v4: lessons refresh (L1 3-blank starter, L10 SENTINEL template)
 
@@ -108,6 +110,8 @@ export default function App() {
     stageByLesson[activeLessonId] ?? { scrolled: false, timed: false, videoDone: false };
 
   const isTeacher = userRole === "teacher";
+
+  useStudentSession(userRole);
 
   // ✅ Unlock next lesson only when previous is mastered (students); teachers get all
   const unlockedLessonIds = useMemo(() => {
@@ -684,6 +688,7 @@ export default function App() {
               currentEditorCode={code}
             />
           )}
+          <AppGuide role={userRole} />
           {isTeacher && (
             <button type="button" className="btn ghost" onClick={onResetAllProgress} title="Reset all code, gates, and mastery">
               Reset all progress

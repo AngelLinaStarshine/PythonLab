@@ -36,6 +36,7 @@ import {
   downloadStudentEventsCsv,
   openPrintableReportWindow,
 } from "../utils/teacherReports.js";
+import { TeacherTools } from "./AppGuide.jsx";
 
 const C = {
   bg:"#040c18", card:"#0a1627", cardAlt:"#081120",
@@ -1089,6 +1090,7 @@ const TABS = [
   { id: "students", icon: "👩‍🎓", label: "Students" },
   { id: "gradebook", icon: "📊", label: "Grade Book" },
   { id: "reports", icon: "📄", label: "Reports" },
+  { id: "tools", icon: "🔗", label: "Tools" },
   { id: "alerts", icon: "🚨", label: "Alerts" },
   { id: "assign", icon: "📝", label: "Assign" },
   { id: "controls", icon: "🎛️", label: "Controls" },
@@ -1307,6 +1309,7 @@ export default function TeacherDashboard({
                 masteryByLesson={masteryByLesson}
               />
             )}
+            {tab === "tools" && <TeacherTools />}
             {tab==="alerts"    && (
               <AlertsTab
                 summaries={summaries}
