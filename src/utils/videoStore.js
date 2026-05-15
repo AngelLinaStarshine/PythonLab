@@ -92,6 +92,43 @@ export function importAllLessonVideos(jsonText) {
   return true;
 }
 
+/** Merge site-wide published videos from /lesson-videos.json (Netlify deploy). */
+let publishedFetchDone = false;
+
+export async function loadPublishedVideosFromSite() {
+  if (publishedFetchDone || typeof fetch === "undefined") return;
+  publishedFetchDone = true;
+  try {
+    const res = await fetch("/lesson-videos.json", { cache: "no-cache" });
+    if (!res.ok) return;
+    const remote = await res.json();
+    if (!remote || typeof remote !== "object") return;
+
+    const data = load();
+    let changed = false;
+    for (const [lessonId, arr] of Object.entries(remote)) {
+      if (!Array.isArray(arr)) continue;
+      const existing = Array.isArray(data[lessonId]) ? [...data[lessonId]] : [];
+      for (const v of arr) {
+        const url = String(v?.url ?? "").trim();
+        const label = String(v?.label ?? "Video").trim();
+        if (!url || !label || url.startsWith("blob:")) continue;
+        if (existing.some((e) => e.url === url)) continue;
+        existing.push({
+          label,
+          url,
+          addedAt: v.addedAt || "published",
+        });
+        changed = true;
+      }
+      if (existing.length) data[lessonId] = existing;
+    }
+    if (changed) save(data);
+  } catch (e) {
+    console.warn("loadPublishedVideosFromSite", e);
+  }
+}
+
 export function getVideoSummary() {
   const data = load();
   const lessonIds = ["l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8", "l9", "l10"];

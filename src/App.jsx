@@ -6,7 +6,14 @@ import LessonList from "./components/LessonList.jsx";
 import EditorPane from "./components/EditorPane.jsx";
 import ResultPane from "./components/ResultPane.jsx";
 import LearnPanel from "./components/LearnPanel.jsx";
-import RolePicker, { saveRole, loadRole, loadStudentName } from "./components/RolePicker.jsx";
+import RolePicker, {
+  saveRole,
+  loadRole,
+  loadStudentName,
+  markTeacherSession,
+  clearTeacherSession,
+} from "./components/RolePicker.jsx";
+import { loadPublishedVideosFromSite } from "./utils/videoStore.js";
 import { usePyodideRunner } from "./hooks/usePyodideRunner.js";
 import { analyzeCode } from "./ai/analyzeClient.js";
 import { buildErrorCoach } from "./ai/errorCoach.js";
@@ -53,6 +60,11 @@ function normalizeCodeForLesson(lesson, code) {
 
 export default function App() {
   const [userRole, setUserRole] = useState(() => loadRole());
+  const [videosReady, setVideosReady] = useState(false);
+
+  useEffect(() => {
+    loadPublishedVideosFromSite().finally(() => setVideosReady(true));
+  }, []);
   const [activeLessonId, setActiveLessonId] = useState(lessons[0]?.id ?? "l1");
 
   const [lessonOverridesVersion, setLessonOverridesVersion] = useState(0);
@@ -429,6 +441,7 @@ export default function App() {
 
   const onSwitchRole = () => {
     setUserRole(null);
+    clearTeacherSession();
     try {
       localStorage.removeItem("py_learn_role");
     } catch {
@@ -621,6 +634,8 @@ export default function App() {
     return (
       <RolePicker
         onSelect={(role) => {
+          if (role === "teacher") markTeacherSession();
+          else clearTeacherSession();
           saveRole(role);
           setUserRole(role);
         }}
@@ -707,7 +722,7 @@ export default function App() {
           </div>
 
           <LearnPanel
-            key={`learn-${learnPanelMountKey}-${activeLessonId}`}
+            key={`learn-${learnPanelMountKey}-${activeLessonId}-${videosReady ? "pub" : "load"}`}
             ref={learnPanelRef}
             lesson={activeLesson}
             progress={lessonProgress}

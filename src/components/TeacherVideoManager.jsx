@@ -72,7 +72,7 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
   const publishListForStudents = () => {
     const persist = sourcesForPersistence(sources);
     saveTeacherVideos(lessonId, persist);
-    const count = getStudentVideoSources(lessonId).length;
+    const count = getStudentVideoSources(lessonId, lesson).length;
     setPackNotice(
       count > 0
         ? `${count} video(s) are saved for students on this lesson (this browser).`

@@ -6,9 +6,35 @@ import { setStudentName, getStudentName } from "../utils/studentActivityStore.js
 
 export const ROLE_STORAGE_KEY = "py_learn_role";
 export const STUDENT_NAME_KEY = "py_learn_student_name";
+/** Set only after a successful passcode this browser session (prevents stale teacher role). */
+export const TEACHER_SESSION_KEY = "py_learn_teacher_session";
 
-/** From `.env.local` as VITE_TEACHER_PASSCODE (never show this value on the role screen). */
+/** From `.env.local` / Netlify env at build time (never show on screen). */
 const TEACHER_PASSCODE = String(import.meta.env.VITE_TEACHER_PASSCODE ?? "").trim();
+
+export function markTeacherSession() {
+  try {
+    sessionStorage.setItem(TEACHER_SESSION_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearTeacherSession() {
+  try {
+    sessionStorage.removeItem(TEACHER_SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function hasValidTeacherSession() {
+  try {
+    return sessionStorage.getItem(TEACHER_SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 const C = {
   bg: "#040c18",
@@ -58,9 +84,18 @@ const cardStyle = {
 export function loadRole() {
   try {
     const r = localStorage.getItem(ROLE_STORAGE_KEY);
-    if (r !== "teacher" && r !== "student") return null;
-    if (r === "student" && !loadStudentName()) return null;
-    return r;
+    if (r === "teacher") {
+      if (!hasValidTeacherSession()) {
+        localStorage.removeItem(ROLE_STORAGE_KEY);
+        return null;
+      }
+      return "teacher";
+    }
+    if (r === "student") {
+      if (!loadStudentName()) return null;
+      return "student";
+    }
+    return null;
   } catch {
     return null;
   }
@@ -101,6 +136,7 @@ export default function RolePicker({ onSelect }) {
       setNameError("Name must be at least 2 characters.");
       return;
     }
+    clearTeacherSession();
     saveStudentName(trimmed);
     onSelect("student", { displayName: trimmed });
   };
@@ -116,6 +152,7 @@ export default function RolePicker({ onSelect }) {
       setPasscodeError("Incorrect passcode.");
       return;
     }
+    markTeacherSession();
     onSelect("teacher", {});
   };
 

@@ -136,17 +136,29 @@ export function saveTeacherVideos(lessonId, sources) {
   }
 }
 
-/** Students: only teacher-saved videos (no placeholder URLs from lessons.js). */
-export function getStudentVideoSources(lessonId) {
+/** Students: teacher-saved videos, plus bundled lesson MP4s when none are saved yet. */
+export function getStudentVideoSources(lessonId, lesson) {
   migrateLegacyVideos();
-  return filterVideosWithUrls(
+  const saved = filterVideosWithUrls(
     getVideosForLesson(lessonId).map((v, i) => videoEntryToSource(v, lessonId, i)),
   ).filter((s) => isPersistableVideoUrl(s.url));
+
+  const defaults = lesson
+    ? filterVideosWithUrls(lessonOptionsToSources(lesson, lessonId)).filter((s) =>
+        isPersistableVideoUrl(s.url),
+      )
+    : [];
+
+  if (saved.length === 0) return defaults;
+
+  const urls = new Set(saved.map((s) => String(s.url).trim()));
+  const extra = defaults.filter((d) => !urls.has(String(d.url).trim()));
+  return [...saved, ...extra];
 }
 
 /** Teacher preview: saved videos, or lesson defaults padded for the manager UI. */
 export function getMergedVideoSources(lesson, lessonId) {
-  const saved = getStudentVideoSources(lessonId);
+  const saved = getStudentVideoSources(lessonId, lesson);
   if (saved.length > 0) return saved;
 
   const defaultSources = filterVideosWithUrls(lessonOptionsToSources(lesson, lessonId));

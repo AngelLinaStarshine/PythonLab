@@ -25,6 +25,7 @@ import TeacherVideoManager from "./TeacherVideoManager.jsx";
 import TeacherLearnEditor from "./TeacherLearnEditor.jsx";
 import InlineTryMe from "./InlineTryMe.jsx";
 import { getInlineTryMe } from "../data/lessonInlineTryMe.js";
+import { importAllLessonVideos } from "../utils/videoStore.js";
 
 const C = {
   bg: "#040c18",
@@ -166,7 +167,7 @@ function GateBadge({ done, label, index }) {
           color: done ? "#000" : C.amber,
         }}
       >
-        {done ? "‚??" : index}
+        {done ? "???" : index}
       </div>
       <span style={{ fontSize: 12, fontWeight: 600, color: done ? C.green : C.amber }}>{label}</span>
     </div>
@@ -193,7 +194,7 @@ function TimerBar({ totalSecs, elapsed, done }) {
         }}
       >
         <span style={{ color: C.t2 }}>
-          {done ? "‚?? Reading complete" : `‚è± Minimum read time, ${formatTime(remaining)} remaining`}
+          {done ? "??? Reading complete" : `? Minimum read time, ${formatTime(remaining)} remaining`}
         </span>
         <span style={{ color: done ? C.green : C.amber, fontWeight: 600 }}>{Math.round(pct)}%</span>
       </div>
@@ -290,7 +291,7 @@ const LearnPanel = forwardRef(function LearnPanel(
   const [videoSourcesVersion, setVideoSourcesVersion] = useState(0);
   const videoOptions = useMemo(() => {
     const lid = lessonId ?? lesson?.id;
-    const raw = isTeacher ? getMergedVideoSources(lesson, lid) : getStudentVideoSources(lid);
+    const raw = isTeacher ? getMergedVideoSources(lesson, lid) : getStudentVideoSources(lid, lesson);
     return filterVideosWithUrls(raw);
   }, [lesson, lessonId, lesson?.id, isTeacher, videoSourcesVersion]);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
@@ -510,8 +511,8 @@ const LearnPanel = forwardRef(function LearnPanel(
   }, [activeTab, open, lesson?.id, scrollRequestId, runScrollToHint]);
 
   const tabs = [
-    { id: "read", label: "??? Reading", locked: false },
-    { id: "video", label: "??¨ Video", locked: !readDone && !isTeacher },
+    { id: "read", label: "???? Reading", locked: false },
+    { id: "video", label: "???? Video", locked: !readDone && !isTeacher },
   ];
 
   return (
@@ -545,7 +546,7 @@ const LearnPanel = forwardRef(function LearnPanel(
             borderBottom: open ? `1px solid ${C.border}` : "none",
           }}
         >
-          <span style={{ fontSize: 18 }}>???</span>
+          <span style={{ fontSize: 18 }}>????</span>
           <span style={{ fontSize: 15, fontWeight: 700, color: C.t1, flex: 1, minWidth: 120 }}>Learn</span>
           {isTeacher && (
             <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -557,7 +558,7 @@ const LearnPanel = forwardRef(function LearnPanel(
             <GateBadge done={videoDone} label="Video" index={2} />
             <GateBadge done={allDone} label="Unlocked" index={3} />
           </div>
-          <span style={{ fontSize: 12, color: C.t3 }}>{open ? "‚?≤" : "‚?º"}</span>
+          <span style={{ fontSize: 12, color: C.t3 }}>{open ? "???" : "???"}</span>
         </div>
 
         <div
@@ -566,7 +567,7 @@ const LearnPanel = forwardRef(function LearnPanel(
           aria-live="polite"
           style={{ margin: "10px 14px 0", borderRadius: 10 }}
         >
-          {learnComplete ? "Practice Unlocked ‚??" : "Complete all gates to unlock practice"}
+          {learnComplete ? "Practice Unlocked ???" : "Complete all gates to unlock practice"}
         </div>
 
         {open && (
@@ -604,9 +605,9 @@ const LearnPanel = forwardRef(function LearnPanel(
                     }}
                   >
                     {tab.label}
-                    {isLocked && <span style={{ fontSize: 11 }}>???</span>}
-                    {tab.id === "read" && readDone && <span style={{ fontSize: 11, color: C.green }}>‚??</span>}
-                    {tab.id === "video" && videoDone && <span style={{ fontSize: 11, color: C.green }}>‚??</span>}
+                    {isLocked && <span style={{ fontSize: 11 }}>????</span>}
+                    {tab.id === "read" && readDone && <span style={{ fontSize: 11, color: C.green }}>???</span>}
+                    {tab.id === "video" && videoDone && <span style={{ fontSize: 11, color: C.green }}>???</span>}
                   </button>
                 );
               })}
@@ -620,7 +621,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                 }}
               >
                 {allDone ? (
-                  <span style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>‚?? Practice unlocked</span>
+                  <span style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>??? Practice unlocked</span>
                 ) : (
                   <span style={{ fontSize: 12, color: C.t3 }}>
                     {!readDone ? "Step 1: Read & wait" : "Step 2: Watch video"}
@@ -642,7 +643,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                       lineHeight: 1.65,
                     }}
                   >
-                    <strong style={{ color: C.cyan }}>??Ø Concept: </strong>
+                    <strong style={{ color: C.cyan }}>???? Concept: </strong>
                     {lesson.concept}
                   </div>
                 )}
@@ -906,7 +907,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                       textAlign: "center",
                     }}
                   >
-                    ‚?? Reading complete, click <strong>Video</strong> tab to continue
+                    ??? Reading complete, click <strong>Video</strong> tab to continue
                   </div>
                 )}
 
@@ -927,7 +928,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                       gap: 12,
                     }}
                   >
-                    <span style={{ fontSize: 36 }}>???</span>
+                    <span style={{ fontSize: 36 }}>????</span>
                     <span style={{ fontSize: 14, color: C.t2 }}>Complete the reading first to unlock this video.</span>
                   </div>
                 ) : (
@@ -1082,7 +1083,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                           gap: 12,
                         }}
                       >
-                        <span style={{ fontSize: 40 }}>??¨</span>
+                        <span style={{ fontSize: 40 }}>????</span>
                         <span
                           style={{
                             fontSize: 13,
@@ -1094,9 +1095,29 @@ const LearnPanel = forwardRef(function LearnPanel(
                           }}
                         >
                           {!isTeacher && videoOptions.length === 0
-                            ? "Your teacher has not added any videos for this lesson on this device yet. They should add YouTube, NotebookLM, or public MP4/WebM links in teacher mode (uploaded files only work on the same browser where they were added unless hosted on a web URL)."
+                            ? "No videos yet for this lesson. Your teacher should add YouTube or public MP4 links, share a video pack, or publish public/lesson-videos.json with the site."
                             : "No video URL, add one in teacher mode"}
                         </span>
+                        {!isTeacher && videoOptions.length === 0 ? (
+                          <button
+                            type="button"
+                            className="btn ghost"
+                            onClick={() => {
+                              const raw = window.prompt(
+                                "Paste the video pack JSON from your teacher (Download pack in teacher mode):",
+                              );
+                              if (!raw?.trim()) return;
+                              try {
+                                importAllLessonVideos(raw.trim());
+                                setVideoSourcesVersion((v) => v + 1);
+                              } catch {
+                                window.alert("Import failed ? check the JSON and try again.");
+                              }
+                            }}
+                          >
+                            Import class video pack
+                          </button>
+                        ) : null}
                         {!isTeacher && !progress?.videoDone && videoOptions.length > 0 && (
                           <button
                             type="button"
@@ -1112,7 +1133,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                               fontWeight: 600,
                             }}
                           >
-                            ‚?? Mark video watched
+                            ??? Mark video watched
                           </button>
                         )}
                       </div>
@@ -1138,7 +1159,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                   background: `${C.green}08`,
                 }}
               >
-                <span style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>‚?? Checkpoint: </span>
+                <span style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>??? Checkpoint: </span>
                 <span style={{ fontSize: 12, color: C.t1 }}>{lesson.checkpoint}</span>
               </div>
             )}
