@@ -5,11 +5,13 @@ import { useEffect, useRef, useState } from "react";
  */
 export default function InputPromptModal({ guide, open, onCancel, onSubmit }) {
   const [values, setValues] = useState([]);
+  const [formError, setFormError] = useState("");
   const firstRef = useRef(null);
 
   useEffect(() => {
     if (!open || !guide) return;
-    setValues(guide.fields.map((f) => f.example ?? ""));
+    setValues(guide.fields.map(() => ""));
+    setFormError("");
   }, [open, guide]);
 
   useEffect(() => {
@@ -20,7 +22,14 @@ export default function InputPromptModal({ guide, open, onCancel, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(values.map((v) => String(v).trim()));
+    const trimmed = values.map((v) => String(v).trim());
+    const empty = trimmed.findIndex((v) => !v);
+    if (empty >= 0) {
+      setFormError(`Please fill in ${guide.fields[empty]?.label ?? "all fields"} before running.`);
+      return;
+    }
+    setFormError("");
+    onSubmit(trimmed);
   };
 
   return (
@@ -62,12 +71,14 @@ export default function InputPromptModal({ guide, open, onCancel, onSubmit }) {
             </label>
           ))}
 
+          {formError ? <p className="input-modal-error">{formError}</p> : null}
+
           <div className="input-modal-actions">
             <button type="button" className="btn ghost" onClick={onCancel}>
               Cancel
             </button>
             <button type="submit" className="btn">
-              Run with these values
+              Run
             </button>
           </div>
         </form>

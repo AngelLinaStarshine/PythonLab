@@ -16,7 +16,7 @@ export default function ResultPane({
   /** Scroll Learn reading to a heading that matches `section` (word overlap). */
   onGoToReading,
   inputGuide = null,
-  onRunWithOwnInputs,
+  onRunWithSampleInputs,
 }) {
   const canRun = Boolean(runtimeReady && unlocked);
   const canMastery = Boolean(runtimeReady && unlocked);
@@ -64,9 +64,9 @@ export default function ResultPane({
               </li>
             ))}
           </ol>
-          {typeof onRunWithOwnInputs === "function" ? (
-            <button type="button" className="btn ghost small input-guide-btn" onClick={onRunWithOwnInputs}>
-              Run with my own values…
+          {typeof onRunWithSampleInputs === "function" ? (
+            <button type="button" className="btn ghost small input-guide-btn" onClick={onRunWithSampleInputs}>
+              Use sample answers instead
             </button>
           ) : null}
         </div>

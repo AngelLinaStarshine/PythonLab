@@ -243,15 +243,15 @@ const TESTS = {
 
       const contains = stdoutMustContain(
         stdout,
-        ["message", "risk", "label"],
-        "Output should include message, risk, and label."
+        ["message", "risk"],
+        "Output should include Message and Risk Score lines."
       );
       if (contains) return contains;
 
       const labelOk = stdoutMustMatchRegex(
         stdout,
-        [/label\s*:\s*(high|high risk)/i],
-        'Label should show HIGH / HIGH RISK when risk is 85.'
+        [/(label|status)\s*:\s*(high|high risk)/i],
+        'Label (or Status) should show HIGH when risk is 85. Example: Label      : HIGH'
       );
       if (labelOk) return labelOk;
 

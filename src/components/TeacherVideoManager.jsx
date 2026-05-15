@@ -7,9 +7,11 @@ import {
   lessonOptionsToSources,
   filterVideosWithUrls,
   getMergedVideoSources,
+  getStudentVideoSources,
   sourcesForPersistence,
   MIN_VIDEOS_PER_LESSON,
 } from "../utils/videoUtils.js";
+import { addVideoToLesson, exportAllLessonVideos, importAllLessonVideos } from "../utils/videoStore.js";
 
 export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }) {
   const defaultSources = filterVideosWithUrls(lessonOptionsToSources(lesson, lessonId));
@@ -20,6 +22,7 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
   const [newLabel, setNewLabel] = useState("");
   const [uploadObjectUrl, setUploadObjectUrl] = useState(null);
   const [uploadNotice, setUploadNotice] = useState("");
+  const [packNotice, setPackNotice] = useState("");
 
   useEffect(() => {
     setSources(getMergedVideoSources(lesson, lessonId));
@@ -54,12 +57,62 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
     let finalUrl = url;
     if (newType === "youtube") finalUrl = getYouTubeEmbedUrl(url) || url;
     const label = (newLabel || "").trim() || (newType === "youtube" ? "YouTube" : newType === "notebooklm" ? "NotebookLM" : "MP4");
-    save([
-      ...sources,
-      { id: `t-${lessonId}-${Date.now()}`, type: newType, url: finalUrl, label },
-    ]);
+    const ok = addVideoToLesson(lessonId, label, finalUrl);
+    if (!ok) {
+      setUploadNotice("That URL is already saved for this lesson.");
+      return;
+    }
+    setUploadNotice("");
+    onVideosChange?.();
+    setSources(padForTeacherDisplay(getMergedVideoSources(lesson, lessonId)));
     setNewUrl("");
     setNewLabel("");
+  };
+
+  const publishListForStudents = () => {
+    const persist = sourcesForPersistence(sources);
+    saveTeacherVideos(lessonId, persist);
+    const count = getStudentVideoSources(lessonId).length;
+    setPackNotice(
+      count > 0
+        ? `${count} video(s) are saved for students on this lesson (this browser).`
+        : "No videos saved yet — add a YouTube, NotebookLM, or public MP4/WebM URL (file upload is preview only).",
+    );
+    onVideosChange?.();
+    setSources(padForTeacherDisplay(getMergedVideoSources(lesson, lessonId)));
+  };
+
+  const copyVideoPack = async () => {
+    try {
+      const text = exportAllLessonVideos();
+      await navigator.clipboard.writeText(text);
+      setPackNotice("Copied all lesson videos to clipboard. Paste into Import on student devices or another browser.");
+    } catch {
+      setPackNotice("Could not copy — use Export download instead.");
+    }
+  };
+
+  const downloadVideoPack = () => {
+    const blob = new Blob([exportAllLessonVideos()], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "py-learn-lesson-videos.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setPackNotice("Downloaded video pack. Students import the same file on their devices.");
+  };
+
+  const importVideoPack = () => {
+    const raw = window.prompt("Paste the video pack JSON (from teacher Export):");
+    if (!raw?.trim()) return;
+    try {
+      importAllLessonVideos(raw.trim());
+      setPackNotice("Video pack imported for all lessons.");
+      onVideosChange?.();
+      setSources(padForTeacherDisplay(getMergedVideoSources(lesson, lessonId)));
+    } catch {
+      setPackNotice("Import failed — check the JSON and try again.");
+    }
   };
 
   const addFromFile = (e, { recording = false } = {}) => {
@@ -97,10 +150,33 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
         </p>
       ) : null}
       <p className="teacher-video-manager-note">
-        <strong>Students see</strong> every video you add with a <strong>YouTube</strong>,{" "}
-        <strong>NotebookLM</strong>, or <strong>public MP4/WebM URL</strong> (saved in this browser for all
-        learners on this computer). File upload is teacher preview only until you host the file and paste its URL.
+        <strong>Students see</strong> videos you add with <strong>Add</strong> (YouTube, NotebookLM, or public MP4/WebM
+        URL). Videos are stored in <strong>this browser only</strong> unless you export the pack and students import it
+        on their devices (required for Netlify/class laptops).
       </p>
+      <p className="teacher-video-manager-note">
+        File upload is <strong>preview only</strong> on your machine — host the file online, paste that URL, then click{" "}
+        <strong>Add</strong>.
+      </p>
+      {packNotice ? (
+        <p className="teacher-video-manager-note teacher-video-manager-notice" role="status">
+          {packNotice}
+        </p>
+      ) : null}
+      <div className="teacher-video-pack-actions" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+        <button type="button" className="btn ghost" onClick={publishListForStudents}>
+          Save list for students
+        </button>
+        <button type="button" className="btn ghost" onClick={copyVideoPack}>
+          Copy all lessons (clipboard)
+        </button>
+        <button type="button" className="btn ghost" onClick={downloadVideoPack}>
+          Download pack
+        </button>
+        <button type="button" className="btn ghost" onClick={importVideoPack}>
+          Import pack
+        </button>
+      </div>
       <p className="teacher-video-manager-note">
         <strong>NotebookLM:</strong> build or refine your script in{" "}
         <a href="https://notebooklm.google.com/" target="_blank" rel="noopener noreferrer">

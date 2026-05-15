@@ -306,16 +306,27 @@ export default function App() {
     setStdout("");
     setError("");
     setMasteryMsg("");
+    if (lessonInputGuide) {
+      setInputModalOpen(true);
+      return;
+    }
+    const result = await run(code, {});
+    setStdout(result.stdout || "");
+    setError(result.error || "");
+    if ((result.error || "").trim()) setRunErrorStreak((n) => n + 1);
+    else setRunErrorStreak(0);
+  };
+
+  const onRunWithSampleInputs = async () => {
+    if (!learnGate || !lessonInputGuide) return;
+    setStdout("");
+    setError("");
+    setMasteryMsg("");
     const mockInputs =
-      lessonInputGuide?.sampleInputs?.length
+      lessonInputGuide.sampleInputs?.length
         ? lessonInputGuide.sampleInputs
         : getLessonTestInputs(activeLessonId);
     await runCodeWithInputs(mockInputs, { label: "sample inputs" });
-  };
-
-  const onRunWithOwnInputs = () => {
-    if (!learnGate || !lessonInputGuide) return;
-    setInputModalOpen(true);
   };
 
   const onInputModalSubmit = async (values) => {
@@ -777,7 +788,7 @@ export default function App() {
               onMasteryCheck={onMasteryCheck}
               mastered={mastered}
               inputGuide={lessonInputGuide}
-              onRunWithOwnInputs={lessonInputGuide ? onRunWithOwnInputs : undefined}
+              onRunWithSampleInputs={lessonInputGuide ? onRunWithSampleInputs : undefined}
             />
           </div>
         </main>

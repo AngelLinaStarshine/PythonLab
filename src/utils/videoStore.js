@@ -15,12 +15,14 @@ function load() {
   }
 }
 
-function save(data) {
+function save(data, lessonId) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     if (typeof window !== "undefined") {
       window.dispatchEvent(
-        new CustomEvent("py-learn-teacher-videos-updated", { detail: { storageKey: STORAGE_KEY } }),
+        new CustomEvent("py-learn-teacher-videos-updated", {
+          detail: { storageKey: STORAGE_KEY, lessonId: lessonId || null },
+        }),
       );
     }
   } catch (e) {
@@ -49,7 +51,7 @@ export function addVideoToLesson(lessonId, label, url) {
   });
 
   data[lessonId] = existing;
-  save(data);
+  save(data, lessonId);
   return true;
 }
 
@@ -57,7 +59,7 @@ export function removeVideoFromLesson(lessonId, index) {
   const data = load();
   const existing = Array.isArray(data[lessonId]) ? data[lessonId] : [];
   data[lessonId] = existing.filter((_, i) => i !== index);
-  save(data);
+  save(data, lessonId);
 }
 
 export function updateVideoInLesson(lessonId, index, label, url) {
@@ -70,13 +72,24 @@ export function updateVideoInLesson(lessonId, index, label, url) {
     url: (url || "").trim() || existing[index].url,
   };
   data[lessonId] = existing;
-  save(data);
+  save(data, lessonId);
 }
 
 export function clearVideosForLesson(lessonId) {
   const data = load();
   delete data[lessonId];
-  save(data);
+  save(data, lessonId);
+}
+
+export function exportAllLessonVideos() {
+  return JSON.stringify(load(), null, 2);
+}
+
+export function importAllLessonVideos(jsonText) {
+  const parsed = JSON.parse(jsonText);
+  if (!parsed || typeof parsed !== "object") throw new Error("Invalid video pack");
+  save(parsed);
+  return true;
 }
 
 export function getVideoSummary() {

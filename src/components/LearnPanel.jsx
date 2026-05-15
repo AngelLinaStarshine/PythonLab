@@ -166,7 +166,7 @@ function GateBadge({ done, label, index }) {
           color: done ? "#000" : C.amber,
         }}
       >
-        {done ? "âœ“" : index}
+        {done ? "â??" : index}
       </div>
       <span style={{ fontSize: 12, fontWeight: 600, color: done ? C.green : C.amber }}>{label}</span>
     </div>
@@ -193,7 +193,7 @@ function TimerBar({ totalSecs, elapsed, done }) {
         }}
       >
         <span style={{ color: C.t2 }}>
-          {done ? "âœ… Reading complete" : `â± Minimum read time, ${formatTime(remaining)} remaining`}
+          {done ? "â?? Reading complete" : `â± Minimum read time, ${formatTime(remaining)} remaining`}
         </span>
         <span style={{ color: done ? C.green : C.amber, fontWeight: 600 }}>{Math.round(pct)}%</span>
       </div>
@@ -346,7 +346,8 @@ const LearnPanel = forwardRef(function LearnPanel(
     const bump = () => setVideoSourcesVersion((v) => v + 1);
     const onCustom = (e) => {
       const lid = lessonId ?? lesson?.id;
-      if (!lid || e.detail?.lessonId === lid) bump();
+      const changed = e.detail?.lessonId;
+      if (!changed || !lid || changed === lid) bump();
     };
     const onStorage = (e) => {
       if (e.key === TEACHER_VIDEOS_KEY) bump();
@@ -509,8 +510,8 @@ const LearnPanel = forwardRef(function LearnPanel(
   }, [activeTab, open, lesson?.id, scrollRequestId, runScrollToHint]);
 
   const tabs = [
-    { id: "read", label: "ğŸ“– Reading", locked: false },
-    { id: "video", label: "ğŸ¬ Video", locked: !readDone && !isTeacher },
+    { id: "read", label: "ğ??? Reading", locked: false },
+    { id: "video", label: "ğ??¬ Video", locked: !readDone && !isTeacher },
   ];
 
   return (
@@ -544,7 +545,7 @@ const LearnPanel = forwardRef(function LearnPanel(
             borderBottom: open ? `1px solid ${C.border}` : "none",
           }}
         >
-          <span style={{ fontSize: 18 }}>ğŸ“š</span>
+          <span style={{ fontSize: 18 }}>ğ???</span>
           <span style={{ fontSize: 15, fontWeight: 700, color: C.t1, flex: 1, minWidth: 120 }}>Learn</span>
           {isTeacher && (
             <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -556,7 +557,7 @@ const LearnPanel = forwardRef(function LearnPanel(
             <GateBadge done={videoDone} label="Video" index={2} />
             <GateBadge done={allDone} label="Unlocked" index={3} />
           </div>
-          <span style={{ fontSize: 12, color: C.t3 }}>{open ? "â–²" : "â–¼"}</span>
+          <span style={{ fontSize: 12, color: C.t3 }}>{open ? "â?²" : "â?¼"}</span>
         </div>
 
         <div
@@ -565,7 +566,7 @@ const LearnPanel = forwardRef(function LearnPanel(
           aria-live="polite"
           style={{ margin: "10px 14px 0", borderRadius: 10 }}
         >
-          {learnComplete ? "Practice Unlocked âœ…" : "Complete all gates to unlock practice"}
+          {learnComplete ? "Practice Unlocked â??" : "Complete all gates to unlock practice"}
         </div>
 
         {open && (
@@ -603,9 +604,9 @@ const LearnPanel = forwardRef(function LearnPanel(
                     }}
                   >
                     {tab.label}
-                    {isLocked && <span style={{ fontSize: 11 }}>ğŸ”’</span>}
-                    {tab.id === "read" && readDone && <span style={{ fontSize: 11, color: C.green }}>âœ“</span>}
-                    {tab.id === "video" && videoDone && <span style={{ fontSize: 11, color: C.green }}>âœ“</span>}
+                    {isLocked && <span style={{ fontSize: 11 }}>ğ???</span>}
+                    {tab.id === "read" && readDone && <span style={{ fontSize: 11, color: C.green }}>â??</span>}
+                    {tab.id === "video" && videoDone && <span style={{ fontSize: 11, color: C.green }}>â??</span>}
                   </button>
                 );
               })}
@@ -619,7 +620,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                 }}
               >
                 {allDone ? (
-                  <span style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>âœ… Practice unlocked</span>
+                  <span style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>â?? Practice unlocked</span>
                 ) : (
                   <span style={{ fontSize: 12, color: C.t3 }}>
                     {!readDone ? "Step 1: Read & wait" : "Step 2: Watch video"}
@@ -641,7 +642,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                       lineHeight: 1.65,
                     }}
                   >
-                    <strong style={{ color: C.cyan }}>ğŸ¯ Concept: </strong>
+                    <strong style={{ color: C.cyan }}>ğ??¯ Concept: </strong>
                     {lesson.concept}
                   </div>
                 )}
@@ -905,7 +906,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                       textAlign: "center",
                     }}
                   >
-                    âœ… Reading complete, click <strong>Video</strong> tab to continue
+                    â?? Reading complete, click <strong>Video</strong> tab to continue
                   </div>
                 )}
 
@@ -926,7 +927,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                       gap: 12,
                     }}
                   >
-                    <span style={{ fontSize: 36 }}>ğŸ”’</span>
+                    <span style={{ fontSize: 36 }}>ğ???</span>
                     <span style={{ fontSize: 14, color: C.t2 }}>Complete the reading first to unlock this video.</span>
                   </div>
                 ) : (
@@ -1081,7 +1082,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                           gap: 12,
                         }}
                       >
-                        <span style={{ fontSize: 40 }}>ğŸ¬</span>
+                        <span style={{ fontSize: 40 }}>ğ??¬</span>
                         <span
                           style={{
                             fontSize: 13,
@@ -1111,7 +1112,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                               fontWeight: 600,
                             }}
                           >
-                            âœ“ Mark video watched
+                            â?? Mark video watched
                           </button>
                         )}
                       </div>
@@ -1137,7 +1138,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                   background: `${C.green}08`,
                 }}
               >
-                <span style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>âœ“ Checkpoint: </span>
+                <span style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>â?? Checkpoint: </span>
                 <span style={{ fontSize: 12, color: C.t1 }}>{lesson.checkpoint}</span>
               </div>
             )}

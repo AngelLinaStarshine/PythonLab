@@ -110,11 +110,18 @@ export function isPersistableVideoUrl(url) {
   return true;
 }
 
+/** Persist every real URL in the teacher list (not padded fill slots or blob previews). */
 export function sourcesForPersistence(sources) {
   if (!Array.isArray(sources)) return [];
-  return filterVideosWithUrls(sources).filter(
-    (s) => isTeacherAddedSource(s) && isPersistableVideoUrl(s.url),
-  );
+  const seen = new Set();
+  return filterVideosWithUrls(sources).filter((s) => {
+    if (String(s.id || "").startsWith("fill-")) return false;
+    if (!isPersistableVideoUrl(s.url)) return false;
+    const key = String(s.url).trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function loadTeacherVideos(lessonId) {

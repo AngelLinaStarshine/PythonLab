@@ -7,7 +7,7 @@ export const LESSON_INPUT_GUIDES = {
   l2: {
     title: "What to enter when asked (Lesson 2)",
     intro:
-      "Run and Mastery Check fill in sample answers for you. If a popup appears, enter these three values in order:",
+      "Click Run to open a form and type your three answers. Mastery Check uses sample answers automatically.",
     fields: [
       {
         label: "Message",

@@ -192,7 +192,7 @@ print("╔══ PHISHING INTAKE REPORT ══╗")
 print(f"Message    : {msg}")
 print(f"Risk Score : {risk} / 100")
 print(f"Confidence : __BLANK4__")
-print(f"Status     : {label}")
+print(f"Label      : {label}")
 
 # ── Bonus: add your own field below ──────────────────────────────
 # Example: analyst = input("Your name: ")

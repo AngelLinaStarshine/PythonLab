@@ -1362,6 +1362,12 @@ a { color: inherit; }
   color: var(--sun);
 }
 
+.input-modal-error {
+  margin: 0;
+  font-size: 13px;
+  color: #ff6b7a;
+}
+
 .input-modal-actions {
   display: flex;
   gap: 8px;
