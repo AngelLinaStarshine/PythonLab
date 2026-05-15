@@ -1,4 +1,5 @@
 import { recordStudentEvent } from "./utils/studentActivityStore.js";
+import { ROLE_STORAGE_KEY } from "./components/RolePicker.jsx";
 
 /**
  * securityLayer.js
@@ -266,17 +267,27 @@ function hideSecurityOverlay() {
   }
 }
 
+function isTeacherSession() {
+  try {
+    return localStorage.getItem(ROLE_STORAGE_KEY) === "teacher";
+  } catch {
+    return false;
+  }
+}
+
 (function handleVisibility() {
   let blurTimer = null;
   const BLUR_DELAY_MS = 800;
 
   function scheduleBlurOverlay(reason) {
+    if (isTeacherSession()) return;
     if (blurTimer) {
       clearTimeout(blurTimer);
       blurTimer = null;
     }
     blurTimer = setTimeout(() => {
       blurTimer = null;
+      if (isTeacherSession()) return;
       document.getElementById("security-blur-overlay")?.classList.add("active");
       _logSecurityEvent(reason);
     }, BLUR_DELAY_MS);

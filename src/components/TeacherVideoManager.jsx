@@ -6,15 +6,14 @@ import {
   saveTeacherVideos,
   getYouTubeEmbedUrl,
   lessonOptionsToSources,
+  filterVideosWithUrls,
+  getMergedVideoSources,
   MIN_VIDEOS_PER_LESSON,
 } from "../utils/videoUtils.js";
 
 export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }) {
-  const defaultSources = lessonOptionsToSources(lesson, lessonId);
-  const [sources, setSources] = useState(() => {
-    const saved = loadTeacherVideos(lessonId);
-    return saved.length >= MIN_VIDEOS_PER_LESSON ? saved : defaultSources;
-  });
+  const defaultSources = filterVideosWithUrls(lessonOptionsToSources(lesson, lessonId));
+  const [sources, setSources] = useState(() => getMergedVideoSources(lesson, lessonId));
 
   const [newType, setNewType] = useState("mp4");
   const [newUrl, setNewUrl] = useState("");
@@ -22,13 +21,30 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
   const [uploadObjectUrl, setUploadObjectUrl] = useState(null);
 
   useEffect(() => {
-    const saved = loadTeacherVideos(lessonId);
-    const def = lessonOptionsToSources(lesson, lessonId);
-    setSources(saved.length >= MIN_VIDEOS_PER_LESSON ? saved : def);
-  }, [lessonId, lesson]);
+    const list = getMergedVideoSources(lesson, lessonId);
+    setSources(list);
+    const raw = loadTeacherVideos(lessonId);
+    const rawJson = JSON.stringify(raw);
+    const listJson = JSON.stringify(list);
+    if (rawJson !== listJson) {
+      saveTeacherVideos(lessonId, list);
+      onVideosChange?.(list);
+    }
+  }, [lessonId, lesson, onVideosChange]);
 
   const save = (next) => {
-    const list = next.length >= MIN_VIDEOS_PER_LESSON ? next : [...next, ...defaultSources].slice(0, MIN_VIDEOS_PER_LESSON);
+    let list = filterVideosWithUrls(next);
+    if (list.length < MIN_VIDEOS_PER_LESSON && defaultSources.length > 0) {
+      const base = [...list];
+      while (base.length < MIN_VIDEOS_PER_LESSON) {
+        const d = defaultSources[base.length % defaultSources.length];
+        base.push({
+          ...d,
+          id: `fill-${lessonId}-${base.length}-${Date.now()}`,
+        });
+      }
+      list = filterVideosWithUrls(base);
+    }
     setSources(list);
     saveTeacherVideos(lessonId, list);
     onVideosChange?.(list);
@@ -48,14 +64,15 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
     setNewLabel("");
   };
 
-  const addFromFile = (e) => {
+  const addFromFile = (e, { recording = false } = {}) => {
     const file = e.target?.files?.[0];
     if (!file || !file.type.startsWith("video/")) return;
     const prev = uploadObjectUrl;
     if (prev) URL.revokeObjectURL(prev);
     const objUrl = URL.createObjectURL(file);
     setUploadObjectUrl(objUrl);
-    const label = (newLabel || "").trim() || file.name || "Uploaded MP4";
+    const baseLabel = (newLabel || "").trim() || file.name || "Uploaded video";
+    const label = recording ? `Screen recording: ${baseLabel}` : baseLabel;
     save([
       ...sources,
       { id: `t-${lessonId}-${Date.now()}`, type: "mp4", url: objUrl, label },
@@ -65,16 +82,21 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
   };
 
   const remove = (id) => {
-    const next = sources.filter((s) => s.id !== id);
-    if (next.length < MIN_VIDEOS_PER_LESSON) return;
     const revoke = sources.find((s) => s.id === id);
     if (revoke?.url?.startsWith("blob:")) URL.revokeObjectURL(revoke.url);
-    save(next);
+    save(sources.filter((s) => s.id !== id));
   };
 
   return (
     <div className="teacher-video-manager">
       <div className="teacher-video-manager-title">Manage videos (min {MIN_VIDEOS_PER_LESSON}), MP4, YouTube, NotebookLM</div>
+      <p className="teacher-video-manager-note">
+        <strong>NotebookLM:</strong> build or refine your script in{" "}
+        <a href="https://notebooklm.google.com/" target="_blank" rel="noopener noreferrer">
+          NotebookLM
+        </a>
+        , then paste the <strong>share / embed link</strong> here as NotebookLM type so learners see it in-frame.
+      </p>
       <div className="teacher-video-manager-form">
         <select
           className="video-select"
@@ -89,8 +111,22 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
         {newType === "mp4" && (
           <span className="teacher-video-upload">
             <label className="btn ghost" style={{ marginRight: 8 }}>
-              Upload MP4
-              <input type="file" accept="video/mp4,video/*" onChange={addFromFile} style={{ display: "none" }} />
+              Upload file (MP4/WebM)
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/*"
+                onChange={(ev) => addFromFile(ev, { recording: false })}
+                style={{ display: "none" }}
+              />
+            </label>
+            <label className="btn ghost" style={{ marginRight: 8 }} title="Use after recording with OS or browser screen capture">
+              Upload screen recording
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/*"
+                onChange={(ev) => addFromFile(ev, { recording: true })}
+                style={{ display: "none" }}
+              />
             </label>
           </span>
         )}
@@ -119,7 +155,13 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
           <li key={s.id} className="teacher-video-item">
             <span className="teacher-video-item-type">{s.type}</span>
             <span className="teacher-video-item-label">{s.label}</span>
-            <button type="button" className="btn ghost" onClick={() => remove(s.id)} disabled={sources.length <= MIN_VIDEOS_PER_LESSON} title="Remove">
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={() => remove(s.id)}
+              disabled={sources.length <= 1}
+              title="Remove"
+            >
               Remove
             </button>
           </li>

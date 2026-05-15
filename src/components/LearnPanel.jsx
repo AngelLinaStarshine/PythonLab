@@ -11,11 +11,19 @@ import {
   useState,
   forwardRef,
 } from "react";
-import { getMergedVideoSources } from "../utils/videoUtils.js";
-import { getLessonContent } from "../data/lessonTryMe.js";
+import {
+  getMergedVideoSources,
+  getStudentVideoSources,
+  getYouTubeEmbedUrl,
+  getYouTubeStudentEmbedUrl,
+  filterVideosWithUrls,
+} from "../utils/videoUtils.js";
+import { getMergedLessonContent } from "../data/lessonTryMe.js";
 import { splitTryMeStarter, previewTryMeExpected } from "../utils/tryMeConstraint.js";
 import TeacherVideoManager from "./TeacherVideoManager.jsx";
 import TeacherLearnEditor from "./TeacherLearnEditor.jsx";
+import InlineTryMe from "./InlineTryMe.jsx";
+import { getInlineTryMe } from "../data/lessonInlineTryMe.js";
 
 const C = {
   bg: "#040c18",
@@ -260,6 +268,8 @@ const LearnPanel = forwardRef(function LearnPanel(
     onTryMeApply,
     tryMeRunPreview,
     liveEditorCode = "",
+    /** Bumps when teacher saves Learn overrides so Try me / walkthrough JSON reloads. */
+    lessonOverridesVersion = 0,
   },
   ref,
 ) {
@@ -269,19 +279,33 @@ const LearnPanel = forwardRef(function LearnPanel(
   const intervalRef = useRef(null);
   const pendingScrollRef = useRef(null);
   const scrollRequestIdRef = useRef(0);
+  /** When there are zero playable videos, auto-complete the video gate once so Run can unlock. */
+  const autoVideoDoneForLessonRef = useRef(null);
 
   const [open, setOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("read");
   const [scrollRequestId, setScrollRequestId] = useState(0);
 
   const [videoSourcesVersion, setVideoSourcesVersion] = useState(0);
-  const videoOptions = useMemo(
-    () => getMergedVideoSources(lesson, lessonId ?? lesson?.id),
-    [lesson, lessonId, videoSourcesVersion],
-  );
+  const videoOptions = useMemo(() => {
+    const lid = lessonId ?? lesson?.id;
+    const raw = isTeacher ? getMergedVideoSources(lesson, lid) : getStudentVideoSources(lid);
+    return filterVideosWithUrls(raw);
+  }, [lesson, lessonId, lesson?.id, isTeacher, videoSourcesVersion]);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
   const currentSource = videoOptions[selectedVideoIndex];
   const isEmbed = currentSource?.type === "youtube" || currentSource?.type === "notebooklm";
+
+  const youtubeIframeSrc = useMemo(() => {
+    if (currentSource?.type !== "youtube" || !currentSource?.url) return "";
+    const raw = currentSource.url;
+    if (isTeacher) return getYouTubeEmbedUrl(raw) || raw;
+    return getYouTubeStudentEmbedUrl(raw) || getYouTubeEmbedUrl(raw) || raw;
+  }, [currentSource?.type, currentSource?.url, isTeacher]);
+
+  /** First completion only: block scrub on MP4; after `videoDone`, full controls. */
+  const mp4Restricted = !isTeacher && !progress?.videoDone;
+  const [mp4Volume, setMp4Volume] = useState(1);
 
   const scrolled = isTeacher || Boolean(progress?.scrolled);
   const timed = isTeacher || Boolean(progress?.timed);
@@ -292,7 +316,10 @@ const LearnPanel = forwardRef(function LearnPanel(
   const minSecs = lesson?.minReadSeconds ?? 30;
   const [elapsed, setElapsed] = useState(0);
 
-  const enrichment = useMemo(() => getLessonContent(lessonId ?? lesson?.id ?? ""), [lessonId, lesson?.id]);
+  const enrichment = useMemo(
+    () => getMergedLessonContent(lessonId ?? lesson?.id ?? ""),
+    [lessonId, lesson?.id, lessonOverridesVersion],
+  );
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
@@ -311,6 +338,26 @@ const LearnPanel = forwardRef(function LearnPanel(
   );
 
   useEffect(() => {
+    autoVideoDoneForLessonRef.current = null;
+  }, [lessonId]);
+
+  useEffect(() => {
+    if (isTeacher || !readDone || progress?.videoDone) return;
+    if (videoOptions.length > 0) return;
+    if (autoVideoDoneForLessonRef.current === lessonId) return;
+    autoVideoDoneForLessonRef.current = lessonId;
+    onProgressChange?.({ ...(progress ?? {}), videoDone: true });
+  }, [
+    isTeacher,
+    readDone,
+    progress?.videoDone,
+    videoOptions.length,
+    lessonId,
+    onProgressChange,
+    progress,
+  ]);
+
+  useEffect(() => {
     setElapsed(0);
     setActiveTab("read");
   }, [lessonId]);
@@ -323,6 +370,30 @@ const LearnPanel = forwardRef(function LearnPanel(
       videoRef.current.pause();
     }
   }, [lesson?.id]);
+
+  useEffect(() => {
+    setSelectedVideoIndex((idx) => {
+      if (videoOptions.length === 0) return 0;
+      return idx >= videoOptions.length ? 0 : idx;
+    });
+  }, [videoOptions.length]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !currentSource?.url) return;
+    if (currentSource.type === "youtube" || currentSource.type === "notebooklm") return;
+    try {
+      v.load();
+    } catch {
+      /* ignore */
+    }
+  }, [currentSource?.url, currentSource?.type]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || currentSource?.type === "youtube" || currentSource?.type === "notebooklm") return;
+    v.volume = mp4Volume;
+  }, [mp4Volume, currentSource?.url, currentSource?.type, selectedVideoIndex]);
 
   useEffect(() => {
     if (isTeacher) return;
@@ -353,20 +424,16 @@ const LearnPanel = forwardRef(function LearnPanel(
     }
   }, [progress, isTeacher, onProgressChange]);
 
+  /** Track position for seek guard only; avoid clamping on slow timeupdate (that used to freeze playback). */
   const onTimeUpdate = () => {
     const v = videoRef.current;
-    if (!v || progress?.videoDone) return;
-    const now = v.currentTime;
-    if (now - lastTimeRef.current > 1.2 && !v.seeking) {
-      v.currentTime = lastTimeRef.current;
-      return;
-    }
-    lastTimeRef.current = now;
+    if (!v || isTeacher || progress?.videoDone) return;
+    if (!v.seeking) lastTimeRef.current = v.currentTime;
   };
 
   const onSeeking = () => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || isTeacher || progress?.videoDone) return;
     if (v.currentTime > lastTimeRef.current + 0.2) {
       v.currentTime = lastTimeRef.current;
     }
@@ -603,7 +670,10 @@ const LearnPanel = forwardRef(function LearnPanel(
                         )}
                       </div>
                       <ol className="lesson-enrichment-sections">
-                        {enrichment.sections.map((sec) => (
+                        {enrichment.sections.map((sec) => {
+                          const lid = lessonId ?? lesson?.id ?? "";
+                          const inlineSpec = getInlineTryMe(lid, sec.id);
+                          return (
                           <li key={sec.id} className="lesson-enrichment-section">
                             <div className="lesson-enrichment-section-head">
                               <span className="lesson-enrichment-icon" aria-hidden>
@@ -630,6 +700,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                                 <code>{sec.code}</code>
                               </pre>
                             )}
+                            {inlineSpec ? <InlineTryMe {...inlineSpec} /> : null}
                             {sec.tryMe && (() => {
                               const token =
                                 typeof sec.tryMe.editableToken === "string"
@@ -672,11 +743,25 @@ const LearnPanel = forwardRef(function LearnPanel(
                                     }
                                   : null;
 
+                              const loadSubtle = Boolean(inlineSpec);
+
                               return (
                                 <div className="lesson-enrichment-tryme practice-lab">
                                   <div className="lesson-enrichment-tryme-label">Try me</div>
                                   <p className="lesson-enrichment-tryme-locked-note">
-                                    {split ? (
+                                    {loadSubtle ? (
+                                      <>
+                                        Use the <strong>Try Me</strong> block above first. When you are ready for the
+                                        full runnable starter, open it in the <strong>Code</strong> editor (after Read +
+                                        Video gates).{" "}
+                                        {split ? (
+                                          <>
+                                            You may still change only <strong>{split.token}</strong> in the editor
+                                            when a token is shown.
+                                          </>
+                                        ) : null}
+                                      </>
+                                    ) : split ? (
                                       <>
                                         Change only <strong>{split.token}</strong> in the <strong>Code</strong> editor
                                         after <strong>Load in editor</strong> (see Hint). Other text is fixed
@@ -693,17 +778,28 @@ const LearnPanel = forwardRef(function LearnPanel(
                                     <code>{sec.tryMe.starter}</code>
                                   </pre>
                                   {onTryMeApply && (
-                                    <div className="lesson-enrichment-tryme-actions">
+                                    <div
+                                      className={
+                                        loadSubtle
+                                          ? "lesson-enrichment-tryme-actions lesson-enrichment-tryme-actions--subtle"
+                                          : "lesson-enrichment-tryme-actions"
+                                      }
+                                    >
                                       <button
                                         type="button"
-                                        className="btn small"
+                                        className={loadSubtle ? "btn ghost small" : "btn small"}
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           onTryMeApply(sec.tryMe.starter, sec.id, { constraint });
                                         }}
                                       >
-                                        Load in editor
+                                        {loadSubtle ? "Load full example in code editor" : "Load in editor"}
                                       </button>
+                                      {loadSubtle ? (
+                                        <span className="lesson-enrichment-tryme-gate-note">
+                                          Available after Read + Video gates
+                                        </span>
+                                      ) : null}
                                     </div>
                                   )}
                                   <details className="lesson-enrichment-details">
@@ -755,7 +851,8 @@ const LearnPanel = forwardRef(function LearnPanel(
                             })()}
                             {sec.tip && <p className="lesson-enrichment-tip">Tip: {sec.tip}</p>}
                           </li>
-                        ))}
+                          );
+                        })}
                       </ol>
                     </div>
                   )}
@@ -842,15 +939,18 @@ const LearnPanel = forwardRef(function LearnPanel(
                       </div>
                     )}
 
-                    {currentSource?.type === "youtube" && currentSource?.url && (
-                      <div className="video-embed-wrap">
-                        <iframe
-                          className="video-embed"
-                          src={currentSource.url}
-                          title={currentSource.label}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
+                    {currentSource?.type === "youtube" && youtubeIframeSrc && (
+                      <div className="video-shell-col">
+                        <div className="video-stage">
+                          <iframe
+                            key={youtubeIframeSrc}
+                            className="video-embed video-stage-fill"
+                            src={youtubeIframeSrc}
+                            title={currentSource.label}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            {...(isTeacher ? { allowFullScreen: true } : {})}
+                          />
+                        </div>
                         {!isTeacher && !progress?.videoDone && (
                           <button type="button" className="btn sun" onClick={onMarkWatched}>
                             I watched this, unlock
@@ -860,8 +960,14 @@ const LearnPanel = forwardRef(function LearnPanel(
                     )}
 
                     {currentSource?.type === "notebooklm" && currentSource?.url && (
-                      <div className="video-embed-wrap">
-                        <iframe className="video-embed" src={currentSource.url} title={currentSource.label} />
+                      <div className="video-shell-col">
+                        <div className="video-stage">
+                          <iframe
+                            className="video-embed video-stage-fill"
+                            src={currentSource.url}
+                            title={currentSource.label}
+                          />
+                        </div>
                         <a href={currentSource.url} target="_blank" rel="noopener noreferrer" className="video-external-link">
                           Open NotebookLM in new tab
                         </a>
@@ -874,44 +980,73 @@ const LearnPanel = forwardRef(function LearnPanel(
                     )}
 
                     {(currentSource?.type === "mp4" || !currentSource?.type) && currentSource?.url && (
-                      <>
-                        <video
-                          className="video"
-                          ref={videoRef}
-                          src={currentSource?.url}
-                          controls
-                          controlsList="nodownload noplaybackrate"
-                          disablePictureInPicture
-                          onTimeUpdate={onTimeUpdate}
-                          onSeeking={onSeeking}
-                          onEnded={onEnded}
-                        />
-                        <div className="video-controls">
-                          <button type="button" className="btn" onClick={() => videoRef.current?.play()}>
-                            Play
-                          </button>
-                          <button type="button" className="btn ghost" onClick={() => videoRef.current?.pause()}>
-                            Pause
-                          </button>
-                          <button
-                            type="button"
-                            className="btn ghost"
-                            onClick={() => {
-                              const v = videoRef.current;
-                              if (!v) return;
-                              v.currentTime = 0;
-                              lastTimeRef.current = 0;
-                              v.pause();
+                      <div className="video-shell-col">
+                        <div className="video-stage">
+                          <video
+                            key={`${currentSource?.id || "v"}-${currentSource?.url || ""}`}
+                            className="video video-stage-fill"
+                            ref={videoRef}
+                            src={currentSource?.url}
+                            playsInline
+                            controls={!mp4Restricted}
+                            controlsList={
+                              isTeacher ? "nodownload noplaybackrate" : "nofullscreen nodownload noplaybackrate"
+                            }
+                            disablePictureInPicture
+                            onTimeUpdate={onTimeUpdate}
+                            onSeeking={onSeeking}
+                            onEnded={onEnded}
+                            onDoubleClick={(e) => {
+                              if (mp4Restricted) e.preventDefault();
                             }}
-                          >
-                            Restart
-                          </button>
+                          />
                         </div>
-                      </>
+                        {mp4Restricted ? (
+                          <div className="video-controls video-controls-student">
+                            <button type="button" className="btn" onClick={() => videoRef.current?.play()}>
+                              Play
+                            </button>
+                            <button type="button" className="btn ghost" onClick={() => videoRef.current?.pause()}>
+                              Pause
+                            </button>
+                            <button
+                              type="button"
+                              className="btn ghost"
+                              onClick={() => {
+                                const v = videoRef.current;
+                                if (!v) return;
+                                v.currentTime = 0;
+                                lastTimeRef.current = 0;
+                                v.pause();
+                              }}
+                            >
+                              Restart
+                            </button>
+                            <label className="video-volume">
+                              <span className="video-volume-label">Volume</span>
+                              <input
+                                type="range"
+                                min={0}
+                                max={1}
+                                step={0.05}
+                                value={mp4Volume}
+                                onChange={(e) => setMp4Volume(Number(e.target.value))}
+                              />
+                            </label>
+                          </div>
+                        ) : null}
+                      </div>
                     )}
 
-                    {!isEmbed && currentSource?.url && (
-                      <div className="video-note">Skipping is disabled. Watch to the end to unlock.</div>
+                    {currentSource?.type === "youtube" && currentSource?.url && mp4Restricted && (
+                      <div className="video-note">
+                        Playback stays in this page. If the player does not mark completion, use the button under the
+                        video when you have watched it.
+                      </div>
+                    )}
+
+                    {!isEmbed && currentSource?.url && mp4Restricted && (
+                      <div className="video-note">Skipping is disabled until you finish once. Watch to the end to unlock.</div>
                     )}
 
                     {!currentSource?.url && (
@@ -929,8 +1064,21 @@ const LearnPanel = forwardRef(function LearnPanel(
                         }}
                       >
                         <span style={{ fontSize: 40 }}>🎬</span>
-                        <span style={{ fontSize: 13, color: C.t2 }}>No video URL, add one in teacher mode</span>
-                        {!isTeacher && !progress?.videoDone && (
+                        <span
+                          style={{
+                            fontSize: 13,
+                            color: C.t2,
+                            textAlign: "center",
+                            padding: "0 16px",
+                            maxWidth: 420,
+                            lineHeight: 1.45,
+                          }}
+                        >
+                          {!isTeacher && videoOptions.length === 0
+                            ? "Your teacher has not added any videos for this lesson on this device yet. They should add YouTube, NotebookLM, or public MP4/WebM links in teacher mode (uploaded files only work on the same browser where they were added unless hosted on a web URL)."
+                            : "No video URL, add one in teacher mode"}
+                        </span>
+                        {!isTeacher && !progress?.videoDone && videoOptions.length > 0 && (
                           <button
                             type="button"
                             onClick={onMarkWatched}

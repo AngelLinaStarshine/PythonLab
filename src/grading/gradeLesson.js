@@ -143,24 +143,12 @@ function isBooleanTF(expr) {
   return /^(True|False)$/.test(expr.trim());
 }
 
-function hasPrintUsingVars(code) {
+/** Lesson 1 starter: username, grade, two_factor_enabled (no risk_score line in template). */
+function hasL1StarterPrintSummary(code) {
   const c = String(code ?? "");
-  const hasPrint = /\bprint\s*\(/.test(c);
-  const usesUsername = /\busername\b/.test(c);
-  const usesGrade = /\bgrade\b/.test(c);
-  const uses2fa = /\btwo_factor_enabled\b/.test(c);
-  const usesRisk = /\brisk_score\b/.test(c);
-  return hasPrint && usesUsername && usesGrade && uses2fa && usesRisk;
-}
-
-function looksLikeFloatLiteral(expr) {
-  const t = String(expr ?? "").trim();
-  if (!t) return false;
-  if (isQuotedString(t) || isBooleanTF(t)) return false;
-  if (isInt10or11(t)) return false;
-  // int literals without a dot are not floats for this lab
-  if (/^-?\d+$/.test(t)) return false;
-  return /^-?\d*\.\d+([eE][+-]?\d+)?$/.test(t) || /^-?\d+\.$/.test(t);
+  if (!/\bprint\s*\(/.test(c)) return false;
+  if (!/\busername\b/.test(c) || !/\bgrade\b/.test(c) || !/\btwo_factor_enabled\b/.test(c)) return false;
+  return true;
 }
 
 /* -----------------------------
@@ -175,7 +163,6 @@ const TESTS = {
     requiredPatterns: [
       /\busername\s*=/,
       /\bgrade\s*=/,
-      /\brisk_score\s*=/,
       /\btwo_factor_enabled\s*=/,
       /\btype\s*\(/,
       /\bprint\s*\(/,
@@ -187,7 +174,7 @@ const TESTS = {
       const req = requirePatterns(
         code,
         TESTS.l1.requiredPatterns,
-        "Lesson 1 requires username, grade, risk_score, two_factor_enabled, type(), and print()."
+        "Lesson 1 requires username, grade, two_factor_enabled, type(), and print().",
       );
       if (req) return req;
 
@@ -195,11 +182,10 @@ const TESTS = {
 
       const usernameExpr = findAssignment(clean, "username");
       const gradeExpr = findAssignment(clean, "grade");
-      const riskExpr = findAssignment(clean, "risk_score");
       const twoFAExpr = findAssignment(clean, "two_factor_enabled");
 
-      if (!usernameExpr || !gradeExpr || !riskExpr || !twoFAExpr) {
-        return missing("Define all four variables: username, grade, risk_score, two_factor_enabled.");
+      if (!usernameExpr || !gradeExpr || !twoFAExpr) {
+        return missing("Define all three variables: username, grade, two_factor_enabled.");
       }
 
       if (!isQuotedString(usernameExpr)) {
@@ -210,18 +196,14 @@ const TESTS = {
         return missing("grade must be 10 or 11 as a number (no quotes). Example: grade = 10");
       }
 
-      if (!looksLikeFloatLiteral(riskExpr)) {
-        return missing("risk_score must be a float literal (include a decimal point). Example: risk_score = 0.0");
-      }
-
       if (!isBooleanTF(twoFAExpr)) {
         return missing(
-          "two_factor_enabled must be True or False (capital T/F, no quotes). Example: two_factor_enabled = True"
+          "two_factor_enabled must be True or False (capital T/F, no quotes). Example: two_factor_enabled = True",
         );
       }
 
-      if (!hasPrintUsingVars(clean)) {
-        return missing("Use print() and include username, grade, risk_score, and two_factor_enabled in the summary output.");
+      if (!hasL1StarterPrintSummary(clean)) {
+        return missing("Use print() and include username, grade, and two_factor_enabled in your output.");
       }
 
       return pass("Mastered ✅ Lesson 1 strict type rules passed.");

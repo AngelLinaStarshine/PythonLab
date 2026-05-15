@@ -535,6 +535,18 @@ a { color: inherit; }
   margin-bottom: 4px;
 }
 
+.lesson-enrichment-tryme-actions--subtle {
+  margin-top: 6px;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.lesson-enrichment-tryme-gate-note {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .lesson-enrichment-details {
   margin-top: 8px;
   font-size: 12px;
@@ -624,12 +636,71 @@ a { color: inherit; }
   gap: 8px;
 }
 
+/* In-app video frame: fixed aspect ratio, no extra scroll inside the player area */
+.video-shell-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.video-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: min(48vh, 440px);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+}
+
+.video-stage-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.video-controls-student {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px 14px;
+}
+
+.video-volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
+}
+
+.video-volume-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.video-volume input[type="range"] {
+  width: min(140px, 36vw);
+  accent-color: var(--accent);
+}
+
 .video-embed {
   width: 100%;
   height: 280px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: #000;
+}
+
+.video-stage .video-embed {
+  height: 100%;
 }
 
 .video-external-link {
@@ -649,6 +720,18 @@ a { color: inherit; }
   font-weight: 700;
   color: var(--sun);
   margin-bottom: 8px;
+}
+
+.teacher-video-manager-note {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+  margin: 0 0 12px;
+  max-width: 720px;
+}
+
+.teacher-video-manager-note a {
+  color: var(--accent);
 }
 
 .teacher-video-manager-form {
@@ -708,6 +791,22 @@ a { color: inherit; }
   border: 1px solid rgba(255,255,255,0.08);
 }
 
+.video-stage .video {
+  height: 100%;
+  border: none;
+}
+
+.result-learn-gate-hint {
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 173, 46, 0.08);
+  color: var(--sun);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .video-controls {
   display: flex;
   gap: 10px;
@@ -728,6 +827,15 @@ a { color: inherit; }
   border: 1px solid var(--border);
   margin: 12px 16px 0 16px;
   background: rgba(4, 12, 24, 0.55);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.lesson-quiz-panel-wrap {
+  margin: 12px 16px 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(4, 12, 24, 0.45);
   box-shadow: var(--shadow);
   overflow: hidden;
 }
@@ -1039,6 +1147,55 @@ a { color: inherit; }
 
 .console-pre.err { border-color: rgba(255,107,107,0.55); }
 
+.error-coach {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.error-coach-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  margin-bottom: 8px;
+}
+
+.error-coach-intro {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.error-coach-list {
+  margin: 0 0 0 1.1em;
+  padding: 0;
+  color: var(--text);
+}
+
+.error-coach-list li {
+  margin-bottom: 6px;
+}
+
+.error-coach-actions {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(167, 139, 250, 0.22);
+}
+
+.error-coach-foot {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .runtime-loading { padding: 16px; color: var(--muted); }
 
 /* =========================
@@ -1196,6 +1353,30 @@ a { color: inherit; }
   display: flex;
   gap: 8px;
   margin-top: 12px;
+}
+
+.teacher-learn-editor-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 8px;
+  line-height: 1.45;
+}
+
+.teacher-learn-editor-hint code {
+  font-size: 11px;
+}
+
+.teacher-learn-editor-row {
+  margin-bottom: 8px;
+}
+
+.teacher-learn-editor-json {
+  min-height: 260px;
+}
+
+.btn.small {
+  padding: 5px 10px;
+  font-size: 12px;
 }
 
 /* =========================

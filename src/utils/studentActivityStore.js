@@ -1,6 +1,8 @@
 // src/utils/studentActivityStore.js
 // Records student activity for teacher notifications. Uses localStorage (no backend).
 
+import { loadStudentName } from "../components/RolePicker.jsx";
+
 const STORAGE_KEY = "py_learn_student_events";
 const STUDENT_ID_KEY = "py_learn_student_id";
 const MAX_EVENTS = 500;
@@ -43,9 +45,11 @@ function saveEvents(list) {
  */
 export function recordStudentEvent(event) {
   const studentId = getStudentId();
+  const studentName = loadStudentName() || undefined;
   const entry = {
     id: Date.now() + "_" + Math.random().toString(36).slice(2, 8),
     studentId,
+    studentName,
     at: new Date().toISOString(),
     atLabel: new Date().toLocaleTimeString(),
     ...event,

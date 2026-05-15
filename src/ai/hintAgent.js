@@ -22,7 +22,8 @@ Lesson 1 mastery rules:
 - username must be a quoted string ("" or '')
 - grade must be number 10 or 11 (no quotes)
 - two_factor_enabled must be True or False (capital, no quotes)
-- must print using all variables
+- include type() somewhere to inspect a type
+- print() must show username, grade, and two_factor_enabled
 `,
   // add l2..l10 guides later
 };

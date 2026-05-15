@@ -9,6 +9,7 @@ import LearnPanel from "./components/LearnPanel.jsx";
 import RolePicker, { saveRole, loadRole, loadStudentName } from "./components/RolePicker.jsx";
 import { usePyodideRunner } from "./hooks/usePyodideRunner.js";
 import { analyzeCode } from "./ai/analyzeClient.js";
+import { buildErrorCoach } from "./ai/errorCoach.js";
 import { useDebounce } from "./hooks/useDebounce.js";
 import { gradeLesson, getLessonTestInputs, wrapWithMockInputs } from "./grading/gradeLesson.js";
 import { recordStudentEvent, clearStudentEvents } from "./utils/studentActivityStore.js";
@@ -18,8 +19,10 @@ import TeacherNotificationsPanel from "./components/TeacherNotificationsPanel.js
 import TeacherDashboard from "./components/TeacherDashboard.jsx";
 import AgentARIA from "./components/AgentARIA.jsx";
 import PracticeLab from "./components/PracticeLab.jsx";
+import QuizPanel from "./components/QuizPanel.jsx";
+import { getQuiz } from "./data/quizData.js";
 
-const STORAGE_KEY = "py_learn_progress_v3"; // bump again to avoid old saves
+const STORAGE_KEY = "py_learn_progress_v4"; // v4: lessons refresh (L1 3-blank starter, L10 SENTINEL template)
 
 function loadProgress() {
   try {
@@ -104,9 +107,20 @@ export default function App() {
   }, [isTeacher, masteryByLesson]);
 
   const learnComplete = isTeacher || (lessonProgress.scrolled && lessonProgress.timed && lessonProgress.videoDone);
+  /** Code editor, Result Run/Mastery, and Practice lab stay locked until reading + video gates pass (students). */
+  const learnGate = learnComplete;
+
+  /** After "Complete Lab, proceed to quiz", show lesson quiz when questions exist for this lesson. */
+  const [showQuizAfterLab, setShowQuizAfterLab] = useState(false);
+
+  useEffect(() => {
+    setShowQuizAfterLab(false);
+  }, [activeLessonId]);
 
   const [stdout, setStdout] = useState("");
   const [error, setError] = useState("");
+  /** Counts consecutive runs (Run or Mastery) that ended with a non-empty interpreter error. */
+  const [runErrorStreak, setRunErrorStreak] = useState(0);
   const [hint, setHint] = useState({ severity: "none", message: "" });
 
   const [masteryMsg, setMasteryMsg] = useState(""); // shown in ResultPane
@@ -143,7 +157,6 @@ export default function App() {
     });
   }, [showAgentAria, activeLessonId, activeLesson?.title]);
 
-  const [antiCheatEnabled, setAntiCheatEnabled] = useState(true);
   const [noPasteEnabled, setNoPasteEnabled] = useState(true);
   /** Bumped when starter code is applied from Learn / Lab so Monaco remounts with the new `value`. */
   const [editorLayoutKey, setEditorLayoutKey] = useState(0);
@@ -178,6 +191,15 @@ export default function App() {
   useEffect(() => {
     lastRecordedHintRef.current = "";
   }, [activeLessonId]);
+
+  useEffect(() => {
+    setRunErrorStreak(0);
+  }, [activeLessonId]);
+
+  const errorCoach = useMemo(
+    () => buildErrorCoach({ errorText: error, lessonId: activeLessonId, streak: runErrorStreak }),
+    [error, activeLessonId, runErrorStreak],
+  );
 
   // Student: track window active time for teacher notifications
   const focusStartRef = useRef(null);
@@ -248,7 +270,7 @@ export default function App() {
   };
 
   const onRun = async () => {
-    if (!learnComplete) return;
+    if (!learnGate) return;
     setStdout("");
     setError("");
     setMasteryMsg("");
@@ -256,6 +278,11 @@ export default function App() {
     const result = await run(code);
     setStdout(result.stdout || "");
     setError(result.error || "");
+    if ((result.error || "").trim()) {
+      setRunErrorStreak((n) => n + 1);
+    } else {
+      setRunErrorStreak(0);
+    }
     setTryMeRunPreview((prev) => {
       if (!prev?.sectionId) return prev;
       return {
@@ -275,6 +302,7 @@ export default function App() {
     setMasteryMsg("");
     setTryMeRunPreview(null);
     setEditorTryMeConstraint(null);
+    setRunErrorStreak(0);
     // keep mastery as-is (teacher choice); if you want reset mastery, tell me.
   };
 
@@ -287,8 +315,7 @@ export default function App() {
 
   // ✅ NEW: Mastery Check
   const onMasteryCheck = async () => {
-    if (!learnComplete) return;
-
+    if (!learnGate) return;
     setTryMeRunPreview(null);
     setEditorTryMeConstraint(null);
     setStdout("");
@@ -304,6 +331,11 @@ export default function App() {
 
     setStdout(out);
     setError(err);
+    if (err.trim()) {
+      setRunErrorStreak((n) => n + 1);
+    } else {
+      setRunErrorStreak(0);
+    }
 
     const grade = gradeLesson({ lessonId: activeLessonId, stdout: out, error: err, code });
 
@@ -381,6 +413,7 @@ export default function App() {
       }
       setTryMeRunPreview(null);
       setEditorTryMeConstraint(null);
+      setRunErrorStreak(0);
       saveProgress({
         activeLessonId: firstId,
         codeByLesson: initialCode,
@@ -395,25 +428,21 @@ export default function App() {
   );
 
   /**
-   * Tab / window leave: restart from lesson 1 as soon as the page is hidden (no grace
-   * period; switching back still finds a fresh session). Students always; teachers
-   * only when “Reset on tab switch” is enabled. Also handle bfcache restores via pageshow.
+   * Tab / window leave + bfcache: full session reset for students only.
+   * Teachers are never reset when switching windows or tabs (their work stays put).
    */
   useEffect(() => {
-    const leaveResetEnabled = !isTeacher || antiCheatEnabled;
-    if (!leaveResetEnabled) return;
+    if (isTeacher) return;
 
     const MOUNT_GRACE_MS = 2000;
     const mountedAt = Date.now();
 
     const runLeaveReset = (reason) => {
       if (Date.now() - mountedAt < MOUNT_GRACE_MS) return;
-      if (!isTeacher) {
-        recordStudentEvent({
-          type: "window_switch",
-          reason,
-        });
-      }
+      recordStudentEvent({
+        type: "window_switch",
+        reason,
+      });
       resetSessionToBeginning({
         clearActivityLog: false,
         progressHint:
@@ -421,9 +450,28 @@ export default function App() {
       });
     };
 
+    let hiddenTid;
+    const HIDDEN_DEBOUNCE_MS = 3500;
+
+    const fullscreenActive = () =>
+      Boolean(
+        document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.mozFullScreenElement,
+      );
+
     const onVisibility = () => {
       if (document.visibilityState === "hidden") {
-        runLeaveReset("tab_or_window_hidden_session_reset");
+        if (Date.now() - mountedAt < MOUNT_GRACE_MS) return;
+        if (fullscreenActive()) return;
+        window.clearTimeout(hiddenTid);
+        hiddenTid = window.setTimeout(() => {
+          hiddenTid = undefined;
+          runLeaveReset("tab_or_window_hidden_session_reset");
+        }, HIDDEN_DEBOUNCE_MS);
+      } else {
+        window.clearTimeout(hiddenTid);
+        hiddenTid = undefined;
       }
     };
 
@@ -437,17 +485,20 @@ export default function App() {
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("pageshow", onPageShow);
     return () => {
+      window.clearTimeout(hiddenTid);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pageshow", onPageShow);
     };
-  }, [isTeacher, antiCheatEnabled, resetSessionToBeginning]);
+  }, [isTeacher, resetSessionToBeginning]);
 
   useEffect(() => {
+    if (isTeacher) return;
+
     /** Ignore scrollbar / layout jitter so we do not reset in a tight loop. */
-    const SIGNIFICANT_SIZE_CHANGE_PX = 180;
+    const SIGNIFICANT_SIZE_CHANGE_PX = 420;
     /** Let first paint + scrollbar settle before any auto-reset. */
     const MOUNT_SETTLE_MS = 1600;
-    const DEBOUNCE_MS = 450;
+    const DEBOUNCE_MS = 900;
 
     const mountedAt = Date.now();
     let tid;
@@ -507,7 +558,7 @@ export default function App() {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onOrientation);
     };
-  }, [resetSessionToBeginning]);
+  }, [isTeacher, resetSessionToBeginning]);
 
   const onResetAllProgress = () => {
     resetSessionToBeginning({
@@ -541,21 +592,24 @@ export default function App() {
               ? "👩‍🏫 Teacher"
               : `👩‍🎓 ${loadStudentName() || "Student"}`}
           </span>
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={onSwitchRole}
+            title="Return to sign-in to choose Teacher or Student"
+          >
+            Switch role
+          </button>
           {isTeacher && <TeacherNotificationsPanel />}
           {isTeacher && (
             <TeacherDashboard
               masteryByLesson={masteryByLesson}
               noPasteEnabled={noPasteEnabled}
-              antiCheatEnabled={antiCheatEnabled}
               onToggleCopy={setNoPasteEnabled}
-              onToggleAntiCheat={setAntiCheatEnabled}
               onResetAll={onResetAllProgress}
+              activeLessonId={activeLessonId}
+              currentEditorCode={code}
             />
-          )}
-          {isTeacher && (
-            <button type="button" className="btn ghost" onClick={onSwitchRole}>
-              Switch role
-            </button>
           )}
           {isTeacher && (
             <button type="button" className="btn ghost" onClick={onResetAllProgress} title="Reset all code, gates, and mastery">
@@ -563,25 +617,14 @@ export default function App() {
             </button>
           )}
           {isTeacher && (
-            <>
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={antiCheatEnabled}
-                  onChange={(e) => setAntiCheatEnabled(e.target.checked)}
-                />
-                Reset on tab switch
-              </label>
-
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={noPasteEnabled}
-                  onChange={(e) => setNoPasteEnabled(e.target.checked)}
-                />
-                Block copy/paste
-              </label>
-            </>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={noPasteEnabled}
+                onChange={(e) => setNoPasteEnabled(e.target.checked)}
+              />
+              Block copy/paste
+            </label>
           )}
         </div>
       </header>
@@ -602,6 +645,7 @@ export default function App() {
               setMasteryMsg("");
               setTryMeRunPreview(null);
               setEditorTryMeConstraint(null);
+              setRunErrorStreak(0);
             }}
           />
         </aside>
@@ -626,23 +670,47 @@ export default function App() {
             onTryMeApply={onTryMeLoadInEditor}
             tryMeRunPreview={tryMeRunPreview}
             liveEditorCode={code}
+            lessonOverridesVersion={lessonOverridesVersion}
           />
 
           <PracticeLab
             lessonId={activeLessonId}
             unlocked={learnComplete}
             onApplyStarter={applyStarterFromLab}
-            onComplete={
-              !isTeacher
-                ? () =>
-                    recordStudentEvent({
-                      type: "lab_completed",
-                      lessonId: activeLessonId,
-                      lessonTitle: activeLesson?.title,
-                    })
-                : undefined
-            }
+            onComplete={() => {
+              if (getQuiz(activeLessonId).length > 0) {
+                setShowQuizAfterLab(true);
+              }
+              if (!isTeacher) {
+                recordStudentEvent({
+                  type: "lab_completed",
+                  lessonId: activeLessonId,
+                  lessonTitle: activeLesson?.title,
+                });
+              }
+            }}
           />
+
+          {learnComplete && showQuizAfterLab && getQuiz(activeLessonId).length > 0 && (
+            <div className="lesson-quiz-panel-wrap">
+              <QuizPanel
+                key={activeLessonId}
+                lessonId={activeLessonId}
+                onComplete={
+                  !isTeacher
+                    ? (score, total) =>
+                        recordStudentEvent({
+                          type: "quiz_completed",
+                          lessonId: activeLessonId,
+                          lessonTitle: activeLesson?.title,
+                          score,
+                          total,
+                        })
+                    : undefined
+                }
+              />
+            </div>
+          )}
 
           <div className="panes">
             <EditorPane
@@ -650,24 +718,26 @@ export default function App() {
               onChange={onChangeCode}
               hint={hint}
               onSave={onSave}
-              antiPasteEnabled={isTeacher ? noPasteEnabled : true}
-              unlocked={learnComplete}
+              antiPasteEnabled={isTeacher && noPasteEnabled}
+              unlocked={learnGate}
               layoutKey={editorLayoutKey}
               tryMeConstrained={Boolean(editorTryMeConstraint)}
             />
 
-        <ResultPane
-          stdout={stdout}
-          error={error}
-          masteryMsg={masteryMsg}
-          unlocked={learnComplete}
-          onRun={onRun}
-          onReset={onReset}
-          runtimeReady={ready}
-          loadingMsg={loadingMsg}
-          onMasteryCheck={onMasteryCheck}
-          mastered={mastered}
-        />
+            <ResultPane
+              stdout={stdout}
+              error={error}
+              masteryMsg={masteryMsg}
+              unlocked={learnGate}
+              errorCoach={errorCoach}
+              onGoToReading={(section) => learnPanelRef.current?.scrollToReading?.(section)}
+              onRun={onRun}
+              onReset={onReset}
+              runtimeReady={ready}
+              loadingMsg={loadingMsg}
+              onMasteryCheck={onMasteryCheck}
+              mastered={mastered}
+            />
           </div>
         </main>
       </div>

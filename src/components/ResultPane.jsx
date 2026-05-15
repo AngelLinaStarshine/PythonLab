@@ -9,7 +9,12 @@ export default function ResultPane({
   onMasteryCheck,
   masteryMsg,
   mastered,
-  unlocked,
+  /** Students: false until reading + video gates in Learn are complete. */
+  unlocked = true,
+  /** From `buildErrorCoach`: gentle guidance when `error` is non-empty. */
+  errorCoach = null,
+  /** Scroll Learn reading to a heading that matches `section` (word overlap). */
+  onGoToReading,
 }) {
   const canRun = Boolean(runtimeReady && unlocked);
   const canMastery = Boolean(runtimeReady && unlocked);
@@ -20,20 +25,15 @@ export default function ResultPane({
         <div className="pane-title">Result</div>
 
         <div className="pane-actions">
-          <button className="btn" onClick={onRun} disabled={!canRun}>
+          <button type="button" className="btn" onClick={onRun} disabled={!canRun}>
             Run
           </button>
 
-          <button className="btn ghost" onClick={onReset} disabled={!runtimeReady}>
+          <button type="button" className="btn ghost" onClick={onReset} disabled={!runtimeReady}>
             Reset
           </button>
 
-          <button
-            className="btn"
-            onClick={onMasteryCheck}
-            disabled={!canMastery}
-            title={!unlocked ? "Finish Learn gates to unlock mastery" : ""}
-          >
+          <button type="button" className="btn" onClick={onMasteryCheck} disabled={!canMastery}>
             {mastered ? "Mastered ✅" : "Mastery Check"}
           </button>
         </div>
@@ -45,6 +45,13 @@ export default function ResultPane({
           <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 12 }}>
             If loading stalls, put a full Pyodide build in <code>public/pyodide/</code> or check your network.
           </div>
+        </div>
+      )}
+
+      {runtimeReady && !unlocked && (
+        <div className="result-learn-gate-hint" role="status">
+          Finish the Learn steps: scroll through reading, wait the minimum time, then complete the video step (or, if
+          no videos are assigned, that step is skipped after reading). Run and Mastery Check unlock after that.
         </div>
       )}
 
@@ -66,16 +73,33 @@ export default function ResultPane({
         <div className="console-block">
           <div className="console-label">error</div>
           <pre className="console-pre err">{error || ""}</pre>
+          {errorCoach && error?.trim() ? (
+            <div className="error-coach" role="region" aria-label="Learning guide for this error">
+              <div className="error-coach-label">Guide</div>
+              <p className="error-coach-intro">{errorCoach.intro}</p>
+              <ul className="error-coach-list">
+                {errorCoach.bullets.map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
+              </ul>
+              {errorCoach.suggestReading && typeof onGoToReading === "function" ? (
+                <div className="error-coach-actions">
+                  <button
+                    type="button"
+                    className="btn ghost small"
+                    onClick={() => onGoToReading(errorCoach.readingHint)}
+                  >
+                    Open Learn reading ({errorCoach.readingHint})
+                  </button>
+                  <p className="error-coach-foot">
+                    The lesson text walks through this idea step by step. Use search in your browser on the Learn
+                    panel if you do not see that heading right away.
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
-
-        {!unlocked && (
-          <div className="console-block">
-            <div className="console-label">Locked</div>
-            <pre className="console-pre">
-              Finish Learn gates (scroll + time + video) to unlock Run and Mastery.
-            </pre>
-          </div>
-        )}
       </div>
     </section>
   );

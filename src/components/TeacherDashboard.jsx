@@ -6,19 +6,25 @@
 //   2. Progress: per-lesson mastery/completion status
 //   3. Activity: active time per lesson, attempt counts
 //   4. Quiz Results: correct_answer and mastery events
-//   5. Controls: global toggles (copy paste, anti cheat, reset)
+//   5. Controls: copy/paste policy, reset, export
 //
 // Props:
 //   masteryByLesson: { l1: bool, l2: bool, ... }
 //   onToggleCopy: fn(bool) parent sets noPasteEnabled
-//   onToggleAntiCheat: fn(bool) parent sets antiCheatEnabled
 //   noPasteEnabled: bool
-//   antiCheatEnabled: bool
 //   onResetAll: fn()
+//   activeLessonId, currentEditorCode — Assignments tab (per-student code)
 
 import { useState, useEffect, useCallback } from "react";
 import { getStudentEvents, clearStudentEvents } from "../utils/studentActivityStore.js";
 import { lessons } from "../data/lessons.js";
+import { downloadStudentEventsCsv, openPrintableReportWindow } from "../utils/teacherReports.js";
+import {
+  loadAssignments,
+  setAssignment,
+  deleteAssignment,
+  downloadAssignmentsCsv,
+} from "../utils/teacherAssignments.js";
 
 const C = {
   bg:"#040c18", card:"#0a1627", cardAlt:"#081120",
@@ -439,25 +445,27 @@ function ActivityTab({ events }) {
 
 // ─── Tab 4: Quiz & Practice Results ──────────────────────────────
 function ResultsTab({ events }) {
-  const resultTypes = ["correct_answer", "student_question", "mastery_attempt", "lab_completed"];
+  const resultTypes = ["correct_answer", "student_question", "mastery_attempt", "lab_completed", "quiz_completed"];
   const results = events.filter((e) => resultTypes.includes(e.type));
 
   const passed = results.filter((e) => e.type === "correct_answer").length;
   const hints = results.filter((e) => e.type === "student_question").length;
   const labs = results.filter((e) => e.type === "lab_completed").length;
+  const quizzes = results.filter((e) => e.type === "quiz_completed").length;
 
   return (
     <div>
       <SectionHeader icon="🏆" title="Quiz & Mastery Results" />
       <div style={{padding:"14px 18px"}}>
         <div style={{
-          display:"grid", gridTemplateColumns:"repeat(3, 1fr)",
+          display:"grid", gridTemplateColumns:"repeat(4, 1fr)",
           gap:10, marginBottom:16,
         }}>
           {[
             { label:"Lessons passed", value:passed, color:C.green, icon:"✅" },
             { label:"Hint triggers",  value:hints,  color:C.amber, icon:"💡" },
             { label:"Labs completed", value:labs,   color:C.cyan,  icon:"🔬" },
+            { label:"Quizzes finished", value:quizzes, color:C.purple, icon:"📝" },
           ].map(({label,value,color,icon},i) => (
             <div key={i} style={{
               padding:"14px", borderRadius:10,
@@ -490,8 +498,9 @@ function ResultsTab({ events }) {
               const isPassed = ev.type === "correct_answer";
               const isHint   = ev.type === "student_question";
               const isLab    = ev.type === "lab_completed";
-              const color    = isPassed ? C.green : isHint ? C.amber : isLab ? C.cyan : C.t2;
-              const icon     = isPassed ? "✅" : isHint ? "💡" : isLab ? "🔬" : "🔁";
+              const isQuiz   = ev.type === "quiz_completed";
+              const color    = isPassed ? C.green : isHint ? C.amber : isLab ? C.cyan : isQuiz ? C.purple : C.t2;
+              const icon     = isPassed ? "✅" : isHint ? "💡" : isLab ? "🔬" : isQuiz ? "📝" : "🔁";
               return (
                 <div key={i} style={{
                   padding:"10px 12px", borderRadius:8,
@@ -505,6 +514,9 @@ function ResultsTab({ events }) {
                     </span>
                     {ev.lessonId && (
                       <Badge color={color}>{ev.lessonId}</Badge>
+                    )}
+                    {typeof ev.score === "number" && typeof ev.total === "number" && (
+                      <Badge color={color}>{ev.score}/{ev.total}</Badge>
                     )}
                     <span style={{fontSize:11, color:C.t3, marginLeft:"auto", fontFamily:C.mono}}>
                       {ev.atLabel || (ev.at || "").slice(11,19)}
@@ -532,8 +544,8 @@ function ResultsTab({ events }) {
 
 // ─── Tab 5: Controls ─────────────────────────────────────────────
 function ControlsTab({
-  noPasteEnabled, antiCheatEnabled,
-  onToggleCopy, onToggleAntiCheat, onResetAll,
+  noPasteEnabled,
+  onToggleCopy, onResetAll,
 }) {
   const [confirmReset, setConfirmReset] = useState(false);
 
@@ -549,19 +561,28 @@ function ControlsTab({
           Student restrictions
         </div>
 
+        <div
+          style={{
+            fontSize: 12,
+            color: C.t2,
+            lineHeight: 1.45,
+            marginBottom: 12,
+            padding: "10px 12px",
+            borderRadius: 10,
+            background: `${C.amber}08`,
+            border: `1px solid ${C.amber}25`,
+          }}
+        >
+          <strong style={{ color: C.t1 }}>Tab leave:</strong> student sign-in resets after leaving this tab for a few
+          seconds. Your teacher screen is never cleared when you switch windows or resize.
+        </div>
+
         <Toggle
           label="Block copy / paste"
           desc="Students cannot paste code into the editor"
           checked={noPasteEnabled}
           onChange={onToggleCopy}
           color={C.red}
-        />
-        <Toggle
-          label="Reset on tab switch"
-          desc="Student's code resets if they leave the app window"
-          checked={antiCheatEnabled}
-          onChange={onToggleAntiCheat}
-          color={C.amber}
         />
 
         <div style={{
@@ -643,22 +664,237 @@ function ControlsTab({
   );
 }
 
+// ─── Tab: Reports (Excel CSV, JSON, print/PDF) ─────────────────────
+function ReportsTab({ events, masteryByLesson }) {
+  const downloadJson = () => {
+    const data = {
+      exported: new Date().toISOString(),
+      events,
+      masteryByLesson,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `student-report-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div style={{ padding: "14px 18px" }}>
+      <SectionHeader icon="📥" title="Reports & exports" />
+      <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.5, marginBottom: 14 }}>
+        Activity CSV includes every field logged for each student event (name, id, time, type, lesson, messages).
+        Open the print report for bar-style charts, then use the browser&apos;s <strong>Print → Save as PDF</strong>.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <button
+          type="button"
+          onClick={() => downloadStudentEventsCsv(events)}
+          style={{
+            ...btn(),
+            width: "100%",
+            padding: "11px",
+            borderRadius: 10,
+            background: `${C.green}12`,
+            border: `1px solid ${C.green}45`,
+            color: C.green,
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          ⬇ Download activity (Excel CSV)
+        </button>
+        <button
+          type="button"
+          onClick={downloadJson}
+          style={{
+            ...btn(),
+            width: "100%",
+            padding: "11px",
+            borderRadius: 10,
+            background: `${C.cyan}10`,
+            border: `1px solid ${C.cyan}40`,
+            color: C.cyan,
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          ⬇ Download full report (JSON)
+        </button>
+        <button
+          type="button"
+          onClick={() => openPrintableReportWindow(events, masteryByLesson)}
+          style={{
+            ...btn(),
+            width: "100%",
+            padding: "11px",
+            borderRadius: 10,
+            background: `${C.amber}12`,
+            border: `1px solid ${C.amber}45`,
+            color: C.amber,
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          📄 Open print report (graphs + PDF)
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Tab: Per-student code assignments (local) ─────────────────────
+function AssignmentsTab({ events, activeLessonId, currentEditorCode }) {
+  const [studentKey, setStudentKey] = useState("");
+  const [lessonId, setLessonId] = useState(activeLessonId);
+  const [code, setCode] = useState("");
+  const [note, setNote] = useState("");
+  const [tick, setTick] = useState(0);
+
+  const students = [
+    ...new Set(
+      events
+        .map((e) => ((e.studentName && String(e.studentName).trim()) || e.studentId || "").trim())
+        .filter(Boolean),
+    ),
+  ].sort();
+
+  useEffect(() => {
+    setLessonId(activeLessonId);
+  }, [activeLessonId]);
+
+  useEffect(() => {
+    if (!studentKey || !lessonId) return;
+    const all = loadAssignments();
+    const row = all[studentKey]?.[lessonId];
+    setCode(row?.code ?? "");
+    setNote(row?.note ?? "");
+  }, [studentKey, lessonId, tick]);
+
+  const onSave = () => {
+    if (!studentKey.trim()) {
+      window.alert("Choose a student from the list (students appear after they have used the lab on this machine).");
+      return;
+    }
+    setAssignment(studentKey.trim(), lessonId, code, note);
+    setTick((x) => x + 1);
+  };
+
+  const onDelete = () => {
+    if (!studentKey.trim()) return;
+    deleteAssignment(studentKey.trim(), lessonId);
+    setCode("");
+    setNote("");
+    setTick((x) => x + 1);
+  };
+
+  return (
+    <div style={{ padding: "14px 18px" }}>
+      <SectionHeader icon="📝" title="Code assignments" />
+      <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.5, marginBottom: 12 }}>
+        Save starter or solution code per student and lesson on this browser. Export CSV to share or archive.
+        Students still use their own devices unless you distribute these files separately.
+      </p>
+      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.t3, marginBottom: 4 }}>Student</label>
+      <select
+        className="video-select"
+        style={{ width: "100%", maxWidth: "none", marginBottom: 10 }}
+        value={studentKey}
+        onChange={(e) => setStudentKey(e.target.value)}
+      >
+        <option value="">Select student (from activity)</option>
+        {students.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.t3, marginBottom: 4 }}>Lesson</label>
+      <select
+        className="video-select"
+        style={{ width: "100%", maxWidth: "none", marginBottom: 10 }}
+        value={lessonId}
+        onChange={(e) => setLessonId(e.target.value)}
+      >
+        {lessons.map((l) => (
+          <option key={l.id} value={l.id}>
+            {l.id} — {l.title}
+          </option>
+        ))}
+      </select>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+        <button type="button" className="btn ghost" style={{ fontSize: 12 }} onClick={() => setCode(currentEditorCode || "")}>
+          Copy from Code editor
+        </button>
+      </div>
+      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.t3, marginBottom: 4 }}>Python code</label>
+      <textarea
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        rows={10}
+        spellCheck={false}
+        style={{
+          width: "100%",
+          marginBottom: 8,
+          padding: 10,
+          borderRadius: 10,
+          border: `1px solid ${C.border}`,
+          background: C.cardAlt,
+          color: C.t1,
+          fontFamily: "ui-monospace, monospace",
+          fontSize: 12,
+        }}
+      />
+      <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.t3, marginBottom: 4 }}>Note (optional)</label>
+      <input
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        style={{
+          width: "100%",
+          marginBottom: 10,
+          padding: 8,
+          borderRadius: 10,
+          border: `1px solid ${C.border}`,
+          background: C.cardAlt,
+          color: C.t1,
+          fontSize: 12,
+        }}
+      />
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+        <button type="button" className="btn" onClick={onSave}>
+          Save assignment
+        </button>
+        <button type="button" className="btn ghost" onClick={onDelete}>
+          Clear this slot
+        </button>
+        <button type="button" className="btn ghost" onClick={() => downloadAssignmentsCsv()}>
+          ⬇ Export assignments CSV
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main TeacherDashboard ────────────────────────────────────────
 const TABS = [
-  { id:"alerts",   icon:"🚨", label:"Alerts"   },
-  { id:"progress", icon:"📊", label:"Progress" },
-  { id:"activity", icon:"⏱️", label:"Activity" },
-  { id:"results",  icon:"🏆", label:"Results"  },
-  { id:"controls", icon:"🎛️", label:"Controls" },
+  { id: "alerts", icon: "🚨", label: "Alerts" },
+  { id: "progress", icon: "📊", label: "Progress" },
+  { id: "activity", icon: "⏱️", label: "Activity" },
+  { id: "results", icon: "🏆", label: "Results" },
+  { id: "reports", icon: "📥", label: "Reports" },
+  { id: "assign", icon: "📝", label: "Assign" },
+  { id: "controls", icon: "🎛️", label: "Controls" },
 ];
 
 export default function TeacherDashboard({
-  masteryByLesson   = {},
-  noPasteEnabled    = true,
-  antiCheatEnabled  = true,
+  masteryByLesson = {},
+  noPasteEnabled = true,
   onToggleCopy,
-  onToggleAntiCheat,
   onResetAll,
+  activeLessonId = lessons[0]?.id ?? "l1",
+  currentEditorCode = "",
 }) {
   const [open, setOpen]       = useState(false);
   const [tab, setTab]         = useState("alerts");
@@ -806,10 +1042,18 @@ export default function TeacherDashboard({
             {tab === "controls" && (
               <ControlsTab
                 noPasteEnabled={noPasteEnabled}
-                antiCheatEnabled={antiCheatEnabled}
                 onToggleCopy={onToggleCopy}
-                onToggleAntiCheat={onToggleAntiCheat}
                 onResetAll={onResetAll}
+              />
+            )}
+            {tab === "reports" && (
+              <ReportsTab events={events} masteryByLesson={masteryByLesson} />
+            )}
+            {tab === "assign" && (
+              <AssignmentsTab
+                events={events}
+                activeLessonId={activeLessonId}
+                currentEditorCode={currentEditorCode}
               />
             )}
           </div>

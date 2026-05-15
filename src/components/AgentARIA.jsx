@@ -140,7 +140,7 @@ export default function AgentARIA({
 
   const MESSAGES = [
     `Hi! I'm ARIA, your Adaptive Response Intelligence Agent. I see you've made ${wrongAttempts} attempts. No worries, let me help you find the answer.`,
-    `I've analysed your code and the error. It looks like the issue is related to: "${diagnosis.reason}"`,
+    "When mastery keeps failing, the fastest path is usually to match your overall structure to one full example in the reading, then change one small piece at a time.",
     `I recommend going back to the reading section titled "${diagnosis.section}", the answer is explained there. Click the button below to jump straight to it.`,
   ];
 

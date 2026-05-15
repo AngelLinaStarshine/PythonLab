@@ -1,4 +1,5 @@
 // src/components/EditorPane.jsx
+import { useEffect, useRef } from "react";
 import Editor from "@monaco-editor/react";
 import AIPopup from "./AIPopup.jsx";
 
@@ -8,12 +9,24 @@ export default function EditorPane({
   hint,
   onSave,
   antiPasteEnabled,
-  unlocked,
+  /** When false (students before Learn is done), editor is read-only and Save is disabled. */
+  unlocked = true,
   /** Increment when loading starter code from Learn / Lab so Monaco picks up `value` while read-only. */
   layoutKey = 0,
   /** Try me with `editableToken`: only the token slice may change in the editor. */
   tryMeConstrained = false,
 }) {
+  const monacoRef = useRef(null);
+
+  useEffect(() => {
+    const ed = monacoRef.current;
+    if (!ed) return;
+    ed.updateOptions({
+      readOnly: !unlocked,
+      quickSuggestions: unlocked,
+    });
+  }, [unlocked]);
+
   const block = (e) => {
     if (!antiPasteEnabled) return;
     e.preventDefault();
@@ -24,7 +37,13 @@ export default function EditorPane({
       <div className="pane-header">
         <div className="pane-title">Code</div>
         <div className="pane-actions">
-          <button className="btn" onClick={onSave}>
+          <button
+            type="button"
+            className="btn"
+            onClick={onSave}
+            disabled={!unlocked}
+            title={!unlocked ? "Complete Learn (reading + video) to save your code" : undefined}
+          >
             Save
           </button>
         </div>
@@ -48,14 +67,21 @@ export default function EditorPane({
           height="70vh"
           defaultLanguage="python"
           value={code}
+          onMount={(editor) => {
+            monacoRef.current = editor;
+            editor.updateOptions({
+              readOnly: !unlocked,
+              quickSuggestions: unlocked,
+            });
+          }}
           onChange={(v) => onChange(v ?? "")}
           options={{
-            readOnly: false,
+            readOnly: !unlocked,
             minimap: { enabled: false },
             fontSize: 14,
             wordWrap: "on",
             contextmenu: false,         // ✅ reduces easy copy/paste
-            quickSuggestions: true,
+            quickSuggestions: unlocked,
           }}
         />
 
@@ -63,7 +89,8 @@ export default function EditorPane({
 
         {!unlocked && (
           <div className="locked-overlay">
-            Complete Learn (scroll + time + video) to unlock Run and mastery checks.
+            Complete Learn (scroll + time + video). If no videos are assigned, the video step completes after reading.
+            Then editing, Run, and Mastery Check unlock.
           </div>
         )}
       </div>

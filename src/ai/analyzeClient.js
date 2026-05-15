@@ -4,19 +4,19 @@ export async function analyzeCode({ code, lessonId }) {
   // Example: POST /api/analyze
   // return fetch("/api/analyze", { method:"POST", headers:{...}, body: JSON.stringify({code, lessonId})}).then(r=>r.json());
 
-  // Prototype rules-based hints (safe placeholder):
+  // Prototype rules-based hints (high level only; details belong in Learn reading + error Guide).
   const hints = [];
   if (/def\s+[A-Za-z_][A-Za-z0-9_]*\s*\(/.test(code) && /pass\s*$/.test(code.trim())) {
-    hints.push("You defined a function but left `pass`. Try returning a value.");
+    hints.push("Your function is still a stub. Think about what value the caller should receive back.");
   }
   if (/print\s*\(\s*["']Hello["']\s*$/.test(code)) {
-    hints.push("Looks like a missing closing parenthesis or quote.");
+    hints.push("Check that each opening bracket and quote has a matching closing one.");
   }
   if (/input\s*\(/.test(code) && !/int\s*\(|float\s*\(/.test(code)) {
-    hints.push("Remember: input() returns a string. Convert it with int() or float() when needed.");
+    hints.push("Remember the lesson pattern: typed input from the keyboard is still text until you convert it.");
   }
   if (/for\s+\w+\s+in\s+range\(\s*\)\s*:/.test(code)) {
-    hints.push("range() needs at least one number: range(10) or range(start, end).");
+    hints.push("range() needs a clear stop or span of numbers; compare to the smallest working example in the reading.");
   }
 
   // Return one best hint (like an agent pop-up would)
