@@ -2,12 +2,12 @@
 // Teacher-only: add/remove at least 5 videos per lesson (MP4, YouTube, NotebookLM)
 import { useState, useEffect } from "react";
 import {
-  loadTeacherVideos,
   saveTeacherVideos,
   getYouTubeEmbedUrl,
   lessonOptionsToSources,
   filterVideosWithUrls,
   getMergedVideoSources,
+  sourcesForPersistence,
   MIN_VIDEOS_PER_LESSON,
 } from "../utils/videoUtils.js";
 
@@ -19,23 +19,16 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
   const [newUrl, setNewUrl] = useState("");
   const [newLabel, setNewLabel] = useState("");
   const [uploadObjectUrl, setUploadObjectUrl] = useState(null);
+  const [uploadNotice, setUploadNotice] = useState("");
 
   useEffect(() => {
-    const list = getMergedVideoSources(lesson, lessonId);
-    setSources(list);
-    const raw = loadTeacherVideos(lessonId);
-    const rawJson = JSON.stringify(raw);
-    const listJson = JSON.stringify(list);
-    if (rawJson !== listJson) {
-      saveTeacherVideos(lessonId, list);
-      onVideosChange?.(list);
-    }
-  }, [lessonId, lesson, onVideosChange]);
+    setSources(getMergedVideoSources(lesson, lessonId));
+  }, [lessonId, lesson]);
 
-  const save = (next) => {
-    let list = filterVideosWithUrls(next);
-    if (list.length < MIN_VIDEOS_PER_LESSON && defaultSources.length > 0) {
-      const base = [...list];
+  const padForTeacherDisplay = (list) => {
+    let display = filterVideosWithUrls(list);
+    if (display.length < MIN_VIDEOS_PER_LESSON && defaultSources.length > 0) {
+      const base = [...display];
       while (base.length < MIN_VIDEOS_PER_LESSON) {
         const d = defaultSources[base.length % defaultSources.length];
         base.push({
@@ -43,11 +36,16 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
           id: `fill-${lessonId}-${base.length}-${Date.now()}`,
         });
       }
-      list = filterVideosWithUrls(base);
+      display = filterVideosWithUrls(base);
     }
-    setSources(list);
-    saveTeacherVideos(lessonId, list);
-    onVideosChange?.(list);
+    return display;
+  };
+
+  const save = (next) => {
+    const persist = sourcesForPersistence(next);
+    saveTeacherVideos(lessonId, persist);
+    onVideosChange?.(persist);
+    setSources(padForTeacherDisplay(next));
   };
 
   const addFromUrl = () => {
@@ -77,6 +75,9 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
       ...sources,
       { id: `t-${lessonId}-${Date.now()}`, type: "mp4", url: objUrl, label },
     ]);
+    setUploadNotice(
+      "Preview added for you on this device only. Students need a public MP4/WebM URL, YouTube, or NotebookLM link — paste a hosted URL above, or upload the file to your site and paste that link.",
+    );
     setNewLabel("");
     e.target.value = "";
   };
@@ -90,6 +91,16 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
   return (
     <div className="teacher-video-manager">
       <div className="teacher-video-manager-title">Manage videos (min {MIN_VIDEOS_PER_LESSON}), MP4, YouTube, NotebookLM</div>
+      {uploadNotice ? (
+        <p className="teacher-video-manager-note teacher-video-manager-notice" role="status">
+          {uploadNotice}
+        </p>
+      ) : null}
+      <p className="teacher-video-manager-note">
+        <strong>Students see</strong> every video you add with a <strong>YouTube</strong>,{" "}
+        <strong>NotebookLM</strong>, or <strong>public MP4/WebM URL</strong> (saved in this browser for all
+        learners on this computer). File upload is teacher preview only until you host the file and paste its URL.
+      </p>
       <p className="teacher-video-manager-note">
         <strong>NotebookLM:</strong> build or refine your script in{" "}
         <a href="https://notebooklm.google.com/" target="_blank" rel="noopener noreferrer">

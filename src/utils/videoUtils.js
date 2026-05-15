@@ -66,26 +66,52 @@ export function loadTeacherVideos(lessonId) {
   }
 }
 
-/** Save teacher videos for a lesson (merge with defaults not needed here; manager replaces all for that lesson) */
+/** True when the teacher explicitly added this slot (not a lesson default or UI pad row). */
+export function isTeacherAddedSource(source) {
+  return Boolean(source?.id && String(source.id).startsWith("t-"));
+}
+
+/** URLs that survive reload and work for another learner on the same machine (localStorage). */
+export function isPersistableVideoUrl(url) {
+  const u = String(url ?? "").trim();
+  if (!u || u === "undefined" || u === "null") return false;
+  if (u.startsWith("blob:")) return false;
+  return true;
+}
+
+/** Only teacher-added sources with durable URLs are written for students. */
+export function sourcesForPersistence(sources) {
+  if (!Array.isArray(sources)) return [];
+  return filterVideosWithUrls(sources).filter(
+    (s) => isTeacherAddedSource(s) && isPersistableVideoUrl(s.url),
+  );
+}
+
+/** Save teacher videos for a lesson (explicit teacher entries only). */
 export function saveTeacherVideos(lessonId, sources) {
   try {
     const raw = localStorage.getItem(TEACHER_VIDEOS_KEY);
     const all = raw ? JSON.parse(raw) : {};
     all[lessonId] = sources;
     localStorage.setItem(TEACHER_VIDEOS_KEY, JSON.stringify(all));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("py-learn-teacher-videos-updated", { detail: { lessonId } }),
+      );
+    }
   } catch (e) {
     console.error("saveTeacherVideos", e);
   }
 }
 
-/** Get list for students: only teacher-uploaded entries with a real URL. */
+/** Get list for students: teacher-added entries with a real, durable URL. */
 export function getStudentVideoSources(lessonId) {
-  return filterVideosWithUrls(loadTeacherVideos(lessonId));
+  return sourcesForPersistence(loadTeacherVideos(lessonId));
 }
 
 /** Teacher UI + preview: teacher list if ≥ MIN valid entries, else lesson defaults; pad only from valid defaults. */
 export function getMergedVideoSources(lesson, lessonId) {
-  const teacher = filterVideosWithUrls(loadTeacherVideos(lessonId));
+  const teacher = getStudentVideoSources(lessonId);
   const defaultSources = filterVideosWithUrls(lessonOptionsToSources(lesson, lessonId));
   let merged = teacher.length >= MIN_VIDEOS_PER_LESSON ? [...teacher] : [...defaultSources];
   while (merged.length < MIN_VIDEOS_PER_LESSON && defaultSources.length > 0) {

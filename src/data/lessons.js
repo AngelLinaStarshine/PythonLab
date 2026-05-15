@@ -181,9 +181,9 @@ print(f"Risk    : {risk}/100")</code></pre>
 #   BLANK3 — correct label: "HIGH" if risk>=70, "MEDIUM" if risk>=40, else "LOW"
 #   BLANK4 — format confidence as a percentage with 1 decimal place
 
-msg        = input("Paste a suspicious message: ")
-risk       = __BLANK1__(input("Risk score 0-100: "))
-confidence = __BLANK2__(input("Confidence 0.0-1.0: "))
+msg        = input("1/3 MESSAGE — suspicious text (any words). Example: Click this now!\\nType your message: ")
+risk       = __BLANK1__(input("2/3 RISK SCORE — whole number 0-100 (no %). Example: 85\\nType risk score: "))
+confidence = __BLANK2__(input("3/3 CONFIDENCE — decimal 0.0-1.0 (0.85 = 85%). Example: 0.85\\nType confidence: "))
 
 # Three-tier label (you'll build the full if/elif/else in Lesson 3)
 label      = __BLANK3__

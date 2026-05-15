@@ -1199,6 +1199,130 @@ a { color: inherit; }
 .runtime-loading { padding: 16px; color: var(--muted); }
 
 /* =========================
+   Lesson input guide (Result pane)
+========================= */
+.input-guide {
+  margin: 0 14px 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(125, 207, 182, 0.35);
+  background: rgba(125, 207, 182, 0.08);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.input-guide-title {
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.input-guide-intro {
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+
+.input-guide-list {
+  margin: 0 0 10px;
+  padding-left: 1.2rem;
+}
+
+.input-guide-list li {
+  margin-bottom: 6px;
+}
+
+.input-guide-example {
+  color: var(--sun);
+  font-size: 12px;
+}
+
+.input-guide-btn {
+  margin-top: 4px;
+}
+
+/* =========================
+   Custom input modal (own values)
+========================= */
+.input-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.input-modal {
+  width: min(480px, 100%);
+  max-height: min(90vh, 640px);
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+
+.input-modal-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.input-modal-intro {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.input-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-modal-label {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.input-modal-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.input-modal-input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.input-modal-example {
+  font-size: 12px;
+  color: var(--sun);
+}
+
+.input-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* =========================
    AI Popup
 ========================= */
 .ai-popup {

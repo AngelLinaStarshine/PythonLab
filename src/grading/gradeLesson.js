@@ -64,16 +64,28 @@ export function wrapWithMockInputs(pyCode, inputs = []) {
     String(x).replace(/\\/g, "\\\\").replace(/"/g, '\\"')
   );
 
+  // Override builtins.input — Pyodide otherwise keeps the browser prompt and
+  // empty OK clicks become float("") → ValueError on the confidence line.
   const header = `# --- AUTOGRADER INPUT HARNESS ---
+import builtins
 __inputs = iter([${safeInputs.map((x) => `"${x}"`).join(", ")}])
-def input(prompt=""):
+def __lesson_input(prompt=""):
     try:
         return next(__inputs)
     except StopIteration:
         return ""
+builtins.input = __lesson_input
 # --- END HARNESS ---
 `;
   return header + "\n" + (pyCode ?? "");
+}
+
+/** Pad mock inputs when the editor has more input() calls than configured samples. */
+export function alignMockInputs(pyCode, inputs = []) {
+  const calls = (String(pyCode ?? "").match(/\binput\s*\(/g) || []).length;
+  if (calls <= inputs.length) return inputs;
+  const pad = Array.from({ length: calls - inputs.length }, () => "0");
+  return [...inputs, ...pad];
 }
 
 /**
@@ -212,7 +224,7 @@ const TESTS = {
 
   // Lesson 2: Input & Output (phishing checker style)
   l2: {
-    inputs: ["Click this now!", "85"],
+    inputs: ["Click this now!", "85", "0.85"],
     expectedStdoutLines: ["message", "risk", "label"],
     requiredPatterns: [/\binput\s*\(/, /\bint\s*\(/, /\bprint\s*\(/],
     grade: ({ code, stdout, error }) => {

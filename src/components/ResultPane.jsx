@@ -15,6 +15,8 @@ export default function ResultPane({
   errorCoach = null,
   /** Scroll Learn reading to a heading that matches `section` (word overlap). */
   onGoToReading,
+  inputGuide = null,
+  onRunWithOwnInputs,
 }) {
   const canRun = Boolean(runtimeReady && unlocked);
   const canMastery = Boolean(runtimeReady && unlocked);
@@ -47,6 +49,28 @@ export default function ResultPane({
           </div>
         </div>
       )}
+
+      {inputGuide && runtimeReady && unlocked ? (
+        <div className="input-guide" role="region" aria-label="Input help">
+          <div className="input-guide-title">{inputGuide.title}</div>
+          <p className="input-guide-intro">{inputGuide.intro}</p>
+          <ol className="input-guide-list">
+            {inputGuide.fields.map((field) => (
+              <li key={field.label}>
+                <strong>{field.label}</strong> — {field.hint}
+                {field.example ? (
+                  <span className="input-guide-example"> Example: {field.example}</span>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+          {typeof onRunWithOwnInputs === "function" ? (
+            <button type="button" className="btn ghost small input-guide-btn" onClick={onRunWithOwnInputs}>
+              Run with my own values…
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {runtimeReady && !unlocked && (
         <div className="result-learn-gate-hint" role="status">

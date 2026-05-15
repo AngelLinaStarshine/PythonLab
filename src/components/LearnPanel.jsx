@@ -17,6 +17,7 @@ import {
   getYouTubeEmbedUrl,
   getYouTubeStudentEmbedUrl,
   filterVideosWithUrls,
+  TEACHER_VIDEOS_KEY,
 } from "../utils/videoUtils.js";
 import { getMergedLessonContent } from "../data/lessonTryMe.js";
 import { splitTryMeStarter, previewTryMeExpected } from "../utils/tryMeConstraint.js";
@@ -340,6 +341,23 @@ const LearnPanel = forwardRef(function LearnPanel(
   useEffect(() => {
     autoVideoDoneForLessonRef.current = null;
   }, [lessonId]);
+
+  useEffect(() => {
+    const bump = () => setVideoSourcesVersion((v) => v + 1);
+    const onCustom = (e) => {
+      const lid = lessonId ?? lesson?.id;
+      if (!lid || e.detail?.lessonId === lid) bump();
+    };
+    const onStorage = (e) => {
+      if (e.key === TEACHER_VIDEOS_KEY) bump();
+    };
+    window.addEventListener("py-learn-teacher-videos-updated", onCustom);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("py-learn-teacher-videos-updated", onCustom);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [lessonId, lesson?.id]);
 
   useEffect(() => {
     if (isTeacher || !readDone || progress?.videoDone) return;

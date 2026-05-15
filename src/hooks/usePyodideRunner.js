@@ -85,19 +85,55 @@ export function usePyodideRunner() {
     };
   }, []);
 
-  const run = useCallback(async (code) => {
+  const run = useCallback(async (code, options = {}) => {
     const pyodide = pyodideRef.current;
     if (!pyodide) return { stdout: "", error: initError || "Python runtime not ready." };
 
+    const stdinLines = Array.isArray(options.stdinLines) ? options.stdinLines.map(String) : [];
+    const inputPrompts = Array.isArray(options.inputPrompts) ? options.inputPrompts.map(String) : [];
+    let stdinIdx = 0;
+
+    if (stdinLines.length || inputPrompts.length) {
+      pyodide.setStdin({
+        stdin() {
+          if (stdinIdx < stdinLines.length) {
+            const line = stdinLines[stdinIdx];
+            stdinIdx += 1;
+            return line;
+          }
+          const prompt =
+            inputPrompts[stdinIdx] ??
+            `Enter input ${stdinIdx + 1} (see the Input help box above for examples):`;
+          stdinIdx += 1;
+          if (typeof window !== "undefined" && typeof window.prompt === "function") {
+            const typed = window.prompt(prompt);
+            return typed ?? "";
+          }
+          return "";
+        },
+        isatty: true,
+      });
+    }
+
     const wrapped = `
-import sys, io, traceback
+import sys, io, traceback, builtins
 _buf = io.StringIO()
 _err = None
 _stdout = ""
+_stdin_lines = ${JSON.stringify(stdinLines)}
 try:
     _old = sys.stdout
     sys.stdout = _buf
-    exec(${JSON.stringify(code)}, {})
+    _g = {"__name__": "__main__", "__builtins__": builtins}
+    if _stdin_lines:
+        _it = iter(_stdin_lines)
+        def _mock_input(prompt=""):
+            try:
+                return next(_it)
+            except StopIteration:
+                return ""
+        builtins.input = _mock_input
+    exec(${JSON.stringify(code)}, _g)
 except Exception:
     _err = traceback.format_exc()
 finally:
@@ -113,6 +149,8 @@ _stdout = _buf.getvalue()
       return { stdout, error };
     } catch (e) {
       return { stdout: "", error: String(e) };
+    } finally {
+      if (stdinLines.length || inputPrompts.length) pyodide.setStdin();
     }
   }, [initError]);
 

@@ -11,7 +11,7 @@ import { usePyodideRunner } from "./hooks/usePyodideRunner.js";
 import { analyzeCode } from "./ai/analyzeClient.js";
 import { buildErrorCoach } from "./ai/errorCoach.js";
 import { useDebounce } from "./hooks/useDebounce.js";
-import { gradeLesson, getLessonTestInputs, wrapWithMockInputs } from "./grading/gradeLesson.js";
+import { gradeLesson, getLessonTestInputs, alignMockInputs } from "./grading/gradeLesson.js";
 import { recordStudentEvent, clearStudentEvents } from "./utils/studentActivityStore.js";
 import { loadLessonOverrides, getLessonWithOverrides } from "./utils/lessonOverrides.js";
 import { clampTryMeCode } from "./utils/tryMeConstraint.js";
@@ -21,6 +21,8 @@ import AgentARIA from "./components/AgentARIA.jsx";
 import PracticeLab from "./components/PracticeLab.jsx";
 import QuizPanel from "./components/QuizPanel.jsx";
 import { getQuiz } from "./data/quizData.js";
+import InputPromptModal from "./components/InputPromptModal.jsx";
+import { getLessonInputGuide, getLessonInputPrompts } from "./data/lessonInputGuides.js";
 
 const STORAGE_KEY = "py_learn_progress_v4"; // v4: lessons refresh (L1 3-blank starter, L10 SENTINEL template)
 
@@ -124,6 +126,7 @@ export default function App() {
   const [hint, setHint] = useState({ severity: "none", message: "" });
 
   const [masteryMsg, setMasteryMsg] = useState(""); // shown in ResultPane
+  const [inputModalOpen, setInputModalOpen] = useState(false);
 
   const learnPanelRef = useRef(null);
   /** Bumped on full session reset so LearnPanel remounts (local timers / tabs / video state). */
@@ -137,6 +140,7 @@ export default function App() {
   const ariaTriggerLoggedRef = useRef({});
 
   const mastered = Boolean(masteryByLesson[activeLessonId]);
+  const lessonInputGuide = useMemo(() => getLessonInputGuide(activeLessonId), [activeLessonId]);
 
   const masteryFailCount = masteryFailByLesson[activeLessonId] || 0;
   const showAgentAria =
@@ -269,28 +273,57 @@ export default function App() {
     setEditorTryMeConstraint(meta?.constraint ?? null);
   };
 
+  const runCodeWithInputs = useCallback(
+    async (stdinLines, { label = "sample inputs" } = {}) => {
+      const aligned = alignMockInputs(code, stdinLines);
+      const inputPrompts = getLessonInputPrompts(activeLessonId);
+      const result = await run(code, { stdinLines: aligned, inputPrompts });
+      const mockNote =
+        aligned.length > 0
+          ? `[Run used ${label}: ${aligned.map((v) => JSON.stringify(v)).join(", ")}]\n\n`
+          : "";
+      setStdout(mockNote + (result.stdout || ""));
+      setError(result.error || "");
+      if ((result.error || "").trim()) {
+        setRunErrorStreak((n) => n + 1);
+      } else {
+        setRunErrorStreak(0);
+      }
+      setTryMeRunPreview((prev) => {
+        if (!prev?.sectionId) return prev;
+        return {
+          sectionId: prev.sectionId,
+          stdout: result.stdout || "",
+          error: result.error || "",
+        };
+      });
+    },
+    [activeLessonId, code, run]
+  );
+
   const onRun = async () => {
     if (!learnGate) return;
     setStdout("");
     setError("");
     setMasteryMsg("");
+    const mockInputs =
+      lessonInputGuide?.sampleInputs?.length
+        ? lessonInputGuide.sampleInputs
+        : getLessonTestInputs(activeLessonId);
+    await runCodeWithInputs(mockInputs, { label: "sample inputs" });
+  };
 
-    const result = await run(code);
-    setStdout(result.stdout || "");
-    setError(result.error || "");
-    if ((result.error || "").trim()) {
-      setRunErrorStreak((n) => n + 1);
-    } else {
-      setRunErrorStreak(0);
-    }
-    setTryMeRunPreview((prev) => {
-      if (!prev?.sectionId) return prev;
-      return {
-        sectionId: prev.sectionId,
-        stdout: result.stdout || "",
-        error: result.error || "",
-      };
-    });
+  const onRunWithOwnInputs = () => {
+    if (!learnGate || !lessonInputGuide) return;
+    setInputModalOpen(true);
+  };
+
+  const onInputModalSubmit = async (values) => {
+    setInputModalOpen(false);
+    setStdout("");
+    setError("");
+    setMasteryMsg("");
+    await runCodeWithInputs(values, { label: "your inputs" });
   };
 
   const onReset = () => {
@@ -322,10 +355,16 @@ export default function App() {
     setError("");
     setMasteryMsg("Running mastery tests...");
 
-    const inputs = getLessonTestInputs(activeLessonId);
-    const wrapped = wrapWithMockInputs(code, inputs);
-
-    const result = await run(wrapped);
+    const inputs = alignMockInputs(
+      code,
+      lessonInputGuide?.sampleInputs?.length
+        ? lessonInputGuide.sampleInputs
+        : getLessonTestInputs(activeLessonId)
+    );
+    const result = await run(code, {
+      stdinLines: inputs,
+      inputPrompts: getLessonInputPrompts(activeLessonId),
+    });
     const out = result.stdout || "";
     const err = result.error || "";
 
@@ -737,10 +776,19 @@ export default function App() {
               loadingMsg={loadingMsg}
               onMasteryCheck={onMasteryCheck}
               mastered={mastered}
+              inputGuide={lessonInputGuide}
+              onRunWithOwnInputs={lessonInputGuide ? onRunWithOwnInputs : undefined}
             />
           </div>
         </main>
       </div>
+
+      <InputPromptModal
+        guide={lessonInputGuide}
+        open={inputModalOpen}
+        onCancel={() => setInputModalOpen(false)}
+        onSubmit={onInputModalSubmit}
+      />
 
       {showAgentAria && (
         <AgentARIA
