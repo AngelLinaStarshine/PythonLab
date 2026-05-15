@@ -6,7 +6,7 @@ import { useState } from "react";
 export const ROLE_STORAGE_KEY = "py_learn_role";
 export const STUDENT_NAME_KEY = "py_learn_student_name";
 
-/** From `.env.local` as VITE_TEACHER_PASSCODE (never show this value on the role screen). */
+/** Optional: set `VITE_TEACHER_PASSCODE` in `.env.local` to require one shared passcode. If unset, any non-empty passcode works (Netlify-friendly). */
 const TEACHER_PASSCODE = String(import.meta.env.VITE_TEACHER_PASSCODE ?? "").trim();
 
 /** Teacher or student with saved name; otherwise null (show picker). */
@@ -86,15 +86,16 @@ export default function RolePicker({ onSelect }) {
 
   const submitTeacher = (e) => {
     e.preventDefault();
-    if (!TEACHER_PASSCODE) {
-      setError("Teacher passcode is not configured. Add VITE_TEACHER_PASSCODE to .env.local (see .env.example).");
+    const trimmed = passcode.trim();
+    if (!trimmed) {
+      setError("Please enter a passcode.");
       return;
     }
-    if (passcode === TEACHER_PASSCODE) {
-      onSelect("teacher", {});
+    if (TEACHER_PASSCODE && trimmed !== TEACHER_PASSCODE) {
+      setError("Incorrect passcode.");
       return;
     }
-    setError("Incorrect passcode.");
+    onSelect("teacher", {});
   };
 
   if (teacherStep) {
@@ -105,7 +106,7 @@ export default function RolePicker({ onSelect }) {
           <p className="role-picker-subtitle">
             {TEACHER_PASSCODE
               ? "Enter the teacher passcode you were given."
-              : "Teacher sign-in is not configured on this copy. The person hosting the lab must set VITE_TEACHER_PASSCODE in a .env.local file (see .env.example in the project folder)."}
+              : "Enter any passcode you choose (for example: teacher or your school name)."}
           </p>
           <form className="role-picker-passcode-form" onSubmit={submitTeacher}>
             <label className="role-picker-passcode-label">
@@ -116,7 +117,6 @@ export default function RolePicker({ onSelect }) {
                 autoComplete="off"
                 className="role-picker-passcode-input"
                 value={passcode}
-                disabled={!TEACHER_PASSCODE}
                 onChange={(ev) => {
                   setPasscode(ev.target.value);
                   setError("");
@@ -128,7 +128,7 @@ export default function RolePicker({ onSelect }) {
               <button type="button" className="btn ghost" onClick={backToRoles}>
                 Back
               </button>
-              <button type="submit" className="btn" disabled={!TEACHER_PASSCODE}>
+              <button type="submit" className="btn">
                 Continue
               </button>
             </div>
@@ -188,7 +188,7 @@ export default function RolePicker({ onSelect }) {
           >
             <span className="role-btn-icon">👩‍🏫</span>
             <span className="role-btn-label">Teacher</span>
-            <span className="role-btn-desc">Passcode required (from your admin)</span>
+            <span className="role-btn-desc">Enter any teacher passcode</span>
           </button>
           <button
             type="button"
