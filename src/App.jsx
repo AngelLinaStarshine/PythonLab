@@ -19,7 +19,12 @@ import { analyzeCode } from "./ai/analyzeClient.js";
 import { buildErrorCoach } from "./ai/errorCoach.js";
 import { useDebounce } from "./hooks/useDebounce.js";
 import { gradeLesson, getLessonTestInputs, alignMockInputs } from "./grading/gradeLesson.js";
-import { recordStudentEvent, clearStudentEvents } from "./utils/studentActivityStore.js";
+import {
+  recordStudentEvent,
+  clearStudentEvents,
+  registerStudent,
+  saveStudentProgressSnapshot,
+} from "./utils/studentActivityStore.js";
 import { loadLessonOverrides, getLessonWithOverrides } from "./utils/lessonOverrides.js";
 import { clampTryMeCode } from "./utils/tryMeConstraint.js";
 import TeacherNotificationsPanel from "./components/TeacherNotificationsPanel.jsx";
@@ -437,11 +442,14 @@ export default function App() {
     }
   };
 
-  // Persist progress
+  // Persist progress + per-student snapshot for teacher reports
   useEffect(() => {
     const p = loadProgress();
     saveProgress({ ...p, activeLessonId, codeByLesson, stageByLesson, masteryByLesson });
-  }, [activeLessonId, stageByLesson, masteryByLesson]);
+    if (!isTeacher) {
+      saveStudentProgressSnapshot(null, { stageByLesson, masteryByLesson });
+    }
+  }, [activeLessonId, stageByLesson, masteryByLesson, isTeacher, codeByLesson]);
 
   const onSwitchRole = () => {
     setUserRole(null);
@@ -638,17 +646,22 @@ export default function App() {
     return (
       <RolePicker
         onSelect={(role, meta) => {
-          if (role === "teacher") markTeacherSession();
-          else {
+          saveRole(role);
+          if (role === "teacher") {
+            markTeacherSession();
+          } else {
             clearTeacherSession();
             if (meta?.displayName) {
+              const sid = registerStudent(null, meta.displayName);
+              saveStudentProgressSnapshot(sid, { stageByLesson, masteryByLesson });
               recordStudentEvent({
                 type: "student_sign_in",
+                studentId: sid,
+                studentName: meta.displayName,
                 message: `Signed in as ${meta.displayName}`,
               });
             }
           }
-          saveRole(role);
           setUserRole(role);
         }}
       />
@@ -739,9 +752,19 @@ export default function App() {
             ref={learnPanelRef}
             lesson={activeLesson}
             progress={lessonProgress}
-            onProgressChange={(next) =>
-              setStageByLesson((prev) => ({ ...prev, [activeLessonId]: next }))
-            }
+            onProgressChange={(next) => {
+              setStageByLesson((prev) => {
+                const merged = { ...prev, [activeLessonId]: next };
+                if (!isTeacher && next?.scrolled && next?.timed && next?.videoDone) {
+                  recordStudentEvent({
+                    type: "learn_complete",
+                    lessonId: activeLessonId,
+                    lessonTitle: activeLesson?.title,
+                  });
+                }
+                return merged;
+              });
+            }}
             isTeacher={isTeacher}
             lessonId={activeLessonId}
             onLessonOverride={() => setLessonOverridesVersion((v) => v + 1)}

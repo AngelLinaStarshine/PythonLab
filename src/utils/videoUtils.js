@@ -46,6 +46,19 @@ export function filterVideosWithUrls(list) {
   });
 }
 
+/** One menu entry per URL (students should not see duplicate lesson placeholders). */
+export function dedupeVideoSourcesByUrl(sources) {
+  const seen = new Set();
+  const out = [];
+  for (const s of filterVideosWithUrls(sources)) {
+    const key = String(s.url).trim();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(s);
+  }
+  return out;
+}
+
 export function lessonOptionsToSources(lesson, lessonId) {
   const opts = lesson?.videoOptions ?? (lesson?.videoUrl ? [{ label: "Video", url: lesson.videoUrl }] : []);
   return opts.map((o, i) => ({
@@ -136,24 +149,17 @@ export function saveTeacherVideos(lessonId, sources) {
   }
 }
 
-/** Students: teacher-saved videos, plus bundled lesson MP4s when none are saved yet. */
-export function getStudentVideoSources(lessonId, lesson) {
+/** Students: only teacher-saved / published videos (no duplicate lesson placeholders). */
+export function getStudentVideoSources(lessonId, _lesson) {
   migrateLegacyVideos();
   const saved = filterVideosWithUrls(
     getVideosForLesson(lessonId).map((v, i) => videoEntryToSource(v, lessonId, i)),
   ).filter((s) => isPersistableVideoUrl(s.url));
+  return dedupeVideoSourcesByUrl(saved);
+}
 
-  const defaults = lesson
-    ? filterVideosWithUrls(lessonOptionsToSources(lesson, lessonId)).filter((s) =>
-        isPersistableVideoUrl(s.url),
-      )
-    : [];
-
-  if (saved.length === 0) return defaults;
-
-  const urls = new Set(saved.map((s) => String(s.url).trim()));
-  const extra = defaults.filter((d) => !urls.has(String(d.url).trim()));
-  return [...saved, ...extra];
+export function lessonHasStudentVideos(lessonId, lesson) {
+  return getStudentVideoSources(lessonId, lesson).length > 0;
 }
 
 /** Teacher preview: saved videos, or lesson defaults padded for the manager UI. */

@@ -16,6 +16,7 @@
 // ─────────────────────────────────────────────────────────────────
 
 import { useState } from "react";
+import { AppPortal } from "../utils/appPortal.js";
 
 const C = {
   bg:"#040c18", card:"#0a1627", cardAlt:"#081120",
@@ -495,25 +496,20 @@ export function AppGuide({ role }) {
 
       {/* Modal */}
       {open && (
+        <AppPortal>
         <div
+          className="app-modal-overlay"
           onClick={e => { if(e.target===e.currentTarget) setOpen(false); }}
-          style={{
-            position:"fixed", inset:0, zIndex:99000,
-            background:"rgba(2,8,20,0.88)",
-            backdropFilter:"blur(8px)",
-            display:"flex", alignItems:"flex-start",
-            justifyContent:"center",
-            padding:"40px 16px", overflowY:"auto",
-          }}
         >
-          <div style={{
-            width:"100%", maxWidth:680,
-            background:C.card, borderRadius:16,
+          <div
+            className="app-modal-panel"
+            style={{
+            background:C.card,
             border:`1px solid ${C.border}`,
-            boxShadow:"0 20px 60px rgba(0,0,0,0.7)",
-            overflow:"hidden",
             animation:"guide-in 0.25s ease",
-          }}>
+          }}
+            onClick={e => e.stopPropagation()}
+          >
             <style>{`@keyframes guide-in{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
 
             {/* Header */}
@@ -560,11 +556,7 @@ export function AppGuide({ role }) {
               ))}
             </div>
 
-            {/* Content */}
-            <div style={{
-              padding:"20px 24px",
-              maxHeight:"70vh", overflowY:"auto",
-            }}>
+            <div className="app-modal-scroll" style={{ padding:"20px 24px" }}>
               {tab === "student" && <StudentGuide/>}
               {tab === "teacher" && <TeacherGuide/>}
             </div>
@@ -590,6 +582,7 @@ export function AppGuide({ role }) {
             </div>
           </div>
         </div>
+        </AppPortal>
       )}
     </>
   );

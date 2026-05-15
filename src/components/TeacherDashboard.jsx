@@ -19,10 +19,11 @@
 // ─────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from "react";
+import { AppPortal } from "../utils/appPortal.js";
 import {
   getAllStudents,
   buildStudentSummary,
-  getStudentEvents,
+  getClassReportEvents,
   clearStudentEvents,
 } from "../utils/studentActivityStore.js";
 import { lessons } from "../data/lessons.js";
@@ -657,7 +658,7 @@ function ControlsTab({
     const data = {
       exported:  new Date().toISOString(),
       students:  allSummaries,
-      events:    getStudentEvents(),
+      events:    getClassReportEvents(),
     };
     const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
     const url  = URL.createObjectURL(blob);
@@ -938,7 +939,9 @@ function ReportsTab({ allEvents, summaries, masteryByLesson }) {
     URL.revokeObjectURL(url);
   };
 
-  if (allEvents.length === 0 && summaries.length === 0) {
+  const hasData = allEvents.length > 0 || summaries.length > 0;
+
+  if (!hasData) {
     return (
       <div style={{ padding: "20px", color: C.t2, fontSize: 13, lineHeight: 1.7 }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: C.t1, marginBottom: 10 }}>No reports yet</div>
@@ -1120,11 +1123,9 @@ export default function TeacherDashboard({
   const [alertCount, setAlertCount] = useState(0);
 
   const refresh = useCallback(() => {
-    const events    = getStudentEvents();
-    const students  = getAllStudents();
-    const sums      = students.map(s =>
-      buildStudentSummary(s.studentId, masteryByLesson)
-    );
+    const events = getClassReportEvents();
+    const students = getAllStudents();
+    const sums = students.map((s) => buildStudentSummary(s.studentId));
     setAllEvents(events);
     setSummaries(sums);
 
@@ -1141,12 +1142,19 @@ export default function TeacherDashboard({
       "printscreen_attempt",
     ]);
     setAlertCount(events.filter((e) => alertTypes.has(normalizeAlertType(e.type))).length);
-  }, [masteryByLesson]);
+  }, []);
 
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, 5000);
-    return () => clearInterval(id);
+    const onUpdate = () => refresh();
+    window.addEventListener("py-learn-activity-updated", onUpdate);
+    window.addEventListener("storage", onUpdate);
+    const id = setInterval(refresh, 3000);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("py-learn-activity-updated", onUpdate);
+      window.removeEventListener("storage", onUpdate);
+    };
   }, [refresh]);
 
   const handleClearAlerts = () => { clearStudentEvents(); refresh(); };
@@ -1182,19 +1190,23 @@ export default function TeacherDashboard({
         )}
       </button>
 
-      {/* Dashboard panel */}
       {open && (
-        <div style={{
-          position:"fixed",top:0,right:0,bottom:0,
-          width:480, zIndex:9000,
+        <AppPortal>
+        <div
+          className="app-modal-overlay"
+          onClick={() => { setOpen(false); setSelected(null); }}
+        >
+        <div
+          className="app-modal-panel app-modal-panel--dashboard"
+          style={{
           background:C.card,
-          borderLeft:`1px solid ${C.border}`,
-          boxShadow:"-8px 0 40px rgba(0,0,0,0.6)",
-          display:"flex",flexDirection:"column",
+          border:`1px solid ${C.border}`,
           fontFamily:C.sans,
           animation:"slide-in-right 0.25s ease",
-        }}>
-          <style>{`@keyframes slide-in-right{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+        }}
+          onClick={e => e.stopPropagation()}
+        >
+          <style>{`@keyframes slide-in-right{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
 
           {/* Header */}
           <div style={{
@@ -1348,10 +1360,12 @@ export default function TeacherDashboard({
               background:C.green,boxShadow:`0 0 6px ${C.green}`,
             }}/>
             <span style={{fontSize:11,color:C.t3}}>
-              Auto-refreshes every 5 s · {allEvents.length} total events
+              Auto-refreshes every 3 s · {allEvents.length} total events
             </span>
           </div>
         </div>
+        </div>
+        </AppPortal>
       )}
     </>
   );

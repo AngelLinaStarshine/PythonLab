@@ -294,6 +294,7 @@ const LearnPanel = forwardRef(function LearnPanel(
     const raw = isTeacher ? getMergedVideoSources(lesson, lid) : getStudentVideoSources(lid, lesson);
     return filterVideosWithUrls(raw);
   }, [lesson, lessonId, lesson?.id, isTeacher, videoSourcesVersion]);
+  const hasVideos = isTeacher || videoOptions.length > 0;
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
   const currentSource = videoOptions[selectedVideoIndex];
   const isEmbed = currentSource?.type === "youtube" || currentSource?.type === "notebooklm";
@@ -362,14 +363,13 @@ const LearnPanel = forwardRef(function LearnPanel(
   }, [lessonId, lesson?.id]);
 
   useEffect(() => {
-    if (isTeacher || !readDone || progress?.videoDone) return;
+    if (isTeacher || progress?.videoDone) return;
     if (videoOptions.length > 0) return;
     if (autoVideoDoneForLessonRef.current === lessonId) return;
     autoVideoDoneForLessonRef.current = lessonId;
     onProgressChange?.({ ...(progress ?? {}), videoDone: true });
   }, [
     isTeacher,
-    readDone,
     progress?.videoDone,
     videoOptions.length,
     lessonId,
@@ -381,6 +381,12 @@ const LearnPanel = forwardRef(function LearnPanel(
     setElapsed(0);
     setActiveTab("read");
   }, [lessonId]);
+
+  useEffect(() => {
+    if (!isTeacher && !hasVideos && activeTab === "video") {
+      setActiveTab("read");
+    }
+  }, [hasVideos, isTeacher, activeTab]);
 
   useEffect(() => {
     lastTimeRef.current = 0;
@@ -512,7 +518,7 @@ const LearnPanel = forwardRef(function LearnPanel(
 
   const tabs = [
     { id: "read", label: "Reading", locked: false },
-    { id: "video", label: "Video", locked: !readDone && !isTeacher },
+    ...(hasVideos ? [{ id: "video", label: "Video", locked: !readDone && !isTeacher }] : []),
   ];
 
   return (
@@ -554,8 +560,8 @@ const LearnPanel = forwardRef(function LearnPanel(
           )}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <GateBadge done={readDone} label="Read" index={1} />
-            <GateBadge done={videoDone} label="Video" index={2} />
-            <GateBadge done={allDone} label="Unlocked" index={3} />
+            {hasVideos ? <GateBadge done={videoDone} label="Video" index={2} /> : null}
+            <GateBadge done={allDone} label="Unlocked" index={hasVideos ? 3 : 2} />
           </div>
           <span style={{ fontSize: 12, color: C.t3 }}>{open ? "\u25BC" : "\u25B6"}</span>
         </div>
@@ -623,7 +629,11 @@ const LearnPanel = forwardRef(function LearnPanel(
                   <span style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>Practice unlocked</span>
                 ) : (
                   <span style={{ fontSize: 12, color: C.t3 }}>
-                    {!readDone ? "Step 1: Read & wait" : "Step 2: Watch video"}
+                    {!readDone
+                      ? "Step 1: Read & wait"
+                      : hasVideos
+                        ? "Step 2: Watch video"
+                        : "Finish reading to unlock practice"}
                   </span>
                 )}
               </div>
@@ -931,7 +941,7 @@ const LearnPanel = forwardRef(function LearnPanel(
                   </div>
                 ) : (
                   <div style={{ padding: "16px 22px" }}>
-                    {videoOptions.length > 0 && (
+                    {videoOptions.length > 1 && (
                       <div className="video-options" style={{ marginBottom: 12 }}>
                         <span className="video-options-label">Video:</span>
                         <select
