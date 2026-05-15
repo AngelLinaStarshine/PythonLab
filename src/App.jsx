@@ -633,9 +633,17 @@ export default function App() {
   if (!userRole) {
     return (
       <RolePicker
-        onSelect={(role) => {
+        onSelect={(role, meta) => {
           if (role === "teacher") markTeacherSession();
-          else clearTeacherSession();
+          else {
+            clearTeacherSession();
+            if (meta?.displayName) {
+              recordStudentEvent({
+                type: "student_sign_in",
+                message: `Signed in as ${meta.displayName}`,
+              });
+            }
+          }
           saveRole(role);
           setUserRole(role);
         }}

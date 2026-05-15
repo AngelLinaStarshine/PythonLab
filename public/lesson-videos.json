@@ -1,8 +1,23 @@
 {
-  "l1": [],
-  "l2": [],
+  "l1": [
+    {
+      "label": "Python Variables in Cyber",
+      "url": "/videos/l1_python_variables_in_cyber.mp4"
+    }
+  ],
+  "l2": [
+    {
+      "label": "Python Security Logic",
+      "url": "/videos/l2_python_security_logic.mp4"
+    }
+  ],
   "l3": [],
-  "l4": [],
+  "l4": [
+    {
+      "label": "Python Loops for Security",
+      "url": "/videos/l4_python_loops_for_security.mp4"
+    }
+  ],
   "l5": [],
   "l6": [],
   "l7": [],

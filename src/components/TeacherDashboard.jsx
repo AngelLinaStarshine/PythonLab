@@ -32,6 +32,10 @@ import {
   deleteAssignment,
   downloadAssignmentsCsv,
 } from "../utils/teacherAssignments.js";
+import {
+  downloadStudentEventsCsv,
+  openPrintableReportWindow,
+} from "../utils/teacherReports.js";
 
 const C = {
   bg:"#040c18", card:"#0a1627", cardAlt:"#081120",
@@ -915,13 +919,179 @@ function AssignmentsTab({ events, activeLessonId, currentEditorCode }) {
   );
 }
 
+// ── Reports tab ──────────────────────────────────────────────────
+function ReportsTab({ allEvents, summaries, masteryByLesson }) {
+  const exportAll = () => {
+    const data = {
+      exported: new Date().toISOString(),
+      students: summaries,
+      events: allEvents,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement("a"), {
+      href: url,
+      download: `class_report_${Date.now()}.json`,
+    });
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (allEvents.length === 0 && summaries.length === 0) {
+    return (
+      <div style={{ padding: "20px", color: C.t2, fontSize: 13, lineHeight: 1.7 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: C.t1, marginBottom: 10 }}>No reports yet</div>
+        <p style={{ margin: "0 0 12px" }}>
+          Reports are built from <strong style={{ color: C.cyan }}>student activity on this browser</strong>.
+          They appear after learners sign in as <strong>Student</strong> (with their name) and use the lab.
+        </p>
+        <ul style={{ margin: "0 0 14px", paddingLeft: 18 }}>
+          <li>Teacher mode does not create student rows.</li>
+          <li>Each computer keeps its own data (not synced to Netlify automatically).</li>
+          <li>For a quick test: Switch role → Student → enter a name → complete a lesson → open Dashboard again.</li>
+        </ul>
+        <p style={{ margin: 0, fontSize: 12, color: C.t3 }}>
+          Class exports also live under the <strong>Controls</strong> tab when data exists.
+        </p>
+      </div>
+    );
+  }
+
+  const byType = {};
+  for (const e of allEvents) {
+    const t = e?.type || "(none)";
+    byType[t] = (byType[t] || 0) + 1;
+  }
+
+  return (
+    <div style={{ padding: "16px 20px" }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, marginBottom: 4 }}>Class reports</div>
+      <p style={{ fontSize: 12, color: C.t2, margin: "0 0 14px", lineHeight: 1.5 }}>
+        {summaries.length} student{summaries.length !== 1 ? "s" : ""} · {allEvents.length} events logged on this device
+      </p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+        <button
+          type="button"
+          onClick={() => openPrintableReportWindow(allEvents, masteryByLesson)}
+          style={{
+            ...btn(),
+            padding: "11px",
+            borderRadius: 10,
+            background: `${C.purple}10`,
+            border: `1px solid ${C.purple}40`,
+            color: C.purple,
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          Print / Save PDF
+        </button>
+        <button
+          type="button"
+          onClick={() => downloadStudentEventsCsv(allEvents)}
+          style={{
+            ...btn(),
+            padding: "11px",
+            borderRadius: 10,
+            background: `${C.green}10`,
+            border: `1px solid ${C.green}40`,
+            color: C.green,
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          Download CSV
+        </button>
+        <button
+          type="button"
+          onClick={exportAll}
+          style={{
+            ...btn(),
+            padding: "11px",
+            borderRadius: 10,
+            background: `${C.cyan}10`,
+            border: `1px solid ${C.cyan}40`,
+            color: C.cyan,
+            fontSize: 12,
+            fontWeight: 600,
+            gridColumn: "1 / -1",
+          }}
+        >
+          Download full JSON report
+        </button>
+      </div>
+
+      <div
+        style={{
+          background: C.cardAlt,
+          borderRadius: 10,
+          border: `1px solid ${C.border}`,
+          padding: "12px 14px",
+          marginBottom: 14,
+        }}
+      >
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: "uppercase", marginBottom: 8 }}>
+          Events by type
+        </div>
+        {Object.entries(byType)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 12)
+          .map(([type, count]) => (
+            <div
+              key={type}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 12,
+                padding: "4px 0",
+                borderBottom: `1px solid ${C.border}`,
+              }}
+            >
+              <span style={{ color: C.t1 }}>{type}</span>
+              <span style={{ color: C.cyan, fontWeight: 700 }}>{count}</span>
+            </div>
+          ))}
+      </div>
+
+      <div style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: "uppercase", marginBottom: 8 }}>
+        Recent activity
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {allEvents
+          .slice(-15)
+          .reverse()
+          .map((e) => (
+            <div
+              key={e.id}
+              style={{
+                padding: "8px 10px",
+                borderRadius: 8,
+                background: C.cardAlt,
+                border: `1px solid ${C.border}`,
+                fontSize: 11,
+              }}
+            >
+              <span style={{ color: C.cyan, fontWeight: 600 }}>{e.studentName || "Unknown"}</span>
+              <span style={{ color: C.t3 }}> · </span>
+              <span style={{ color: C.t2 }}>{e.type}</span>
+              {e.lessonId ? <span style={{ color: C.t3 }}> · {e.lessonId}</span> : null}
+              <div style={{ color: C.t3, marginTop: 2 }}>{e.atLabel || e.at}</div>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN TeacherDashboard ────────────────────────────────────────
 const TABS = [
-  {id:"students", icon:"👩‍🎓", label:"Students"},
-  {id:"gradebook",icon:"📊",   label:"Grade Book"},
-  {id:"alerts",   icon:"🚨",   label:"Alerts"},
-  {id:"assign",   icon:"📝",   label:"Assign"},
-  {id:"controls", icon:"🎛️",  label:"Controls"},
+  { id: "students", icon: "👩‍🎓", label: "Students" },
+  { id: "gradebook", icon: "📊", label: "Grade Book" },
+  { id: "reports", icon: "📄", label: "Reports" },
+  { id: "alerts", icon: "🚨", label: "Alerts" },
+  { id: "assign", icon: "📝", label: "Assign" },
+  { id: "controls", icon: "🎛️", label: "Controls" },
 ];
 
 function normalizeAlertType(type) {
@@ -1130,6 +1300,13 @@ export default function TeacherDashboard({
             )}
 
             {tab==="gradebook" && <GradeBook summaries={summaries}/>}
+            {tab==="reports" && (
+              <ReportsTab
+                allEvents={allEvents}
+                summaries={summaries}
+                masteryByLesson={masteryByLesson}
+              />
+            )}
             {tab==="alerts"    && (
               <AlertsTab
                 summaries={summaries}
