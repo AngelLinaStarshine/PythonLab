@@ -9,7 +9,7 @@ import { loadLessonOverrides } from "../utils/lessonOverrides.js";
 export const lessonContent = [
   {
     lessonId: "l1",
-    ttsIntro: "Welcome to Lesson 1: Variables and Types. In this lesson you will learn how to store data in Python using variables. Every piece of information a program works with — a username, a score, a flag — lives in a variable. By the end of this lesson you will be able to create variables of four different types, verify their type using the type function, and print clean formatted output.",
+    ttsIntro: "Welcome to Lesson 1: Variables and Types. In this lesson you will learn how to store data in Python using variables. Every piece of information a program works with. a username, a score, a flag. lives in a variable. By the end of this lesson you will be able to create variables of four different types, verify their type using the type function, and print clean formatted output.",
     sections: [
       {
         id:"s1", icon:"🛡️", heading:"Why Variables Matter in Cyber and AI",
@@ -17,12 +17,12 @@ export const lessonContent = [
         code:null, tryMe:null, tip:null,
       },
       {
-        id:"s2", icon:"📦", heading:"Creating Variables — The Assignment Operator",
-        body:"A variable is a named container for a value. Use the equals sign to assign a value to a name. Python reads the right side and automatically detects the type — you never declare it manually.",
-        code:`username           = "Ava"    # str   — text in quotes
-grade              = 10       # int   — whole number
-risk_score         = 0.0      # float — decimal number
-two_factor_enabled = True     # bool  — True or False`,
+        id:"s2", icon:"📦", heading:"Creating Variables. The Assignment Operator",
+        body:"A variable is a named container for a value. Use the equals sign to assign a value to a name. Python reads the right side and automatically detects the type. you never declare it manually.",
+        code:`username           = "Ava"    # str  . text in quotes
+grade              = 10       # int  . whole number
+risk_score         = 0.0      # float. decimal number
+two_factor_enabled = True     # bool . True or False`,
         tryMe:{
           starter:`# Change YourName and run it
 username           = "YourName"
@@ -40,8 +40,8 @@ print("2FA enabled:", two_factor_enabled)`,
         tip:null,
       },
       {
-        id:"s3", icon:"🔬", heading:"The Four Types — str, int, float, bool",
-        body:"Python has four basic types. A string stores text and always needs quotes. An integer stores whole numbers with no quotes. A float stores decimal numbers. A boolean stores exactly True or False with a capital first letter. Using the wrong type — for example storing a number inside quotes — breaks any math you try to do with it.",
+        id:"s3", icon:"🔬", heading:"The Four Types. str, int, float, bool",
+        body:"Python has four basic types. A string stores text and always needs quotes. An integer stores whole numbers with no quotes. A float stores decimal numbers. A boolean stores exactly True or False with a capital first letter. Using the wrong type. for example storing a number inside quotes. breaks any math you try to do with it.",
         code:`username  = "Ava"      # str
 grade     = 10         # int
 risk      = 0.75       # float
@@ -67,13 +67,13 @@ print(type(mfa_on))`,
         tip:"In cybersecurity, the wrong type causes real bugs. Storing a port number as a string means you cannot compare it to 443 with greater-than or less-than operators.",
       },
       {
-        id:"s4", icon:"🖨️", heading:"Printing Output — f-Strings",
-        body:"Python's print function displays values. The modern, professional way is an f-string: put the letter f before the opening quote, then embed variable names inside curly braces. F-strings are cleaner and faster than comma-separated print calls.",
+        id:"s4", icon:"🖨️", heading:"Printing Output. f strings",
+        body:"Python's print function displays values. The modern, professional way is an f string: put the letter f before the opening quote, then embed variable names inside curly braces. f strings are cleaner and faster than comma-separated print calls.",
         code:`username = "Ava"
 grade    = 10
 mfa_on   = True
 
-# f-string style — professional standard
+# f string style. professional standard
 print(f"user: {username} | grade: {grade} | 2FA: {mfa_on}")
 # Output: user: Ava | grade: 10 | 2FA: True`,
         tryMe:{
@@ -86,26 +86,26 @@ print(f"User  : {username}")
 print(f"Grade : {grade}")
 print(f"2FA   : {mfa_on}")`,
           expectedOutput:"=== CYBER PROFILE ===\nUser  : Ava\nGrade : 10\n2FA   : True",
-          hint:"Inside an f-string, put variable names inside curly braces. Try changing the values and re-running.",
+          hint:"Inside an f string, put variable names inside curly braces. Try changing the values and re-running.",
         },
         tip:null,
       },
       {
         id:"s5", icon:"❌", heading:"Common Mistakes",
-        body:"Three bugs cause most beginner errors. First, missing quotes on a string gives a NameError. Second, quotes around a number make it text so math crashes with TypeError. Third, lowercase true or false are not valid Python — booleans need exactly True or False with a capital first letter.",
-        code:`# BUG 1 — NameError: missing quotes
+        body:"Three bugs cause most beginner errors. First, missing quotes on a string gives a NameError. Second, quotes around a number make it text so math crashes with TypeError. Third, lowercase true or false are not valid Python. booleans need exactly True or False with a capital first letter.",
+        code:`# BUG 1. NameError: missing quotes
 # username = Ava
 username = "Ava"       # ✓ Fixed
 
-# BUG 2 — Wrong type: grade is text not number
+# BUG 2. Wrong type: grade is text not number
 # grade = "10"
 grade = 10             # ✓ Fixed
 
-# BUG 3 — NameError: lowercase bool
+# BUG 3. NameError: lowercase bool
 # mfa_on = true
 mfa_on = True          # ✓ Fixed`,
         tryMe:{
-          starter:`# Fix all three bugs — one error per line
+          starter:`# Fix all three bugs. one error per line
 username = Ava
 grade    = "11"
 mfa_on   = false
@@ -125,14 +125,14 @@ print(f"{username} | grade+1={grade+1} | 2FA:{mfa_on}")`,
     sections:[
       {
         id:"s1", icon:"🛡️", heading:"Security Tools Start With Input",
-        body:"Every security form you have filled out — reporting phishing, flagging suspicious activity — is powered by code that reads what you typed, converts it to the right type, and stores it. Python's input function lets your program pause and ask the user for information at runtime.",
+        body:"Every security form you have filled out. reporting phishing, flagging suspicious activity. is powered by code that reads what you typed, converts it to the right type, and stores it. Python's input function lets your program pause and ask the user for information at runtime.",
         code:null, tryMe:null, tip:null,
       },
       {
         id:"s2", icon:"⌨️", heading:"The input() Function",
-        body:"input() pauses the program, shows a prompt, and waits for the user to type and press Enter. Whatever they type is always returned as a string — even if they type a number. This is the single most important rule about input.",
+        body:"input() pauses the program, shows a prompt, and waits for the user to type and press Enter. Whatever they type is always returned as a string. even if they type a number. This is the single most important rule about input.",
         code:`msg = input("Paste suspicious message: ")
-print(type(msg))    # <class 'str'> — always a string`,
+print(type(msg))    # <class 'str'>. always a string`,
         tryMe:{
           starter:`name = input("What is your name? ")
 print("Hello,", name)
@@ -143,10 +143,10 @@ print("Type:", type(name))`,
         tip:null,
       },
       {
-        id:"s3", icon:"🔢", heading:"Converting Types — int() and float()",
-        body:"If the user types a number and you want to do math, wrap int() or float() directly around input(). Python runs the inner function first, then passes the result to the outer one. If conversion fails — for example the user types hello — Python raises a ValueError.",
-        code:`risk       = int(input("Risk score 0-100: "))
-confidence = float(input("Confidence 0.0-1.0: "))
+        id:"s3", icon:"🔢", heading:"Converting Types. int() and float()",
+        body:"If the user types a number and you want to do math, wrap int() or float() directly around input(). Python runs the inner function first, then passes the result to the outer one. If conversion fails. for example the user types hello. Python raises a ValueError.",
+        code:`risk       = int(input("Risk score 0 to 100: "))
+confidence = float(input("Confidence 0.0 to 1.0: "))
 
 print(f"risk + 10: {risk + 10}")
 print(f"Confidence: {confidence * 100:.1f}%")`,
@@ -158,16 +158,16 @@ print(f"Type: {type(risk)}")
 print(f"Doubled: {risk * 2}")
 print(f"Label: {'HIGH' if risk >= 70 else 'MEDIUM' if risk >= 40 else 'LOW'}")`,
           expectedOutput:"You entered: 72\nType: <class 'int'>\nDoubled: 144\nLabel: HIGH",
-          hint:"Try entering 72. Then try entering hello to see a ValueError — Lesson 9 shows you how to handle that.",
+          hint:"Try entering 72. Then try entering hello to see a ValueError. Lesson 9 shows you how to handle that.",
         },
         tip:"The pattern int(input('prompt')) is very common. Python runs inside-out: input() runs first, returns a string, then int() converts it.",
       },
       {
         id:"s4", icon:"📋", heading:"Building a Formatted Report",
-        body:"Once you have inputs stored and converted, print a professional report using f-strings. The format specifier colon dot one f rounds a float to one decimal place.",
+        body:"Once you have inputs stored and converted, print a professional report using f strings. The format specifier colon dot one f rounds a float to one decimal place.",
         code:`msg        = input("Suspicious message: ")
-risk       = int(input("Risk score 0-100: "))
-confidence = float(input("Confidence 0.0-1.0: "))
+risk       = int(input("Risk score 0 to 100: "))
+confidence = float(input("Confidence 0.0 to 1.0: "))
 status     = "HIGH RISK" if risk >= 70 else "MEDIUM" if risk >= 40 else "LOW"
 
 print(f"Message    : {msg}")
@@ -186,7 +186,7 @@ print(f"Risk Score : {risk} / 100")
 print(f"Confidence : {confidence * 100:.1f}%")
 print(f"Status     : {status}")`,
           expectedOutput:"=== PHISHING INTAKE REPORT ===\nMessage    : Buy Bitcoin now!\nRisk Score : 72 / 100\nConfidence : 87.5%\nStatus     : HIGH RISK",
-          hint:"Try changing confidence to 0.5 — the percentage should display as 50.0%. The :.1f format specifier handles the rounding.",
+          hint:"Try changing confidence to 0.5. the percentage should display as 50.0%. The :.1f format specifier handles the rounding.",
         },
         tip:null,
       },
@@ -203,8 +203,8 @@ print(f"Status     : {status}")`,
         code:null, tryMe:null, tip:null,
       },
       {
-        id:"s2", icon:"🔀", heading:"if / elif / else — Branch Order Matters",
-        body:"Python reads conditions from top to bottom and runs the first branch that is True. The moment one branch fires, all remaining branches are completely skipped — even if they would also be True. This is why the highest threshold must always come first. Missing the colon at the end of a condition line gives a SyntaxError. Wrong indentation gives an IndentationError.",
+        id:"s2", icon:"🔀", heading:"if / elif / else. Branch Order Matters",
+        body:"Python reads conditions from top to bottom and runs the first branch that is True. The moment one branch fires, all remaining branches are completely skipped. even if they would also be True. This is why the highest threshold must always come first. Missing the colon at the end of a condition line gives a SyntaxError. Wrong indentation gives an IndentationError.",
         code:
 `score = 85
 
@@ -212,7 +212,7 @@ if score >= 90:       # checked first. 85 < 90 → False, skip
     print("CRITICAL")
 elif score >= 70:     # checked second. 85 >= 70 → True, RUNS
     print("HIGH RISK")
-elif score >= 40:     # never reached — already fired above
+elif score >= 40:     # never reached. already fired above
     print("MEDIUM")
 else:                 # never reached
     print("LOW")
@@ -232,23 +232,23 @@ else:
           expectedOutput:"HIGH RISK",
           hint:"Change score to 95 for CRITICAL, 55 for MEDIUM, or 15 for LOW. Test every branch.",
         },
-        tip:"Order determines which branch fires. If you put elif score >= 10 before elif score >= 70, every score above 10 hits the first branch. HIGH and CRITICAL become unreachable — a silent bug more dangerous than a crash.",
+        tip:"Order determines which branch fires. If you put elif score >= 10 before elif score >= 70, every score above 10 hits the first branch. HIGH and CRITICAL become unreachable. a silent bug more dangerous than a crash.",
       },
       {
         id:"s3", icon:"⚖️", heading:"All Six Comparison Operators",
-        body:"Conditions are built from comparison operators that return True or False. Greater than or equal catches the threshold and everything above it. Strictly greater than excludes the threshold itself. Double equals compares values — never use a single equals sign inside a condition, that is assignment and gives a SyntaxError. Not equal, less than or equal, and strictly less than complete the set.",
+        body:"Conditions are built from comparison operators that return True or False. Greater than or equal catches the threshold and everything above it. Strictly greater than excludes the threshold itself. Double equals compares values. never use a single equals sign inside a condition, that is assignment and gives a SyntaxError. Not equal, less than or equal, and strictly less than complete the set.",
         code:
 `score  = 72
 status = "blocked"
 fails  = 3
 
-print(score >= 70)       # True  — 72 is at or above 70
-print(score > 70)        # True  — 72 is strictly above 70
-print(score > 72)        # False — 72 is not strictly above 72
-print(status == "blocked") # True — exact match
-print(status != "allowed") # True — they differ
-print(fails <= 3)        # True  — 3 is at or below 3
-print(fails < 3)         # False — 3 is not strictly below 3`,
+print(score >= 70)       # True . 72 is at or above 70
+print(score > 70)        # True . 72 is strictly above 70
+print(score > 72)        # False. 72 is not strictly above 72
+print(status == "blocked") # True. exact match
+print(status != "allowed") # True. they differ
+print(fails <= 3)        # True . 3 is at or below 3
+print(fails < 3)         # False. 3 is not strictly below 3`,
         tryMe:{
           starter:`score = 50
 print(score >= 70)   # ?
@@ -257,27 +257,27 @@ print(score == 50)   # ?
 print(score != 50)   # ?
 print(score < 100)   # ?`,
           expectedOutput:"False\nTrue\nTrue\nFalse\nTrue",
-          hint:"Every comparison returns True or False — these are the building blocks of every conditional in your program.",
+          hint:"Every comparison returns True or False. these are the building blocks of every conditional in your program.",
         },
         tip:null,
       },
       {
         id:"s4", icon:"🔗", heading:"Combining with and / or / not",
-        body:"Real threats rarely trigger on just one signal. You combine conditions using boolean operators. 'and' requires both conditions to be True — if either is False, the whole condition is False. 'or' requires at least one to be True — if either is True, the whole condition is True. 'not' inverts a boolean. You can use parentheses to group complex rules and make your intent clear.",
+        body:"Real threats rarely trigger on just one signal. You combine conditions using boolean operators. 'and' requires both conditions to be True. if either is False, the whole condition is False. 'or' requires at least one to be True. if either is True, the whole condition is True. 'not' inverts a boolean. You can use parentheses to group complex rules and make your intent clear.",
         code:
 `score      = 75
 new_device = True
 malware    = False
 
-# AND — both must be True
+# AND. both must be True
 if score >= 70 and new_device:
     print("ESCALATE: high risk from unknown device")
 
-# OR — either is enough
+# OR. either is enough
 if score >= 70 or malware:
     print("ALERT: action required")
 
-# NOT — inverts
+# NOT. inverts
 if not malware:
     print("No malware in this event")
 
@@ -290,33 +290,33 @@ new_device = True
 malware    = False
 
 if score >= 70 and new_device:
-    print("Line 1: ESCALATE — printed?")
+    print("Line 1: ESCALATE. printed?")
 
 if score >= 70 and malware:
-    print("Line 2: MALWARE+HIGH — printed?")
+    print("Line 2: MALWARE+HIGH. printed?")
 
 if score >= 70 or malware:
-    print("Line 3: ALERT — printed?")`,
-          expectedOutput:"Line 1: ESCALATE — printed?\nLine 3: ALERT — printed?",
-          hint:"Line 2 uses 'and' — BOTH must be True. malware is False so Line 2 does not print. Line 3 uses 'or' — only one needs to be True, and score>=70 is True.",
+    print("Line 3: ALERT. printed?")`,
+          expectedOutput:"Line 1: ESCALATE. printed?\nLine 3: ALERT. printed?",
+          hint:"Line 2 uses 'and'. BOTH must be True. malware is False so Line 2 does not print. Line 3 uses 'or'. only one needs to be True, and score>=70 is True.",
         },
         tip:null,
       },
       {
         id:"s5", icon:"🏗️", heading:"The 5-Tier Triage Function",
-        body:"Professional security tools wrap their decision logic in a function that returns a label. This makes the logic reusable anywhere. Notice the function uses return, not print — returning means the caller can store the result, compare it, or pass it to another function. A function that only prints is a dead end. This five-tier structure mirrors real SOC severity levels: CRITICAL requires immediate human response, ESCALATE means high risk from an unknown source, HIGH means a single strong signal, MEDIUM means monitoring required, LOW means within normal range.",
+        body:"Professional security tools wrap their decision logic in a function that returns a label. This makes the logic reusable anywhere. Notice the function uses return, not print. returning means the caller can store the result, compare it, or pass it to another function. A function that only prints is a dead end. This five-tier structure mirrors real SOC severity levels: CRITICAL requires immediate human response, ESCALATE means high risk from an unknown source, HIGH means a single strong signal, MEDIUM means monitoring required, LOW means within normal range.",
         code:
 `def label_risk(score, new_device=False, malware=False):
     """Returns: CRITICAL / ESCALATE / HIGH / MEDIUM / LOW"""
-    if score >= 90:                  # worst case — page on-call now
+    if score >= 90:                  # worst case. page on-call now
         return "CRITICAL"
     if score >= 70 and new_device:   # high score + unknown device
         return "ESCALATE"
     if score >= 70 or malware:       # high score OR malware present
         return "HIGH"
-    if score >= 40:                  # moderate — monitor
+    if score >= 40:                  # moderate. monitor
         return "MEDIUM"
-    return "LOW"                     # baseline — no action needed
+    return "LOW"                     # baseline. no action needed
 
 # Compose: result flows into the next decision
 label = label_risk(65, malware=True)  # returns "HIGH"
@@ -341,27 +341,27 @@ print(label_risk(50))
 print(label_risk(20))
 print(label_risk(65, malware=True))`,
           expectedOutput:"CRITICAL\nESCALATE\nHIGH\nMEDIUM\nLOW\nHIGH",
-          hint:"score=65 is below 70 so the score >= 70 checks fail. But malware=True makes the 'score >= 70 or malware' condition True — result is HIGH.",
+          hint:"score=65 is below 70 so the score >= 70 checks fail. But malware=True makes the 'score >= 70 or malware' condition True. result is HIGH.",
         },
-        tip:"label_risk(65, malware=True) returns HIGH because 'or malware' is True even though the score is only medium. A malware detection overrides the score — exactly how real tools work.",
+        tip:"label_risk(65, malware=True) returns HIGH because 'or malware' is True even though the score is only medium. A malware detection overrides the score. exactly how real tools work.",
       },
     ],
   },
 
   {
     lessonId:"l4",
-    ttsIntro:"Welcome to Lesson 4: Loops. A SIEM processes up to one hundred thousand security events per second — every single one passes through a loop. In this lesson you will write for loops with all three forms of range, use the modulo operator for pattern detection, maintain multiple counters simultaneously, scan a real list with enumerate, and control loop flow with break and continue.",
+    ttsIntro:"Welcome to Lesson 4: Loops. A SIEM processes up to one hundred thousand security events per second. every single one passes through a loop. In this lesson you will write for loops with all three forms of range, use the modulo operator for pattern detection, maintain multiple counters simultaneously, scan a real list with enumerate, and control loop flow with break and continue.",
     sections:[
       {
         id:"s1", icon:"🛡️", heading:"Why Security Tools Live Inside Loops",
-        body:"A SIEM platform processes between one thousand and one hundred thousand security events per second. Every single event passes through a loop that applies rules, scores it, and routes it to the right queue. Without loops, you would need a separate line of code for each event — completely impossible at scale. Python gives you industrial-strength event processing in a handful of lines. The same for loop that scans 10 events in your practice code is structurally identical to the loop that scans ten million events in a production SOC.",
+        body:"A SIEM platform processes between one thousand and one hundred thousand security events per second. Every single event passes through a loop that applies rules, scores it, and routes it to the right queue. Without loops, you would need a separate line of code for each event. completely impossible at scale. Python gives you industrial-strength event processing in a handful of lines. The same for loop that scans 10 events in your practice code is structurally identical to the loop that scans ten million events in a production SOC.",
         code:null, tryMe:null, tip:null,
       },
       {
-        id:"s2", icon:"🔄", heading:"for Loop + range() — Three Forms",
-        body:"range() generates a sequence of numbers. It has three forms. The single-argument form starts at zero. The two-argument form takes a start and stop — the start is included, the stop is excluded. The three-argument form adds a step, which lets you count by twos, fives, or tens. The off-by-one error is the most common loop mistake: range(1, 10) gives 1 through 9, not 10. To include 10, write range(1, 11).",
+        id:"s2", icon:"🔄", heading:"for Loop + range(). Three Forms",
+        body:"range() generates a sequence of numbers. It has three forms. The single-argument form starts at zero. The two-argument form takes a start and stop. the start is included, the stop is excluded. The three-argument form adds a step, which lets you count by twos, fives, or tens. The off-by-one error is the most common loop mistake: range(1, 10) gives 1 through 9, not 10. To include 10, write range(1, 11).",
         code:
-`# Form 1: range(stop) — starts at 0
+`# Form 1: range(stop). starts at 0
 for i in range(5):
     print(i)              # 0, 1, 2, 3, 4
 
@@ -377,18 +377,18 @@ for threshold in range(0, 101, 25):
     print("Event:", i)
 print("Done")`,
           expectedOutput:"Event: 1\nEvent: 2\nEvent: 3\nEvent: 4\nEvent: 5\nDone",
-          hint:"range(1, 6) gives 1 through 5 — five values. The stop (6) is never included.",
+          hint:"range(1, 6) gives 1 through 5. five values. The stop (6) is never included.",
         },
         tip:"Off-by-one is the single most common loop bug. Always ask: does the last value of range() match what I actually want? Trace through it manually for the first and last value.",
       },
       {
-        id:"s3", icon:"%", heading:"Modulo — Pattern Detection in Data",
-        body:"Modulo gives you the remainder after division. When the remainder is zero, the number divides evenly — it is divisible by the divisor. This is how you detect patterns: every third event, every fifth packet, every even-numbered log entry. Real IDS tools use modulo to sample traffic — checking every nth packet instead of all of them to reduce processing load.",
+        id:"s3", icon:"%", heading:"Modulo. Pattern Detection in Data",
+        body:"Modulo gives you the remainder after division. When the remainder is zero, the number divides evenly. it is divisible by the divisor. This is how you detect patterns: every third event, every fifth packet, every even-numbered log entry. Real IDS tools use modulo to sample traffic. checking every nth packet instead of all of them to reduce processing load.",
         code:
-`print(9  % 3)   # 0  — exact division, no remainder → divisible
-print(10 % 3)   # 1  — 10 ÷ 3 = 3 remainder 1 → not divisible
-print(14 % 2)   # 0  — even number
-print(15 % 2)   # 1  — odd number
+`print(9  % 3)   # 0 . exact division, no remainder → divisible
+print(10 % 3)   # 1 . 10 ÷ 3 = 3 remainder 1 → not divisible
+print(14 % 2)   # 0 . even number
+print(15 % 2)   # 1 . odd number
 
 # Practical: flag every 3rd event
 for event_id in range(1, 11):
@@ -399,15 +399,15 @@ for event_id in range(1, 11):
     if n % 3 == 0:
         print(f"{n} is divisible by 3")
     else:
-        print(f"{n} — skip")`,
-          expectedOutput:"1 — skip\n2 — skip\n3 is divisible by 3\n4 — skip\n5 — skip\n6 is divisible by 3\n7 — skip\n8 — skip\n9 is divisible by 3\n10 — skip",
+        print(f"{n}. skip")`,
+          expectedOutput:"1. skip\n2. skip\n3 is divisible by 3\n4. skip\n5. skip\n6 is divisible by 3\n7. skip\n8. skip\n9 is divisible by 3\n10. skip",
           hint:"Change % 3 to % 5 and predict which numbers appear before running.",
         },
-        tip:"In real IDS tools, modulo is used for traffic sampling — checking every nth packet instead of every single one. At 100k events/second, sampling 1-in-10 reduces load by 90% while keeping statistical accuracy.",
+        tip:"In real IDS tools, modulo is used for traffic sampling. checking every nth packet instead of every single one. At 100k events/second, sampling 1-in-10 reduces load by 90% while keeping statistical accuracy.",
       },
       {
-        id:"s4", icon:"🔢", heading:"Multiple Counters — The Accumulator Pattern",
-        body:"One loop can update several counters simultaneously. Every counter must start at zero before the loop — placing a counter initialisation inside the loop resets it on every iteration, so the final count is always zero or one. The += shorthand adds a value to a variable in place. This accumulator pattern — initialise before, increment inside, read after — appears in almost every analytics pipeline you will ever write.",
+        id:"s4", icon:"🔢", heading:"Multiple Counters. The Accumulator Pattern",
+        body:"One loop can update several counters simultaneously. Every counter must start at zero before the loop. placing a counter initialisation inside the loop resets it on every iteration, so the final count is always zero or one. The += shorthand adds a value to a variable in place. This accumulator pattern. initialise before, increment inside, read after. appears in almost every analytics pipeline you will ever write.",
         code:
 `critical_count   = 0   # ALL counters BEFORE the loop
 suspicious_count = 0
@@ -441,13 +441,13 @@ for score in scores:
 print(f"High: {high_count}")
 print(f"Low:  {low_count}")`,
           expectedOutput:"High: 3\nLow: 2",
-          hint:"88, 72, 95 are >= 70 (HIGH). 15, 22 are < 40 (LOW). 43 and 67 fall in between — neither counter changes for them.",
+          hint:"88, 72, 95 are >= 70 (HIGH). 15, 22 are < 40 (LOW). 43 and 67 fall in between. neither counter changes for them.",
         },
-        tip:"The counter-inside-the-loop bug is silent — no error, just a wrong answer. Always trace through the first two iterations manually: does the counter still hold its value from the previous iteration?",
+        tip:"The counter-inside-the-loop bug is silent. no error, just a wrong answer. Always trace through the first two iterations manually: does the counter still hold its value from the previous iteration?",
       },
       {
         id:"s5", icon:"📋", heading:"Scanning a Real List with enumerate()",
-        body:"When you loop a list, you often need both the index and the value at the same time. enumerate() gives you both in one step — no separate counter variable needed. The optional start=1 argument makes numbering begin at 1 instead of 0, which is more readable for event logs. The result is a tuple you unpack into two variables using idx, value in the for line.",
+        body:"When you loop a list, you often need both the index and the value at the same time. enumerate() gives you both in one step. no separate counter variable needed. The optional start=1 argument makes numbering begin at 1 instead of 0, which is more readable for event logs. The result is a tuple you unpack into two variables using idx, value in the for line.",
         code:
 `risk_scores = [15, 88, 42, 96, 73, 20, 55, 91]
 
@@ -473,15 +473,15 @@ for idx, score in enumerate(scores, start=1):
 
 print(f"Average: {total / len(scores):.1f}")`,
           expectedOutput:"Event 1: 22\nEvent 2: 85\nEvent 3: 47\nEvent 4: 91\nEvent 5: 60\nAverage: 61.0",
-          hint:"enumerate(scores, start=1) gives (1, 22), (2, 85), (3, 47)... — index and value together. Unpack with: for idx, score in enumerate(...):",
+          hint:"enumerate(scores, start=1) gives (1, 22), (2, 85), (3, 47).... index and value together. Unpack with: for idx, score in enumerate(...):",
         },
         tip:null,
       },
       {
         id:"s6", icon:"⏹️", heading:"while Loop, break, and continue",
-        body:"A while loop repeats as long as a condition is True. Use it when the number of iterations depends on runtime data — like waiting for a user to authenticate, or collecting events until a CRITICAL one arrives. break exits the loop immediately. continue skips the rest of the current iteration and jumps to the next. If you forget to increment the variable in a while loop, the condition never becomes False and the program freezes in an infinite loop.",
+        body:"A while loop repeats as long as a condition is True. Use it when the number of iterations depends on runtime data. like waiting for a user to authenticate, or collecting events until a CRITICAL one arrives. break exits the loop immediately. continue skips the rest of the current iteration and jumps to the next. If you forget to increment the variable in a while loop, the condition never becomes False and the program freezes in an infinite loop.",
         code:
-`# Login lockout — 3 attempts then lock
+`# Login lockout. 3 attempts then lock
 attempts  = 0
 max_tries = 3
 
@@ -510,9 +510,9 @@ while attempts < max_tries:
         print("Account locked.")
         break`,
           expectedOutput:"Attempt 1: failed\nAttempt 2: failed\nAttempt 3: failed\nAccount locked.",
-          hint:"The while loop runs while attempts < 3. On the third iteration attempts becomes 3, the inner if fires, and break exits. Without break the loop would stop anyway — try removing break and see if the output changes.",
+          hint:"The while loop runs while attempts < 3. On the third iteration attempts becomes 3, the inner if fires, and break exits. Without break the loop would stop anyway. try removing break and see if the output changes.",
         },
-        tip:"Infinite loops are a real security concern — a poorly written while loop in a network handler can be triggered intentionally by an attacker to exhaust CPU. Always verify your while condition becomes False or has a break.",
+        tip:"Infinite loops are a real security concern. a poorly written while loop in a network handler can be triggered intentionally by an attacker to exhaust CPU. Always verify your while condition becomes False or has a break.",
       },
     ],
   },
@@ -523,12 +523,12 @@ while attempts < max_tries:
     sections:[
       {
         id:"s1", icon:"🛡️", heading:"Functions Equal Reusable Security Logic",
-        body:"A real security system has hundreds of functions — score login, detect anomaly, label risk. Functions wrap logic under a name. Define once, call many times with different inputs. If the scoring rule changes, update it in one place and everything using it automatically improves.",
+        body:"A real security system has hundreds of functions. score login, detect anomaly, label risk. Functions wrap logic under a name. Define once, call many times with different inputs. If the scoring rule changes, update it in one place and everything using it automatically improves.",
         code:null, tryMe:null, tip:null,
       },
       {
         id:"s2", icon:"🏗️", heading:"Defining a Function",
-        body:"The def keyword starts a function. After def comes the name, then parentheses with parameter names. The body is indented. The return keyword sends a value back to the caller. Without return a function gives back None — a very common source of bugs.",
+        body:"The def keyword starts a function. After def comes the name, then parentheses with parameter names. The body is indented. The return keyword sends a value back to the caller. Without return a function gives back None. a very common source of bugs.",
         code:`def greet_analyst(name):
     message = f"Welcome, {name}. System online."
     return message
@@ -549,7 +549,7 @@ print(double_score(50))`,
       },
       {
         id:"s3", icon:"⚙️", heading:"The Risk Scoring Function",
-        body:"The score login attempt function takes two parameters: failed login count and whether the device is new. Each fail adds twenty points. A new device adds thirty. The score is capped at one hundred. It returns the value — not just prints it — so the caller can store and reuse it.",
+        body:"The score login attempt function takes two parameters: failed login count and whether the device is new. Each fail adds twenty points. A new device adds thirty. The score is capped at one hundred. It returns the value. not just prints it. so the caller can store and reuse it.",
         code:`def score_login_attempt(fails, new_device):
     risk = fails * 20
     if new_device:
@@ -572,7 +572,7 @@ print("Risk:", my_risk)
 print("Doubled:", my_risk * 2)
 print("Is high?", my_risk >= 70)`,
           expectedOutput:"Risk: 70\nDoubled: 140\nIs high? True",
-          hint:"The function returns a number you can store and use. Try score_login_attempt(3, False) — what do you predict?",
+          hint:"The function returns a number you can store and use. Try score_login_attempt(3, False). what do you predict?",
         },
         tip:"return sends a value back; print only displays it. A function that returns is a building block. A function that only prints is a dead end.",
       },
@@ -591,7 +591,7 @@ def label_risk(risk):
 
 risk  = score_login_attempt(2, True)   # 70
 label = label_risk(risk)               # "HIGH"
-print(f"Risk: {risk} — Label: {label}")`,
+print(f"Risk: {risk}. Label: {label}")`,
         tryMe:{
           starter:`def score_login_attempt(fails, new_device):
     risk = fails * 20
@@ -618,7 +618,7 @@ for fails, nd in cases:
 
   {
     lessonId:"l6",
-    ttsIntro:"Welcome to Lesson 6: Lists and Analytics. A threat feed delivers dozens of risk scores per hour. In this lesson you will create lists, access items by index, compute totals and averages with built-in functions, and count conditional matches with a loop.",
+    ttsIntro:"Welcome to Lesson 6: Lists and Analytics. A threat feed delivers dozens of risk scores per hour. In this lesson you will create lists, access items by index, compute totals and averages with built in functions, and count conditional matches with a loop.",
     sections:[
       {
         id:"s1", icon:"🛡️", heading:"Lists Equal Collections of Events",
@@ -629,8 +629,8 @@ for fails, nd in cases:
         id:"s2", icon:"📋", heading:"Creating and Accessing a List",
         body:"A list uses square brackets with values separated by commas. Each value has an index starting at zero. The last item is at index negative one. The len function returns the number of items.",
         code:`scores = [15, 42, 88, 73, 60, 95]
-print(scores[0])     # 15 — first
-print(scores[-1])    # 95 — last
+print(scores[0])     # 15. first
+print(scores[-1])    # 95. last
 print(len(scores))   # 6`,
         tryMe:{
           starter:`scores = [10, 45, 88, 73, 60, 95, 30]
@@ -646,8 +646,8 @@ print("Slice:", scores[1:4])`,
         tip:null,
       },
       {
-        id:"s3", icon:"📊", heading:"Analytics with Built-in Functions",
-        body:"Four built-in functions give you immediate analytics on any list. sum adds all values. len counts items. max finds the largest. min finds the smallest. Divide sum by len for the average.",
+        id:"s3", icon:"📊", heading:"Analytics with built in Functions",
+        body:"Four built in functions give you immediate analytics on any list. sum adds all values. len counts items. max finds the largest. min finds the smallest. Divide sum by len for the average.",
         code:`scores = [15, 42, 88, 73, 60, 95]
 print(f"Total  : {sum(scores)}")
 print(f"Average: {sum(scores)/len(scores):.1f}")
@@ -663,7 +663,7 @@ print(f"Average: {average:.1f}")
 print(f"Highest: {max(scores)}")
 print(f"Lowest : {min(scores)}")`,
           expectedOutput:"Total  : 373\nAverage: 62.2\nHighest: 95\nLowest : 15",
-          hint:"Try scores.append(100) before these lines and re-run — all four stats update automatically.",
+          hint:"Try scores.append(100) before these lines and re-run. all four stats update automatically.",
         },
         tip:null,
       },
@@ -736,7 +736,7 @@ print("OS:", device["os"])
 print("Risk:", device["risk"])
 print("Patched:", device["patched"])`,
           expectedOutput:"Owner: Ava\nOS: Windows 11\nRisk: 42\nPatched: False",
-          hint:"Try device['Owner'] with a capital O — you will get a KeyError. Keys are case-sensitive.",
+          hint:"Try device['Owner'] with a capital O. you will get a KeyError. Keys are case-sensitive.",
         },
         tip:null,
       },
@@ -761,7 +761,7 @@ print(device.get("owner","unknown"))`,
       },
       {
         id:"s4", icon:"✏️", heading:"Updating Fields and Looping with .items()",
-        body:"Updating an existing key and adding a new one use the same syntax — square bracket assignment. If the key exists the value is replaced. If not a new key is added. Loop through all key-value pairs with the items method.",
+        body:"Updating an existing key and adding a new one use the same syntax. square bracket assignment. If the key exists the value is replaced. If not a new key is added. Loop through all key-value pairs with the items method.",
         code:`device = {"owner":"Ava","risk":42,"patched":False}
 
 device["risk"]    = 5
@@ -794,7 +794,7 @@ for k, v in device.items():
 
   {
     lessonId:"l8",
-    ttsIntro:"Welcome to Lesson 8: Strings and Log Parsing. Security log analysis is text processing. In this lesson you will use lower to normalize, split to tokenize, and the in operator to detect threat keywords — the exact pipeline used in commercial security tools.",
+    ttsIntro:"Welcome to Lesson 8: Strings and Log Parsing. Security log analysis is text processing. In this lesson you will use lower to normalize, split to tokenize, and the in operator to detect threat keywords. the exact pipeline used in commercial security tools.",
     sections:[
       {
         id:"s1", icon:"🛡️", heading:"Why Strings Power Threat Detection",
@@ -803,11 +803,11 @@ for k, v in device.items():
       },
       {
         id:"s2", icon:"🔡", heading:"Normalize with lower()",
-        body:"FAILED in uppercase, Failed with a capital, and failed lowercase all mean the same thing but Python sees three different strings. lower() converts the entire string to lowercase. It returns a new string — the original is never changed because strings are immutable.",
+        body:"FAILED in uppercase, Failed with a capital, and failed lowercase all mean the same thing but Python sees three different strings. lower() converts the entire string to lowercase. It returns a new string. the original is never changed because strings are immutable.",
         code:`log   = "FAILED Login From IP 10.0.0.5"
 clean = log.lower()
 print(clean)  # "failed login from ip 10.0.0.5"
-print(log)    # unchanged — strings are immutable`,
+print(log)    # unchanged. strings are immutable`,
         tryMe:{
           starter:`log   = "FAILED Login From IP 10.0.0.5"
 clean = log.lower()
@@ -837,7 +837,7 @@ print("Count:", len(words))
 print("First:", words[0])
 print("IP:", words[-1])`,
           expectedOutput:"Tokens: ['failed', 'login', 'from', 'ip', '192.168.1.42']\nCount: 5\nFirst: failed\nIP: 192.168.1.42",
-          hint:"words[-1] always gives the last token — the IP address — regardless of line length.",
+          hint:"words[-1] always gives the last token. the IP address. regardless of line length.",
         },
         tip:null,
       },
@@ -865,7 +865,7 @@ for kw in keywords:
           expectedOutput:"  [ OK  ] failed\n  [ALERT] blocked\n  [ OK  ] malware\n  [ALERT] root\n  [ OK  ] exploit",
           hint:"blocked and root are in the log. Detection only works because we normalized to lowercase first.",
         },
-        tip:"This pattern is used in Snort and Suricata — the two most widely deployed open-source IDS tools.",
+        tip:"This pattern is used in Snort and Suricata. the two most widely deployed open-source IDS tools.",
       },
     ],
   },
@@ -876,14 +876,14 @@ for kw in keywords:
     sections:[
       {
         id:"s1", icon:"🛡️", heading:"Real Data Is Messy",
-        body:"Security tools ingest data from CSV files, network scanners, and APIs — all messy. A tool that crashes on bad input stops protecting. The try and except pattern catches errors before they crash your program.",
+        body:"Security tools ingest data from CSV files, network scanners, and APIs. all messy. A tool that crashes on bad input stops protecting. The try and except pattern catches errors before they crash your program.",
         code:null, tryMe:null, tip:null,
       },
       {
         id:"s2", icon:"💥", heading:"What Happens Without Exception Handling",
         body:"If you convert a non-numeric string to int, Python raises a ValueError and stops the program. Without a try-except block, one bad value kills the entire processing run.",
         code:`value = "N/A"
-x = int(value)          # ValueError — program stops
+x = int(value)          # ValueError. program stops
 print("x * 5 =", x * 5)  # never runs`,
         tryMe:{
           starter:`value = "N/A"
@@ -897,7 +897,7 @@ print("This line never runs")`,
       },
       {
         id:"s3", icon:"🛡️", heading:"try / except Pattern",
-        body:"Wrap failing code in a try block. If an error occurs Python jumps to the except block instead of crashing. Execution continues normally after. Always specify the exception type — ValueError for bad conversions, ZeroDivisionError for division by zero.",
+        body:"Wrap failing code in a try block. If an error occurs Python jumps to the except block instead of crashing. Execution continues normally after. Always specify the exception type. ValueError for bad conversions, ZeroDivisionError for division by zero.",
         code:`value = "N/A"
 
 try:
@@ -913,14 +913,14 @@ print("Program continues here")`,
         x = int(value)
         print(f"  OK  {value} → x*5 = {x*5}")
     except ValueError:
-        print(f"  SKIP '{value}' — not a number")`,
-          expectedOutput:"  OK  10 → x*5 = 50\n  SKIP 'N/A' — not a number\n  OK  88 → x*5 = 440\n  SKIP 'null' — not a number\n  OK  42 → x*5 = 210",
-          hint:"Valid numbers are processed. Invalid strings are skipped. The loop never crashes — all five values are handled.",
+        print(f"  SKIP '{value}'. not a number")`,
+          expectedOutput:"  OK  10 → x*5 = 50\n  SKIP 'N/A'. not a number\n  OK  88 → x*5 = 440\n  SKIP 'null'. not a number\n  OK  42 → x*5 = 210",
+          hint:"Valid numbers are processed. Invalid strings are skipped. The loop never crashes. all five values are handled.",
         },
         tip:"Always name the exception type. Bare except silently catches everything including bugs in your own code.",
       },
       {
-        id:"s4", icon:"🔁", heading:"finally — Always Runs",
+        id:"s4", icon:"🔁", heading:"finally. Always Runs",
         body:"The finally block runs after try and except regardless of success or failure. Use it for cleanup: closing files, logging completion, resetting state. It is your guarantee that certain code always executes.",
         code:`def process_value(raw):
     try:
@@ -932,7 +932,7 @@ print("Program continues here")`,
         print("  [log] done")  # always runs
 
 process_value("45")   # succeeds
-process_value("N/A")  # fails — finally still runs`,
+process_value("N/A")  # fails. finally still runs`,
         tryMe:{
           starter:`def process_value(raw):
     try:
@@ -948,7 +948,7 @@ for item in ["45","N/A","88","??"]:
     process_value(item)
     print()`,
           expectedOutput:"Input: 45\n  Result: 450\n  [log] processed: 45\n\nInput: N/A\n  Skipped: not a number\n  [log] processed: N/A\n",
-          hint:"The log line in finally runs for every input — success or failure. This guarantees every event is logged.",
+          hint:"The log line in finally runs for every input. success or failure. This guarantees every event is logged.",
         },
         tip:null,
       },
@@ -957,15 +957,15 @@ for item in ["45","N/A","88","??"]:
 
   {
     lessonId:"l10",
-    ttsIntro:"Welcome to Lesson 10: the Capstone. You will combine everything from Lessons 1 through 9 into a working Security Operations Center dashboard — a portfolio-ready project.",
+    ttsIntro:"Welcome to Lesson 10: the Capstone. You will combine everything from Lessons 1 through 9 into a working Security Operations Center dashboard. a portfolio-ready project.",
     sections:[
       {
-        id:"s1", icon:"🛡️", heading:"You Have Built Every Piece — Now Connect Them",
+        id:"s1", icon:"🛡️", heading:"You Have Built Every Piece. Now Connect Them",
         body:"A real SOC tool ingests log events, scores each one using keyword rules, stores them in structured records, and generates a summary report. You already know every technique required. This lesson is about connecting them intentionally into one complete, working system.",
         code:null, tryMe:null, tip:null,
       },
       {
-        id:"s2", icon:"🗺️", heading:"Architecture — Each Lesson's Role",
+        id:"s2", icon:"🗺️", heading:"Architecture. Each Lesson's Role",
         body:"Lesson 1 variables store your counters and labels. Lesson 2 input collects live log lines. Lesson 3 conditionals power risk labeling. Lesson 4 while loop collects events until done. Lesson 5 functions encapsulate scoring and labeling. Lesson 6 list accumulates all records. Lesson 7 dictionaries structure each event. Lesson 8 strings normalize and detect keywords. Lesson 9 exceptions handle bad input.",
         code:`# Lesson contributions:
 # L1 → variables: risk, label, count
@@ -1022,7 +1022,7 @@ for log in logs:
       },
       {
         id:"s4", icon:"📊", heading:"Analytics Report and Ranked Output",
-        body:"After collecting events, loop through the list to sum risk scores, count tiers, and compute the average. The sorted function with a lambda key and reverse True produces a ranked list from highest to lowest risk — the view an analyst sees on their dashboard.",
+        body:"After collecting events, loop through the list to sum risk scores, count tiers, and compute the average. The sorted function with a lambda key and reverse True produces a ranked list from highest to lowest risk. the view an analyst sees on their dashboard.",
         code:`events = [...]   # list of dicts collected in the while loop
 
 risks = [e["risk"] for e in events]
@@ -1068,7 +1068,7 @@ export function getLessonContent(lessonId) {
 }
 
 /**
- * Guided walkthrough + Try me: built-in content merged with teacher override JSON (localStorage).
+ * Guided walkthrough + Try me: built in content merged with teacher override JSON (localStorage).
  */
 export function getMergedLessonContent(lessonId) {
   const base = getLessonContent(lessonId);

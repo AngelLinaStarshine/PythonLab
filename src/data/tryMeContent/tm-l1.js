@@ -74,13 +74,13 @@ print(type(mfa_on))`,
     {
       id: "s4",
       icon: "🖨️",
-      heading: "Printing Output, f-Strings",
-      body: "Python's print function displays values. The modern, professional way is an f-string: put the letter f before the opening quote, then embed variable names inside curly braces. F-strings are cleaner and faster than comma-separated print calls.",
+      heading: "Printing Output, f strings",
+      body: "Python's print function displays values. The modern, professional way is an f string: put the letter f before the opening quote, then embed variable names inside curly braces. f strings are cleaner and faster than comma-separated print calls.",
       code: `username = "Ava"
 grade    = 10
 mfa_on   = True
 
-# f-string style, professional standard
+# f string style, professional standard
 print(f"user: {username} | grade: {grade} | 2FA: {mfa_on}")
 # Output: user: Ava | grade: 10 | 2FA: True`,
       tryMe: {
@@ -94,7 +94,7 @@ print(f"Grade : {grade}")
 print(f"2FA   : {mfa_on}")`,
         expectedOutput:
           "=== CYBER PROFILE ===\nUser  : Ava\nGrade : 10\n2FA   : True",
-        hint: "Inside an f-string, put variable names inside curly braces. Try changing the values and re-running.",
+        hint: "Inside an f string, put variable names inside curly braces. Try changing the values and re-running.",
       },
       tip: null,
     },

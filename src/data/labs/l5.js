@@ -30,7 +30,7 @@ print(greet_analyst(__BLANK__))
 print(greet_analyst(__BLANK__))`,
       hints: [
         "def greet_analyst(name):, name is the parameter.",
-        "Inside the function, use name in the f-string.",
+        "Inside the function, use name in the f string.",
         'Call it: greet_analyst("Ava"), put the name in quotes as an argument.',
       ],
       solution: `def greet_analyst(name):

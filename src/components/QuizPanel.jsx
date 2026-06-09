@@ -4,8 +4,8 @@
 // Shows code snippets per question. Tracks score.
 //
 // Props:
-//   lessonId    — string e.g. "l8"
-//   onComplete  — fn(score, total) called when all questions answered
+//   lessonId   . string e.g. "l8"
+//   onComplete . fn(score, total) called when all questions answered
 // ─────────────────────────────────────────────────────────────────
 
 import { useEffect, useState } from "react";
@@ -137,7 +137,7 @@ export default function QuizPanel({ lessonId, onComplete }) {
       ? "Perfect! You understand the code structure completely."
       : pct >= 67
         ? "Good work. Review the questions you missed before moving on."
-        : "Keep going — re-read the lesson material and try again.";
+        : "Keep going. reread the lesson material and try again.";
 
     return (
       <div style={{padding:"24px",fontFamily:C.sans}}>

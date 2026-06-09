@@ -107,6 +107,17 @@ export function setStudentName(name) {
   }
 }
 
+/** Bind activity tracking to a logged-in student account. */
+export function setStudentIdentity(studentId, studentName) {
+  try {
+    if (studentId) localStorage.setItem(STUDENT_ID_KEY, studentId);
+    if (studentName) localStorage.setItem(STUDENT_NAME_KEY, String(studentName).trim());
+    localStorage.setItem(ROLE_KEY, "student");
+  } catch {
+    /* ignore */
+  }
+}
+
 export function clearStudentIdentity() {
   try {
     localStorage.removeItem(STUDENT_ID_KEY);
@@ -200,7 +211,7 @@ export function getClassReportEvents() {
   const normalized = security.map((e, i) => ({
     id: `sec_${i}_${e.at || i}`,
     studentId: e.studentId || "security",
-    studentName: e.studentName || getStudentName() || "—",
+    studentName: e.studentName || getStudentName() || " ",
     type: String(e.type || "").startsWith("security_") ? e.type : `security_${e.type}`,
     at: e.at,
     atLabel: e.atLabel,

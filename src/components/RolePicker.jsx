@@ -349,7 +349,7 @@ export default function RolePicker({ onSelect }) {
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{ fontSize: 36, marginBottom: 12 }}>🛡️</div>
         <div style={{ fontSize: 22, fontWeight: 800, color: C.t1 }}>Cyber/AI Python Lab</div>
-        <div style={{ fontSize: 13, color: C.t2, marginTop: 4 }}>Ontario · Grades 10–11 · Mastery Track</div>
+        <div style={{ fontSize: 13, color: C.t2, marginTop: 4 }}>Ontario · Grades 10 to 11 · Mastery Track</div>
       </div>
 
       <div

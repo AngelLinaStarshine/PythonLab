@@ -7,7 +7,7 @@ export const lab1 = {
   objectives: [
     "Create variables of type str, int, float, and bool.",
     "Use type() to inspect what Python detected.",
-    "Print a formatted profile summary using print() and f-strings.",
+    "Print a formatted profile summary using print() and f strings.",
     "Avoid the three most common beginner type errors.",
   ],
   intro: `In this lab, you will build a mini user profile, the kind a real authentication
@@ -56,7 +56,7 @@ print("user:", username, "| grade:", grade,
     {
       id: "e2",
       title: "Exercise 2, Inspect types with type()",
-      prompt: `Use Python's built-in type() function to verify what type each variable is.
+      prompt: `Use Python's built in type() function to verify what type each variable is.
 Print the type of all four variables. Then answer in a comment:
   • Which variable is <class 'float'>?
   • Which is <class 'bool'>?`,
@@ -91,9 +91,9 @@ print(type(two_factor_enabled))
     },
     {
       id: "e3",
-      title: "Exercise 3, Print a formatted profile with f-strings",
-      prompt: `Now print the same profile using an f-string, the modern, industry-standard
-way to format output. An f-string starts with f before the quote and uses
+      title: "Exercise 3, Print a formatted profile with f strings",
+      prompt: `Now print the same profile using an f string, the modern, industry-standard
+way to format output. An f string starts with f before the quote and uses
 {variable} to embed values.
 
 Target output (exact format):
@@ -102,8 +102,8 @@ Target output (exact format):
   Grade    : 10
   Risk     : 0.0
   2FA      : True`,
-      starter: `# Exercise 3: f-string formatting
-# Complete the f-strings below
+      starter: `# Exercise 3: f string formatting
+# Complete the f strings below
 
 print("=== CYBER PROFILE ===")
 print(f"User     : {__BLANK__}")
@@ -111,7 +111,7 @@ print(f"Grade    : {__BLANK__}")
 print(f"Risk     : {__BLANK__}")
 print(f"2FA      : {__BLANK__}")`,
       hints: [
-        "Inside an f-string, put the variable name inside curly braces: {username}.",
+        "Inside an f string, put the variable name inside curly braces: {username}.",
         'f"User: {username}" will print: User: Ava',
         "Replace each __BLANK__ with the variable name that belongs on that line.",
       ],
@@ -126,7 +126,7 @@ Grade    : 10
 Risk     : 0.0
 2FA      : True`,
       afterNote:
-        "f-strings are used in every professional Python codebase. Get comfortable with the {variable} syntax, you'll use it through all 10 lessons.",
+        "f strings are used in every professional Python codebase. Get comfortable with the {variable} syntax, you'll use it through all 10 lessons.",
     },
     {
       id: "e4",
@@ -170,7 +170,7 @@ print(f"Fixed: {username} | {grade + 1} | {two_factor_enabled}")`,
       "int and float store numbers, never use quotes.",
       "bool is exactly True or False, capital first letter, no quotes.",
       "type() reveals what Python detected, use it when debugging.",
-      'f-strings (f"...") embed variables cleanly, industry standard.',
+      'f strings (f"...") embed variables cleanly, industry standard.',
     ],
   },
 };

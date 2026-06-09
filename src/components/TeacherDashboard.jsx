@@ -1,18 +1,18 @@
 // src/components/TeacherDashboard.jsx
 // ─────────────────────────────────────────────────────────────────
-// Full teacher dashboard — student-centric view.
+// Full teacher dashboard. student-centric view.
 //
 // Tabs:
-//   📋 Students    — card per student, click to drill down
-//   📊 Grade Book  — lesson × student completion matrix
-//   🚨 Alerts      — security violations grouped by student
-//   🎛️ Controls    — toggles + export + reset
+//   📋 Students   . card per student, click to drill down
+//   📊 Grade Book . lesson × student completion matrix
+//   🚨 Alerts     . security violations grouped by student
+//   🎛️ Controls   . toggles + export + reset
 //
 // Each student card shows:
 //   Name, last active, active time, lessons mastered / read / video
 //   Mastery attempts, quiz correct, hints used, ARIA triggers, violations
 //
-// Drill-down shows:
+// drill down shows:
 //   Per-lesson breakdown (read ✓/✗, video ✓/✗, mastery ✓/✗, attempts)
 //   Full event timeline
 //   Download individual report (JSON + CSV)
@@ -125,7 +125,7 @@ function StudentCard({ summary, onClick }) {
   const pct  = Math.round((summary.completedCount / 10) * 100);
   const ts   = summary.lastDate || (summary.lastSeen
     ? new Date(summary.lastSeen).toLocaleDateString()
-    : "—");
+    : " ");
 
   const riskColor =
     summary.violations >= 5 ? C.red :
@@ -200,7 +200,7 @@ function StudentCard({ summary, onClick }) {
   );
 }
 
-// ── Per-student drill-down ───────────────────────────────────────
+// ── Per student drill down ───────────────────────────────────────
 function StudentDetail({ summary, onBack }) {
   const [showEvents, setShowEvents] = useState(false);
 
@@ -325,13 +325,13 @@ function StudentDetail({ summary, onBack }) {
               fontSize:12,
               color: l.attempts>3?C.red:l.attempts>1?C.amber:C.t2,
             }}>
-              {l.attempts||"—"}
+              {l.attempts||" "}
             </div>
             <div style={{
               padding:"9px 12px", textAlign:"center",
               fontSize:12, color:C.t2,
             }}>
-              {l.hintsUsed||"—"}
+              {l.hintsUsed||" "}
             </div>
           </div>
         ))}
@@ -600,7 +600,7 @@ function AlertsTab({ summaries, allEvents, onClear }) {
                   textTransform:"capitalize",
                 }}>
                   {e.type.replace(/_/g," ")}
-                  {e.key && <span style={{color:C.t2,fontWeight:400}}> — {e.key}</span>}
+                  {e.key && <span style={{color:C.t2,fontWeight:400}}>. {e.key}</span>}
                 </div>
                 <div style={{fontSize:11,color:C.t2}}>
                   {e.studentName || "Unknown"} · {e.lessonId||""}
@@ -861,7 +861,7 @@ function AssignmentsTab({ events, activeLessonId, currentEditorCode }) {
       >
         {lessons.map((l) => (
           <option key={l.id} value={l.id}>
-            {l.id} — {l.title}
+            {l.id}. {l.title}
           </option>
         ))}
       </select>
@@ -1119,7 +1119,7 @@ export default function TeacherDashboard({
   const [tab,        setTab]        = useState("students");
   const [allEvents,  setAllEvents]  = useState([]);
   const [summaries,  setSummaries]  = useState([]);
-  const [selected,   setSelected]   = useState(null); // studentId for drill-down
+  const [selected,   setSelected]   = useState(null); // studentId for drill down
   const [alertCount, setAlertCount] = useState(0);
 
   const refresh = useCallback(() => {
@@ -1360,7 +1360,7 @@ export default function TeacherDashboard({
               background:C.green,boxShadow:`0 0 6px ${C.green}`,
             }}/>
             <span style={{fontSize:11,color:C.t3}}>
-              Auto-refreshes every 3 s · {allEvents.length} total events
+              auto refreshes every 3 s · {allEvents.length} total events
             </span>
           </div>
         </div>

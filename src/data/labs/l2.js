@@ -27,7 +27,7 @@ msg = input("Paste suspicious message: ")
 print(__BLANK__)`,
       hints: [
         'print("message:", msg) , use a comma to separate the label from the variable.',
-        'Or use an f-string: print(f"Message: {msg}")',
+        'Or use an f string: print(f"Message: {msg}")',
       ],
       solution: `msg = input("Paste suspicious message: ")
 print("message:", msg)`,
@@ -75,14 +75,14 @@ print(f"Confidence: {percentage:.1f}%")`,
       hints: [
         "Use float() instead of int() for decimal numbers.",
         'confidence = float(input("Confidence 0.0 to 1.0: "))',
-        ":.1f in the f-string rounds the float to 1 decimal place.",
+        ":.1f in the f string rounds the float to 1 decimal place.",
       ],
       solution: `confidence = float(input("Confidence 0.0 to 1.0: "))
 percentage = confidence * 100
 print(f"Confidence: {percentage:.1f}%")`,
       expectedOutput: "Confidence: 87.5%",
       afterNote:
-        ":.1f is f-string formatting syntax. The colon starts the format spec, .1 means one decimal place, and f means float. You can use .2f for two decimal places.",
+        ":.1f is f string formatting syntax. The colon starts the format spec, .1 means one decimal place, and f means float. You can use .2f for two decimal places.",
     },
     {
       id: "e4",
@@ -112,7 +112,7 @@ print(f"Status     : {__BLANK__}")`,
       hints: [
         "risk uses int(), confidence uses float().",
         "Replace each __BLANK__ in the print statements with the matching variable name.",
-        "status is already computed, just use {status} in the f-string.",
+        "status is already computed, just use {status} in the f string.",
       ],
       solution: `msg        = input("Suspicious message: ")
 risk       = int(input("Risk score 0 to 100: "))
@@ -143,7 +143,7 @@ Status     : HIGH RISK`,
       "int(input(...)) converts typed input to an integer in one step.",
       "float(input(...)) converts to a decimal number.",
       "Skipping conversion causes TypeError when you try to do math.",
-      ":.1f in an f-string formats a float to 1 decimal place.",
+      ":.1f in an f string formats a float to 1 decimal place.",
     ],
   },
 };

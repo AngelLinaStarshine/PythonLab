@@ -1,7 +1,7 @@
 export const tryMeL6 = {
   lessonId: "l6",
   ttsIntro:
-    "Welcome to Lesson 6: Lists and Analytics. A threat feed delivers dozens of risk scores per hour. In this lesson you will create lists, access items by index, compute totals and averages with built-in functions, and count conditional matches with a loop.",
+    "Welcome to Lesson 6: Lists and Analytics. A threat feed delivers dozens of risk scores per hour. In this lesson you will create lists, access items by index, compute totals and averages with built in functions, and count conditional matches with a loop.",
   sections: [
     {
       id: "s1",
@@ -38,8 +38,8 @@ print("Slice:", scores[1:4])`,
     {
       id: "s3",
       icon: "📊",
-      heading: "Analytics with Built-in Functions",
-      body: "Four built-in functions give you immediate analytics on any list. sum adds all values. len counts items. max finds the largest. min finds the smallest. Divide sum by len for the average.",
+      heading: "Analytics with built in Functions",
+      body: "Four built in functions give you immediate analytics on any list. sum adds all values. len counts items. max finds the largest. min finds the smallest. Divide sum by len for the average.",
       code: `scores = [15, 42, 88, 73, 60, 95]
 print(f"Total  : {sum(scores)}")
 print(f"Average: {sum(scores)/len(scores):.1f}")

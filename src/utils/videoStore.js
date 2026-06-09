@@ -1,5 +1,5 @@
 // src/utils/videoStore.js
-// Persistent video store — teacher uploads URLs per lesson (localStorage).
+// Persistent video store. teacher uploads URLs per lesson (localStorage).
 // Storage key: "py_learn_lesson_videos"
 // Shape: { l1: [{ label, url, addedAt }], ... }
 

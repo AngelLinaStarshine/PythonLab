@@ -276,7 +276,7 @@ a { color: inherit; }
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* Lesson HTML lives inside .learn-reading-scroll — do not clip to 280px */
+/* Lesson HTML lives inside .learn-reading-scroll. do not clip to 280px */
 .learn-reading-scroll .material,
 .learn-reading-scroll .material-inner {
   height: auto;

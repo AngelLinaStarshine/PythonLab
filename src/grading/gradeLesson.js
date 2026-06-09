@@ -29,7 +29,7 @@ function assertNoRuntimeCrash(error) {
 }
 
 /**
- * Anti-cheat: basic but effective
+ * anti cheat: basic but effective
  */
 function antiCheat(code, expectedOutLines = []) {
   const c = String(code ?? "");
@@ -64,9 +64,9 @@ export function wrapWithMockInputs(pyCode, inputs = []) {
     String(x).replace(/\\/g, "\\\\").replace(/"/g, '\\"')
   );
 
-  // Override builtins.input — Pyodide otherwise keeps the browser prompt and
+  // Override builtins.input. Pyodide otherwise keeps the browser prompt and
   // empty OK clicks become float("") → ValueError on the confidence line.
-  const header = `# --- AUTOGRADER INPUT HARNESS ---
+  const header = `# AUTOGRADER INPUT HARNESS
 import builtins
 __inputs = iter([${safeInputs.map((x) => `"${x}"`).join(", ")}])
 def __lesson_input(prompt=""):
@@ -75,7 +75,7 @@ def __lesson_input(prompt=""):
     except StopIteration:
         return ""
 builtins.input = __lesson_input
-# --- END HARNESS ---
+# END HARNESS
 `;
   return header + "\n" + (pyCode ?? "");
 }

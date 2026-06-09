@@ -31,7 +31,7 @@ export const LESSON_INPUT_GUIDES = {
     sampleInputs: ["Click this now!", "85", "0.85"],
     /** Shown in browser prompt() when interactive fallback runs */
     promptLines: [
-      "1/3 MESSAGE — suspicious text (any words)",
+      "1/3 MESSAGE. suspicious text (any words)",
       "Example: Click this now!",
       "Type your message:",
     ],
@@ -98,7 +98,7 @@ export function getLessonInputPrompts(lessonId) {
       `${guide.promptLines.join("\n")}`,
       `${guide.promptLines.join("\n")}`,
       `${guide.promptLines.join("\n")}`,
-      `Last prompt — type: done`,
+      `Last prompt. type: done`,
     ];
   }
 

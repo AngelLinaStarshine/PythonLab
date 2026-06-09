@@ -4,6 +4,8 @@
 
 A React + Vite app for learning Python in a cyber/AI context. Teacher/student roles, lessons with videos (MP4, YouTube, NotebookLM), Run/Reset/Mastery Check, and teacher notifications.
 
+**NotebookLM:** Teachers can upload the codebase to [Google NotebookLM](https://notebooklm.google.com) using [`docs/NOTEBOOKLM_MASTER_PROMPT.md`](docs/NOTEBOOKLM_MASTER_PROMPT.md) as the first source, then add code files from the checklist in that document.
+
 ## How to run the app
 
 **If you only see “Loading Cyber/AI Python Lab…”**, the app needs to be run locally (it does not run from the raw GitHub page).

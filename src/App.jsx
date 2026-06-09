@@ -6,13 +6,15 @@ import LessonList from "./components/LessonList.jsx";
 import EditorPane from "./components/EditorPane.jsx";
 import ResultPane from "./components/ResultPane.jsx";
 import LearnPanel from "./components/LearnPanel.jsx";
-import RolePicker, {
+import AuthScreen from "./components/AuthScreen.jsx";
+import {
+  getSession,
+  clearSession,
   saveRole,
-  loadRole,
-  loadStudentName,
-  markTeacherSession,
-  clearTeacherSession,
-} from "./components/RolePicker.jsx";
+  clearRole,
+  loadStudentProgress,
+  saveStudentProgress,
+} from "./utils/classStore.js";
 import { loadPublishedVideosFromSite } from "./utils/videoStore.js";
 import { usePyodideRunner } from "./hooks/usePyodideRunner.js";
 import { analyzeCode } from "./ai/analyzeClient.js";
@@ -22,8 +24,9 @@ import { gradeLesson, getLessonTestInputs, alignMockInputs } from "./grading/gra
 import {
   recordStudentEvent,
   clearStudentEvents,
-  registerStudent,
+  registerStudent as registerStudentActivity,
   saveStudentProgressSnapshot,
+  setStudentIdentity,
 } from "./utils/studentActivityStore.js";
 import { loadLessonOverrides, getLessonWithOverrides } from "./utils/lessonOverrides.js";
 import { clampTryMeCode } from "./utils/tryMeConstraint.js";
@@ -37,20 +40,7 @@ import InputPromptModal from "./components/InputPromptModal.jsx";
 import { getLessonInputGuide, getLessonInputPrompts } from "./data/lessonInputGuides.js";
 import { AppGuide } from "./components/AppGuide.jsx";
 import { useStudentSession } from "./hooks/useStudentSession.js";
-
-const STORAGE_KEY = "py_learn_progress_v4"; // v4: lessons refresh (L1 3-blank starter, L10 SENTINEL template)
-
-function loadProgress() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-function saveProgress(payload) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-}
+import { useAntiCheat } from "./hooks/useAntiCheat.js";
 
 function normalizeCodeForLesson(lesson, code) {
   if (!lesson?.template) return code ?? "";
@@ -65,14 +55,41 @@ function normalizeCodeForLesson(lesson, code) {
   return code;
 }
 
+function buildProgressState(p = {}) {
+  const initialCode = {};
+  for (const l of lessons) {
+    const saved = p?.codeByLesson?.[l.id];
+    initialCode[l.id] = normalizeCodeForLesson(l, saved ?? l.template ?? "");
+  }
+  return {
+    activeLessonId: p?.activeLessonId ?? lessons[0]?.id ?? "l1",
+    codeByLesson: initialCode,
+    stageByLesson: p?.stageByLesson ?? {},
+    masteryByLesson: p?.masteryByLesson ?? {},
+  };
+}
+
+const resumedSession = getSession();
+const initialProgress = buildProgressState(
+  resumedSession ? loadStudentProgress(resumedSession.studentId) : {},
+);
+
+if (resumedSession?.studentId) {
+  setStudentIdentity(
+    resumedSession.studentId,
+    resumedSession.displayName || resumedSession.username,
+  );
+}
+
 export default function App() {
-  const [userRole, setUserRole] = useState(() => loadRole());
+  const [userRole, setUserRole] = useState(() => (resumedSession ? "student" : null));
+  const [studentSession, setStudentSession] = useState(() => resumedSession || null);
   const [videosReady, setVideosReady] = useState(false);
 
   useEffect(() => {
     loadPublishedVideosFromSite().finally(() => setVideosReady(true));
   }, []);
-  const [activeLessonId, setActiveLessonId] = useState(lessons[0]?.id ?? "l1");
+  const [activeLessonId, setActiveLessonId] = useState(initialProgress.activeLessonId);
 
   const [lessonOverridesVersion, setLessonOverridesVersion] = useState(0);
   const activeLesson = useMemo(() => {
@@ -81,26 +98,11 @@ export default function App() {
     return getLessonWithOverrides(base, overrides);
   }, [activeLessonId, lessonOverridesVersion]);
 
-  const [codeByLesson, setCodeByLesson] = useState(() => {
-    const p = loadProgress();
-    const initial = {};
-    for (const l of lessons) {
-      const saved = p?.codeByLesson?.[l.id];
-      initial[l.id] = normalizeCodeForLesson(l, saved ?? l.template ?? "");
-    }
-    return initial;
-  });
+  const [codeByLesson, setCodeByLesson] = useState(() => initialProgress.codeByLesson);
 
-  const [stageByLesson, setStageByLesson] = useState(() => {
-    const p = loadProgress();
-    return p?.stageByLesson ?? {};
-  });
+  const [stageByLesson, setStageByLesson] = useState(() => initialProgress.stageByLesson);
 
-  // ✅ NEW: mastery status per lesson
-  const [masteryByLesson, setMasteryByLesson] = useState(() => {
-    const p = loadProgress();
-    return p?.masteryByLesson ?? {};
-  });
+  const [masteryByLesson, setMasteryByLesson] = useState(() => initialProgress.masteryByLesson);
 
   useEffect(() => {
     setCodeByLesson((prev) => {
@@ -142,7 +144,7 @@ export default function App() {
 
   const [stdout, setStdout] = useState("");
   const [error, setError] = useState("");
-  /** Counts consecutive runs (Run or Mastery) that ended with a non-empty interpreter error. */
+  /** Counts consecutive runs (Run or Mastery) that ended with a non empty interpreter error. */
   const [runErrorStreak, setRunErrorStreak] = useState(0);
   const [hint, setHint] = useState({ severity: "none", message: "" });
 
@@ -183,6 +185,8 @@ export default function App() {
   }, [showAgentAria, activeLessonId, activeLesson?.title]);
 
   const [noPasteEnabled, setNoPasteEnabled] = useState(true);
+  const [antiCheatEnabled, setAntiCheatEnabled] = useState(true);
+  const appMountedAtRef = useRef(Date.now());
   /** Bumped when starter code is applied from Learn / Lab so Monaco remounts with the new `value`. */
   const [editorLayoutKey, setEditorLayoutKey] = useState(0);
 
@@ -372,9 +376,14 @@ export default function App() {
   };
 
   const onSave = () => {
-    const payload = { activeLessonId, codeByLesson, stageByLesson };
-    const p = loadProgress();
-    saveProgress({ ...p, ...payload, masteryByLesson });
+    if (studentSession?.studentId) {
+      saveStudentProgress(studentSession.studentId, {
+        activeLessonId,
+        codeByLesson,
+        stageByLesson,
+        masteryByLesson,
+      });
+    }
     setHint({ severity: "info", message: "Progress saved successfully." });
   };
 
@@ -442,23 +451,52 @@ export default function App() {
     }
   };
 
-  // Persist progress + per-student snapshot for teacher reports
+  // Persist progress + Per student snapshot for teacher reports
   useEffect(() => {
-    const p = loadProgress();
-    saveProgress({ ...p, activeLessonId, codeByLesson, stageByLesson, masteryByLesson });
-    if (!isTeacher) {
-      saveStudentProgressSnapshot(null, { stageByLesson, masteryByLesson });
-    }
-  }, [activeLessonId, stageByLesson, masteryByLesson, isTeacher, codeByLesson]);
+    if (isTeacher || !studentSession?.studentId) return;
+    saveStudentProgress(studentSession.studentId, {
+      activeLessonId,
+      codeByLesson,
+      stageByLesson,
+      masteryByLesson,
+    });
+    saveStudentProgressSnapshot(studentSession.studentId, { stageByLesson, masteryByLesson });
+  }, [activeLessonId, stageByLesson, masteryByLesson, isTeacher, codeByLesson, studentSession?.studentId]);
+
+  const handleStudentAuth = useCallback((student) => {
+    const built = buildProgressState(loadStudentProgress(student.id));
+    setStudentIdentity(student.id, student.displayName || student.username);
+    setStudentSession(student);
+    setUserRole("student");
+    setActiveLessonId(built.activeLessonId);
+    setCodeByLesson(built.codeByLesson);
+    setStageByLesson(built.stageByLesson);
+    setMasteryByLesson(built.masteryByLesson);
+    registerStudentActivity(student.id, student.displayName || student.username);
+    saveStudentProgressSnapshot(student.id, {
+      stageByLesson: built.stageByLesson,
+      masteryByLesson: built.masteryByLesson,
+    });
+    recordStudentEvent({
+      type: "student_sign_in",
+      studentId: student.id,
+      studentName: student.displayName || student.username,
+      message: `Signed in as ${student.displayName || student.username}`,
+    });
+  }, []);
+
+  const handleTeacherAuth = useCallback(() => {
+    clearSession();
+    saveRole("teacher");
+    setStudentSession(null);
+    setUserRole("teacher");
+  }, []);
 
   const onSwitchRole = () => {
+    clearSession();
+    clearRole();
     setUserRole(null);
-    clearTeacherSession();
-    try {
-      localStorage.removeItem("py_learn_role");
-    } catch {
-      /* ignore */
-    }
+    setStudentSession(null);
   };
 
   const resetSessionToBeginning = useCallback(
@@ -489,34 +527,56 @@ export default function App() {
       setTryMeRunPreview(null);
       setEditorTryMeConstraint(null);
       setRunErrorStreak(0);
-      saveProgress({
-        activeLessonId: firstId,
-        codeByLesson: initialCode,
-        stageByLesson: {},
-        masteryByLesson: {},
-      });
+      if (studentSession?.studentId) {
+        saveStudentProgress(studentSession.studentId, {
+          activeLessonId: firstId,
+          codeByLesson: initialCode,
+          stageByLesson: {},
+          masteryByLesson: {},
+        });
+      }
       if (typeof window !== "undefined") {
         viewportSizeRef.current = { w: window.innerWidth, h: window.innerHeight };
       }
     },
-    []
+    [studentSession?.studentId],
   );
 
-  /**
-   * Tab / window leave + bfcache: full session reset for students only.
-   * Teachers are never reset when switching windows or tabs (their work stays put).
-   */
+  const handleAntiCheatViolation = useCallback(
+    (reason) => {
+      if (isTeacher || !antiCheatEnabled) return;
+      if (Date.now() - appMountedAtRef.current < 2000) return;
+      const fullscreenActive = Boolean(
+        document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.mozFullScreenElement,
+      );
+      if (fullscreenActive) return;
+      recordStudentEvent({ type: "window_switch", reason });
+      resetSessionToBeginning({
+        clearActivityLog: false,
+        progressHint:
+          "You left this tab or window. Starting again from the first lesson.",
+      });
+    },
+    [isTeacher, antiCheatEnabled, resetSessionToBeginning],
+  );
+
+  useAntiCheat({
+    enabled: !isTeacher && antiCheatEnabled,
+    onViolation: handleAntiCheatViolation,
+  });
+
+  /** Back/forward cache: page can reappear without a full reload; force a clean start. */
   useEffect(() => {
-    if (isTeacher) return;
+    if (isTeacher || !antiCheatEnabled) return;
 
-    const MOUNT_GRACE_MS = 2000;
-    const mountedAt = Date.now();
-
-    const runLeaveReset = (reason) => {
-      if (Date.now() - mountedAt < MOUNT_GRACE_MS) return;
+    const onPageShow = (e) => {
+      if (!e.persisted) return;
+      if (Date.now() - appMountedAtRef.current < 2000) return;
       recordStudentEvent({
         type: "window_switch",
-        reason,
+        reason: "bfcache_pageshow_session_reset",
       });
       resetSessionToBeginning({
         clearActivityLog: false,
@@ -525,46 +585,9 @@ export default function App() {
       });
     };
 
-    let hiddenTid;
-    const HIDDEN_DEBOUNCE_MS = 3500;
-
-    const fullscreenActive = () =>
-      Boolean(
-        document.fullscreenElement ||
-          document.webkitFullscreenElement ||
-          document.mozFullScreenElement,
-      );
-
-    const onVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        if (Date.now() - mountedAt < MOUNT_GRACE_MS) return;
-        if (fullscreenActive()) return;
-        window.clearTimeout(hiddenTid);
-        hiddenTid = window.setTimeout(() => {
-          hiddenTid = undefined;
-          runLeaveReset("tab_or_window_hidden_session_reset");
-        }, HIDDEN_DEBOUNCE_MS);
-      } else {
-        window.clearTimeout(hiddenTid);
-        hiddenTid = undefined;
-      }
-    };
-
-    /** Back/forward cache: page can reappear without a full reload; force a clean start. */
-    const onPageShow = (e) => {
-      if (e.persisted) {
-        runLeaveReset("bfcache_pageshow_session_reset");
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("pageshow", onPageShow);
-    return () => {
-      window.clearTimeout(hiddenTid);
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("pageshow", onPageShow);
-    };
-  }, [isTeacher, resetSessionToBeginning]);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [isTeacher, antiCheatEnabled, resetSessionToBeginning]);
 
   useEffect(() => {
     if (isTeacher) return;
@@ -644,26 +667,9 @@ export default function App() {
 
   if (!userRole) {
     return (
-      <RolePicker
-        onSelect={(role, meta) => {
-          saveRole(role);
-          if (role === "teacher") {
-            markTeacherSession();
-          } else {
-            clearTeacherSession();
-            if (meta?.displayName) {
-              const sid = registerStudent(null, meta.displayName);
-              saveStudentProgressSnapshot(sid, { stageByLesson, masteryByLesson });
-              recordStudentEvent({
-                type: "student_sign_in",
-                studentId: sid,
-                studentName: meta.displayName,
-                message: `Signed in as ${meta.displayName}`,
-              });
-            }
-          }
-          setUserRole(role);
-        }}
+      <AuthScreen
+        onStudentAuth={handleStudentAuth}
+        onTeacherAuth={handleTeacherAuth}
       />
     );
   }
@@ -680,22 +686,24 @@ export default function App() {
           <span className={`role-badge ${userRole}`}>
             {userRole === "teacher"
               ? "👩‍🏫 Teacher"
-              : `👩‍🎓 ${loadStudentName() || "Student"}`}
+              : `👩‍🎓 ${studentSession?.displayName || studentSession?.username || "Student"}`}
           </span>
           <button
             type="button"
             className="btn ghost"
             onClick={onSwitchRole}
-            title="Return to sign-in to choose Teacher or Student"
+            title="Log out and return to sign-in"
           >
-            Switch role
+            Log out
           </button>
           {isTeacher && <TeacherNotificationsPanel />}
           {isTeacher && (
             <TeacherDashboard
               masteryByLesson={masteryByLesson}
               noPasteEnabled={noPasteEnabled}
+              antiCheatEnabled={antiCheatEnabled}
               onToggleCopy={setNoPasteEnabled}
+              onToggleAntiCheat={setAntiCheatEnabled}
               onResetAll={onResetAllProgress}
               activeLessonId={activeLessonId}
               currentEditorCode={code}

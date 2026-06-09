@@ -11,7 +11,7 @@ export default function ResultPane({
   mastered,
   /** Students: false until reading + video gates in Learn are complete. */
   unlocked = true,
-  /** From `buildErrorCoach`: gentle guidance when `error` is non-empty. */
+  /** From `buildErrorCoach`: gentle guidance when `error` is non empty. */
   errorCoach = null,
   /** Scroll Learn reading to a heading that matches `section` (word overlap). */
   onGoToReading,
@@ -57,7 +57,7 @@ export default function ResultPane({
           <ol className="input-guide-list">
             {inputGuide.fields.map((field) => (
               <li key={field.label}>
-                <strong>{field.label}</strong> — {field.hint}
+                <strong>{field.label}</strong>. {field.hint}
                 {field.example ? (
                   <span className="input-guide-example"> Example: {field.example}</span>
                 ) : null}

@@ -55,7 +55,7 @@ print(f"Label: {'HIGH' if risk >= 70 else 'MEDIUM' if risk >= 40 else 'LOW'}")`,
       id: "s4",
       icon: "📋",
       heading: "Building a Formatted Report",
-      body: "Once you have inputs stored and converted, print a professional report using f-strings. The format specifier colon dot one f rounds a float to one decimal place.",
+      body: "Once you have inputs stored and converted, print a professional report using f strings. The format specifier colon dot one f rounds a float to one decimal place.",
       code: `msg        = input("Suspicious message: ")
 risk       = int(input("Risk score 0 to 100: "))
 confidence = float(input("Confidence 0.0 to 1.0: "))

@@ -152,7 +152,7 @@ for i, device in enumerate(inventory, start=1):
       hints: [
         "device.items() returns each (key, value) pair.",
         "Unpack with: for key, value in device.items():",
-        ":10 in the f-string pads the key to 10 characters wide, makes columns align.",
+        ":10 in the f string pads the key to 10 characters wide, makes columns align.",
       ],
       solution: `inventory = [
     {"owner":"Ava",    "os":"Windows 11","risk":5,  "patched":True},

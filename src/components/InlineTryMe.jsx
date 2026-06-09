@@ -1,5 +1,5 @@
 // src/components/InlineTryMe.jsx
-// Inline fill-the-blank during reading — no Pyodide, no Code editor.
+// Inline fill-the-blank during reading. no Pyodide, no Code editor.
 // `code` contains exactly one «BLANK» marker for the editable spot.
 
 import { useState, useRef } from "react";
@@ -327,7 +327,7 @@ export default function InlineTryMe({ code, answer, hint, expected, label }) {
         {status === "wrong" ? (
           <span style={{ fontSize: 12, color: C.red }}>
             ✗{" "}
-            {attempts >= 2 ? "Check the hint or expected output above" : "Not quite — try again"}
+            {attempts >= 2 ? "Check the hint or expected output above" : "Not quite. try again"}
           </span>
         ) : null}
         {attempts > 0 ? (

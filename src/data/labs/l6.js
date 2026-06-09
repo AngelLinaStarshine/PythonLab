@@ -46,13 +46,13 @@ Count : 6`,
     },
     {
       id: "e2",
-      title: "Exercise 2, Compute analytics with built-ins",
+      title: "Exercise 2, Compute analytics with built ins",
       prompt: `Using the same list, compute and print:
   • Total (sum of all scores)
   • Average (total ÷ count) , formatted to 1 decimal place
   • Highest score
   • Lowest score`,
-      starter: `# Exercise 2: Analytics with built-in functions
+      starter: `# Exercise 2: Analytics with built in functions
 risk_scores = [15, 42, 88, 73, 60, 95]
 
 total   = __BLANK__(risk_scores)
@@ -86,7 +86,7 @@ Average : 62.2
 Highest : 95
 Lowest  : 15`,
       afterNote:
-        "sum, len, max, min are Python built-ins, they work on any list. These four lines give you the core of any analytics dashboard.",
+        "sum, len, max, min are Python built ins, they work on any list. These four lines give you the core of any analytics dashboard.",
     },
     {
       id: "e3",
@@ -204,7 +204,7 @@ Added 33: feed length: 6
     nextLesson: "Next up: Lesson 7, structured records with dictionaries.",
     keyTakeaways: [
       "Lists store ordered collections, access with index [i] or [-1] for last.",
-      "sum(), len(), max(), min() are the four analytics built-ins.",
+      "sum(), len(), max(), min() are the four analytics built ins.",
       "Loop + counter = conditional count across a collection.",
       ".append(x) adds to end. .sort(reverse=True) sorts descending.",
       "enumerate(list, start=1) gives index + value in one loop.",

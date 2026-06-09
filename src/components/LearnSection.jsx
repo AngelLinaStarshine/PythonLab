@@ -5,9 +5,9 @@
 // the reading stack.
 //
 // Props:
-//   lessonId     — string
-//   objectives   — string[]
-//   onTryMeApply — fn(starterCode, sectionId?, options?) — match LearnPanel signature if used with App
+//   lessonId    . string
+//   objectives  . string[]
+//   onTryMeApply. fn(starterCode, sectionId?, options?). match LearnPanel signature if used with App
 
 import { useState, useEffect, useCallback } from "react";
 import { lessonContent } from "../data/lessonTryMe.js";
@@ -409,7 +409,7 @@ export default function LearnSection({ lessonId, objectives = [], onTryMeApply, 
         }}
       >
         🔊 Click the listen button on any section to hear it read aloud. ▶ Use the{" "}
-        <strong style={{ color: C.cyan }}>Try Me</strong> blocks to test one concept at a time — no editor needed.
+        <strong style={{ color: C.cyan }}>Try Me</strong> blocks to test one concept at a time. no editor needed.
         When you scroll to the bottom and the timer completes, the <strong style={{ color: C.cyan }}>Video</strong>{" "}
         tab unlocks.
       </div>

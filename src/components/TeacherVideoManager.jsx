@@ -76,7 +76,7 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
     setPackNotice(
       count > 0
         ? `${count} video(s) are saved for students on this lesson (this browser).`
-        : "No videos saved yet — add a YouTube, NotebookLM, or public MP4/WebM URL (file upload is preview only).",
+        : "No videos saved yet. add a YouTube, NotebookLM, or public MP4/WebM URL (file upload is preview only).",
     );
     onVideosChange?.();
     setSources(padForTeacherDisplay(getMergedVideoSources(lesson, lessonId)));
@@ -88,7 +88,7 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
       await navigator.clipboard.writeText(text);
       setPackNotice("Copied all lesson videos to clipboard. Paste into Import on student devices or another browser.");
     } catch {
-      setPackNotice("Could not copy — use Export download instead.");
+      setPackNotice("Could not copy. use Export download instead.");
     }
   };
 
@@ -111,7 +111,7 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
       onVideosChange?.();
       setSources(padForTeacherDisplay(getMergedVideoSources(lesson, lessonId)));
     } catch {
-      setPackNotice("Import failed — check the JSON and try again.");
+      setPackNotice("Import failed. check the JSON and try again.");
     }
   };
 
@@ -129,7 +129,7 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
       { id: `t-${lessonId}-${Date.now()}`, type: "mp4", url: objUrl, label },
     ]);
     setUploadNotice(
-      "Preview added for you on this device only. Students need a public MP4/WebM URL, YouTube, or NotebookLM link — paste a hosted URL above, or upload the file to your site and paste that link.",
+      "Preview added for you on this device only. Students need a public MP4/WebM URL, YouTube, or NotebookLM link. paste a hosted URL above, or upload the file to your site and paste that link.",
     );
     setNewLabel("");
     e.target.value = "";
@@ -155,7 +155,7 @@ export default function TeacherVideoManager({ lessonId, lesson, onVideosChange }
         on their devices (required for Netlify/class laptops).
       </p>
       <p className="teacher-video-manager-note">
-        File upload is <strong>preview only</strong> on your machine — host the file online, paste that URL, then click{" "}
+        File upload is <strong>preview only</strong> on your machine. host the file online, paste that URL, then click{" "}
         <strong>Add</strong>.
       </p>
       {packNotice ? (

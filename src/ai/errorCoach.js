@@ -63,13 +63,13 @@ function bulletsForKind(kind) {
       ];
     case "nameerror":
       return [
-        "Python could not resolve a name you used. That usually means a variable or function name does not match what you defined earlier, or a built-in name is misspelled.",
+        "Python could not resolve a name you used. That usually means a variable or function name does not match what you defined earlier, or a built in name is misspelled.",
         "Re-check identifiers letter by letter against the lesson examples (capitalisation matters).",
       ];
     case "typeerror":
       return [
         "Two values were used together in a way their types do not allow. Think about what each value is (text vs number vs list) before combining or comparing.",
-        "Walk through the lesson section on types and conversions, then re-read the line the exercise is asking you to build.",
+        "Walk through the lesson section on types and conversions, then reread the line the exercise is asking you to build.",
       ];
     case "valueerror":
       return [
@@ -79,7 +79,7 @@ function bulletsForKind(kind) {
     case "zerodivisionerror":
       return [
         "Something was divided by zero. That often means a count or length turned out to be zero when you did not expect it.",
-        "Re-read how the lesson guards totals and loop counters before dividing.",
+        "Reread how the lesson guards totals and loop counters before dividing.",
       ];
     case "indexerror":
     case "keyerror":

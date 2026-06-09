@@ -1,5 +1,5 @@
 import { recordStudentEvent } from "./utils/studentActivityStore.js";
-import { ROLE_STORAGE_KEY } from "./components/RolePicker.jsx";
+import { ROLE_STORAGE_KEY } from "./utils/classStore.js";
 
 /**
  * securityLayer.js
@@ -29,7 +29,7 @@ import { ROLE_STORAGE_KEY } from "./components/RolePicker.jsx";
  * ─────────────────────────────────────────────────────────────────
  */
 
-// ─── 1. Inject CSS immediately — runs before React renders ───────
+// ─── 1. Inject CSS immediately. runs before React renders ───────
 (function injectCSS() {
   const style = document.createElement("style");
   style.id = "security-layer-styles";
@@ -259,7 +259,7 @@ import { ROLE_STORAGE_KEY } from "./components/RolePicker.jsx";
       return false;
     }
 
-    // ── PrintScreen — OS-level, can't fully block, flash the screen ──
+    // ── PrintScreen. OS-level, can't fully block, flash the screen ──
     if (raw === "PrintScreen") {
       _log("printscreen_attempt");
       document.body.style.visibility = "hidden";

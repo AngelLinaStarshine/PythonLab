@@ -312,7 +312,7 @@ Log> done
   ],
   wrapUp: {
     message:
-      "🎖️ Congratulations, you have completed the Cyber Python course! You built a working SOC Dashboard from scratch using every concept in the Ontario Grade 10-11 Python curriculum. This project is ready to go in your portfolio.",
+      "🎖️ Congratulations, you have completed the Cyber Python course! You built a working SOC Dashboard from scratch using every concept in the Ontario Grade 10 to 11 Python curriculum. This project is ready to go in your portfolio.",
     nextLesson: "Share your project. Add it to your GitHub. Show it in interviews. You earned it.",
     keyTakeaways: [
       "Functions (score_event, label_risk) encapsulate reusable logic.",

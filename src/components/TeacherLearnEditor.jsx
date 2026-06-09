@@ -107,15 +107,15 @@ export default function TeacherLearnEditor({ lesson, lessonId, onSave }) {
             rows={8}
           />
           <label className="teacher-learn-editor-label">
-            Guided walkthrough + Try me (JSON) — optional full override
+            Guided walkthrough + Try me (JSON). optional full override
           </label>
           <p className="teacher-learn-editor-hint">
             Shape: <code>lessonId</code>, <code>ttsIntro</code>, <code>sections[]</code> with headings, body, code,
-            tryMe (starter, hint, expectedOutput, …). Leave empty to use built-in content for this lesson.
+            tryMe (starter, hint, expectedOutput, …). Leave empty to use built in content for this lesson.
           </p>
           <div className="teacher-learn-editor-row">
             <button type="button" className="btn ghost small" onClick={insertDefaultTryMe}>
-              Load built-in JSON as starting point
+              Load built in JSON as starting point
             </button>
           </div>
           <textarea

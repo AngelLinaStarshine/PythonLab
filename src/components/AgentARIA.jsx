@@ -42,7 +42,7 @@ const ERROR_SECTION_MAP = {
   typeerror: { section: "The Four Types", reason: "You may be using the wrong type, e.g. a string where a number is needed." },
   syntaxerror: { section: "Creating Variables", reason: "Check your syntax, equals signs, quotes, and colons." },
   "invalid literal": { section: "Converting Types", reason: "int() received text it cannot convert, make sure the value is a number." },
-  valueerror: { section: "Converting Types", reason: "A type conversion failed. Re-read how int() and float() work." },
+  valueerror: { section: "Converting Types", reason: "A type conversion failed. Reread how int() and float() work." },
   indentationerror: { section: "if / elif / else", reason: "Python requires consistent indentation inside if/elif/else blocks." },
   zerodivisionerror: { section: "Counting Inside a Loop", reason: "You divided by zero, check your counter or list length." },
   indexerror: { section: "The for Loop", reason: "You accessed an index that doesn't exist, check your range." },
@@ -63,7 +63,7 @@ const LESSON_HINTS = {
   l3: { section: "if / elif / else Structure", hint: "Check the order of your conditions, highest threshold first. Don't forget the colon at the end of each line." },
   l4: { section: "Counting Inside a Loop", hint: "Make sure your counter starts at 0 before the loop, not inside it. Check your range() start and stop values." },
   l5: { section: "Composing Functions", hint: "Are you using return (not just print)? Can you call one function's output as another's input?" },
-  l6: { section: "Analytics with Built-in Functions", hint: "Check you're using sum(), len(), max(), and min() correctly. Division needs len() as the denominator." },
+  l6: { section: "Analytics with built in Functions", hint: "Check you're using sum(), len(), max(), and min() correctly. Division needs len() as the denominator." },
   l7: { section: "Safe Access with .get()", hint: "Keys are case-sensitive and need quotes in square brackets. Use .get() when a key might not exist." },
   l8: {
     section: "Normalize with lower() and Tokenize with split()",
@@ -89,7 +89,7 @@ function diagnose(lastError, lastCode, lessonId) {
 
   return {
     section: "the reading material",
-    reason: "Re-read the lesson carefully and check the common mistakes section.",
+    reason: "Reread the lesson carefully and check the common mistakes section.",
     source: "generic",
   };
 }
@@ -378,7 +378,7 @@ export default function AgentARIA({
               }}
             >
               <span>📖</span>
-              <span>Re-read: &quot;{diagnosis.section}&quot;</span>
+              <span>Reread: &quot;{diagnosis.section}&quot;</span>
             </button>
 
             <div

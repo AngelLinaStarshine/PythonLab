@@ -5,11 +5,11 @@
 // Key format: "l{lessonNum}-{sectionId}"
 //
 // Each entry:
-//   label    — instruction in the Try Me header
-//   code     — full Python with «BLANK» as the ONE editable spot
-//   answer   — correct string (trimmed, case-insensitive match)
-//   hint     — shown on 💡 Hint click
-//   expected — shown as "Output when correct" on success,
+//   label   . instruction in the Try Me header
+//   code    . full Python with «BLANK» as the ONE editable spot
+//   answer  . correct string (trimmed, case insensitive match)
+//   hint    . shown on 💡 Hint click
+//   expected. shown as "Output when correct" on success,
 //              and as "Expected output" after 2 wrong attempts
 // ─────────────────────────────────────────────────────────────────
 
@@ -19,7 +19,7 @@ export const inlineTryMeData = {
   // LESSON 1 Variables & Types
   // ══════════════════════════════════════════════════════════════
 
-  // s1 — Why Variables Matter (no code to fill in, intro section)
+  // s1. Why Variables Matter (no code to fill in, intro section)
 
   "l1-s2": {
     label:    "Type your username as a Python string (include quotes)",
@@ -32,7 +32,7 @@ print("Hello,", username)`,
   },
 
   "l1-s3": {
-    label:    "Which built-in function tells you a variable's type?",
+    label:    "Which built in function tells you a variable's type?",
     code:
 `grade = 10
 print(«BLANK»(grade))`,
@@ -42,12 +42,12 @@ print(«BLANK»(grade))`,
   },
 
   "l1-s4": {
-    label:    "Inside the f-string, embed the username variable",
+    label:    "Inside the f string, embed the username variable",
     code:
 `username = "Ava"
 print(f"User: {«BLANK»}")`,
     answer:   "username",
-    hint:     "Inside curly braces of an f-string you write the variable name directly, no quotes",
+    hint:     "Inside curly braces of an f string you write the variable name directly, no quotes",
     expected: "User: Ava",
   },
 
@@ -71,7 +71,7 @@ print("User:", username)`,
 `name = «BLANK»("What is your name? ")
 print("Hello,", name)`,
     answer:   "input",
-    hint:     "The built-in that reads typed input from the user is called input()",
+    hint:     "The built in that reads typed input from the user is called input()",
     expected: "Hello, Ava",
   },
 
@@ -99,7 +99,7 @@ print(f"Confidence: {conf * 100:.«BLANK»f}%")`,
   // LESSON 3 Conditionals
   // ══════════════════════════════════════════════════════════════
 
-  // s1 — intro, no code blank
+  // s1. intro, no code blank
 
   "l3-s2": {
     label:    "What is the HIGH risk threshold? (type just the number)",
@@ -147,7 +147,7 @@ if score >= 70 «BLANK» new_device:
 
 print(label_risk(65, malware=«BLANK»))`,
     answer:   "True",
-    hint:     "malware=True makes the 'or malware' condition True — so the result is HIGH even though score=65 is below 70",
+    hint:     "malware=True makes the 'or malware' condition True. so the result is HIGH even though score=65 is below 70",
     expected: "HIGH",
   },
 
@@ -155,7 +155,7 @@ print(label_risk(65, malware=«BLANK»))`,
   // LESSON 4 Loops
   // ══════════════════════════════════════════════════════════════
 
-  // s1 — intro, no code blank
+  // s1. intro, no code blank
 
   "l4-s2": {
     label:    "Type the stop value for range() to include event 10",
@@ -163,7 +163,7 @@ print(label_risk(65, malware=«BLANK»))`,
 `for i in range(1, «BLANK»):
     print("Event:", i)`,
     answer:   "11",
-    hint:     "range(1, 11) gives 1 through 10. The stop is always excluded — add 1 to the last value you want",
+    hint:     "range(1, 11) gives 1 through 10. The stop is always excluded. add 1 to the last value you want",
     expected: "Event: 1\nEvent: 2\nEvent: 3\nEvent: 4\nEvent: 5\nEvent: 6\nEvent: 7\nEvent: 8\nEvent: 9\nEvent: 10",
   },
 
@@ -269,12 +269,12 @@ print(scores[«BLANK»])`,
   },
 
   "l6-s3": {
-    label:    "Which built-in adds all values in a list?",
+    label:    "Which built in adds all values in a list?",
     code:
 `scores = [15, 42, 88]
 print(«BLANK»(scores))`,
     answer:   "sum",
-    hint:     "The built-in function that totals all list values is sum()",
+    hint:     "The built in function that totals all list values is sum()",
     expected: "145",
   },
 
@@ -323,7 +323,7 @@ print(device.«BLANK»("ip", "unknown"))`,
 for k, v in device.«BLANK»():
     print(k, ":", v)`,
     answer:   "items",
-    hint:     ".items() returns each (key, value) pair — unpack with: for k, v in d.items()",
+    hint:     ".items() returns each (key, value) pair. unpack with: for k, v in d.items()",
     expected: "owner : Ava\nrisk : 42",
   },
 
@@ -425,13 +425,13 @@ print(score_event("FAILED login"))`,
   },
 
   "l10-s4": {
-    label:    "Which built-in sorts a list? (add reverse=True after for highest first)",
+    label:    "Which built in sorts a list? (add reverse=True after for highest first)",
     code:
 `events = [{"risk":50},{"risk":90},{"risk":10}]
 ranked = «BLANK»(events, key=lambda e: e["risk"], reverse=True)
 print(ranked[0]["risk"])`,
     answer:   "sorted",
-    hint:     "The sorted() built-in returns a new sorted list without modifying the original",
+    hint:     "The sorted() built in returns a new sorted list without modifying the original",
     expected: "90",
   },
 };

@@ -6,18 +6,18 @@
 // Three questions per lesson, each harder than the last.
 //
 // Format per question:
-//   q        — question text (may include a code block in backticks)
-//   code     — optional Python snippet shown in a code panel
-//   opts     — 4 answer options (A–D)
-//   correct  — index of correct option (0-based)
-//   explain  — explanation shown after answering
-//   tag      — short topic label shown as a badge
+//   q       . question text (may include a code block in backticks)
+//   code    . optional Python snippet shown in a code panel
+//   opts    . 4 answer options (A through D)
+//   correct . index of correct option (0-based)
+//   explain . explanation shown after answering
+//   tag     . short topic label shown as a badge
 // ─────────────────────────────────────────────────────────────────
 
 export const quizData = {
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 1 — Variables & Types
+  // LESSON 1. Variables & Types
   // ══════════════════════════════════════════════════════════════
   l1: [
     {
@@ -33,7 +33,7 @@ print(type(port))`,
         "TypeError",
       ],
       correct: 1,
-      explain: `port is assigned "443" — text inside quotes. Python stores it as str, not int. To get an integer, you would write port = 443 with no quotes, or port = int("443").`,
+      explain: `port is assigned "443". text inside quotes. Python stores it as str, not int. To get an integer, you would write port = 443 with no quotes, or port = int("443").`,
     },
     {
       tag: "Bug fix",
@@ -50,11 +50,11 @@ print(result)`,
         "Remove the print statement",
       ],
       correct: 0,
-      explain: `grade is stored as the string "10". You cannot add a string to an integer — Python raises TypeError. Fix: grade = 10 (no quotes) so both operands are integers.`,
+      explain: `grade is stored as the string "10". You cannot add a string to an integer. Python raises TypeError. Fix: grade = 10 (no quotes) so both operands are integers.`,
     },
     {
       tag: "Output prediction",
-      q: "What is printed by this f-string?",
+      q: "What is printed by this f string?",
       code:
 `user   = "Ava"
 score  = 87
@@ -64,15 +64,15 @@ print(f"{user} | score={score} | admin={flag}")`,
         "Ava | score=87 | admin=True",
         "{user} | score={score} | admin={flag}",
         "Ava | score='87' | admin='True'",
-        "SyntaxError — missing quotes",
+        "SyntaxError. missing quotes",
       ],
       correct: 0,
-      explain: `f-strings embed variable values inside curly braces. user is "Ava", score is 87 (int, no quotes), flag is True (bool). The f-string renders them all inline exactly as they are.`,
+      explain: `f strings embed variable values inside curly braces. user is "Ava", score is 87 (int, no quotes), flag is True (bool). The f string renders them all inline exactly as they are.`,
     },
   ],
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 2 — Input & Output
+  // LESSON 2. Input & Output
   // ══════════════════════════════════════════════════════════════
   l2: [
     {
@@ -88,7 +88,7 @@ print(type(risk))`,
         "<class 'bool'>",
       ],
       correct: 2,
-      explain: `input() ALWAYS returns a string — even when the user types a number. To get an integer you must convert: risk = int(input("Risk score: "))`,
+      explain: `input() ALWAYS returns a string. even when the user types a number. To get an integer you must convert: risk = int(input("Risk score: "))`,
     },
     {
       tag: "Crash diagnosis",
@@ -98,10 +98,10 @@ print(type(risk))`,
 result = score + 10
 print(result)`,
       opts: [
-        "Line 1 — input() is not a valid function",
-        "Line 2 — cannot add str and int",
-        "Line 3 — print needs quotes around result",
-        "No crash — it prints 60",
+        "Line 1. input() is not a valid function",
+        "Line 2. cannot add str and int",
+        "Line 3. print needs quotes around result",
+        "No crash. it prints 60",
       ],
       correct: 1,
       explain: `score is a str (input always returns str). Line 2 tries to add str + int which raises TypeError: can only concatenate str (not "int") to str. Fix line 1: score = int(input("Score: "))`,
@@ -124,7 +124,7 @@ print(f"Confidence: {conf * 100:.2f}%")`,
   ],
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 3 — Conditionals
+  // LESSON 3. Conditionals
   // ══════════════════════════════════════════════════════════════
   l3: [
     {
@@ -168,7 +168,7 @@ else:
         "A and B",
       ],
       correct: 1,
-      explain: `First condition: risk >= 70 is False (65 < 70), so the 'and' fails regardless of new_device. Second condition: risk >= 40 is True (65 >= 40), so the 'or' is True — prints B. The 'else' is never reached.`,
+      explain: `First condition: risk >= 70 is False (65 < 70), so the 'and' fails regardless of new_device. Second condition: risk >= 40 is True (65 >= 40), so the 'or' is True. prints B. The 'else' is never reached.`,
     },
     {
       tag: "Bug fix",
@@ -182,18 +182,18 @@ if risk >= 70:
 if risk < 40:
     print("LOW")`,
       opts: [
-        "Should use elif not a second if — HIGH and MEDIUM both print for risk=85",
-        "The >= operator is wrong — should use >",
+        "Should use elif not a second if. HIGH and MEDIUM both print for risk=85",
+        "The >= operator is wrong. should use >",
         "risk = 85 should be risk = '85'",
-        "print needs f-string formatting",
+        "print needs f string formatting",
       ],
       correct: 0,
-      explain: `Three separate if statements each run independently. For risk=85: first if (>=40) prints MEDIUM, second if (>=70) prints HIGH — both print. Use if/elif/else so only one branch fires.`,
+      explain: `Three separate if statements each run independently. For risk=85: first if (>=40) prints MEDIUM, second if (>=70) prints HIGH. both print. Use if/elif/else so only one branch fires.`,
     },
   ],
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 4 — Loops
+  // LESSON 4. Loops
   // ══════════════════════════════════════════════════════════════
   l4: [
     {
@@ -204,7 +204,7 @@ if risk < 40:
     print(i)`,
       opts: ["3", "4", "7", "9"],
       correct: 1,
-      explain: `range(2, 9, 2) generates: 2, 4, 6, 8 — four values. The step is 2, start is 2, stop is 9 (excluded). So the loop runs 4 times printing 2, 4, 6, 8.`,
+      explain: `range(2, 9, 2) generates: 2, 4, 6, 8. four values. The step is 2, start is 2, stop is 9 (excluded). So the loop runs 4 times printing 2, 4, 6, 8.`,
     },
     {
       tag: "Counter bug",
@@ -235,12 +235,12 @@ for i in range(1, 11):
 print(count)`,
       opts: ["1", "2", "3", "5"],
       correct: 0,
-      explain: `Numbers from 1-10 divisible by BOTH 2 and 3 must be divisible by 6. Only 6 qualifies (6 % 2 == 0 and 6 % 3 == 0). So count is 1. The 'and' requires both conditions — divisible by 2 OR 3 would give 7 numbers.`,
+      explain: `Numbers from 1-10 divisible by BOTH 2 and 3 must be divisible by 6. Only 6 qualifies (6 % 2 == 0 and 6 % 3 == 0). So count is 1. The 'and' requires both conditions. divisible by 2 OR 3 would give 7 numbers.`,
     },
   ],
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 5 — Functions
+  // LESSON 5. Functions
   // ══════════════════════════════════════════════════════════════
   l5: [
     {
@@ -301,12 +301,12 @@ print(bonus)`,
         "Prints None",
       ],
       correct: 2,
-      explain: `bonus is a local variable — it only exists inside the add_bonus function. After the function returns, bonus is gone. print(bonus) outside the function raises NameError. To use it outside, return it or define it globally.`,
+      explain: `bonus is a local variable. it only exists inside the add_bonus function. After the function returns, bonus is gone. print(bonus) outside the function raises NameError. To use it outside, return it or define it globally.`,
     },
   ],
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 6 — Lists
+  // LESSON 6. Lists
   // ══════════════════════════════════════════════════════════════
   l6: [
     {
@@ -361,7 +361,7 @@ print(len(high), sum(high) / len(high)))`,
   ],
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 7 — Dictionaries
+  // LESSON 7. Dictionaries
   // ══════════════════════════════════════════════════════════════
   l7: [
     {
@@ -418,7 +418,7 @@ print(list(d.keys()))`,
   ],
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 8 — Strings
+  // LESSON 8. Strings
   // ══════════════════════════════════════════════════════════════
   l8: [
     {
@@ -435,7 +435,7 @@ log.replace("FAILED", "BLOCKED")`,
         "None",
       ],
       correct: 2,
-      explain: `Strings are immutable. lower() and replace() return NEW strings — they never change the original. The result of log.replace(...) is discarded because it isn't assigned to anything. log stays exactly as it was.`,
+      explain: `Strings are immutable. lower() and replace() return NEW strings. they never change the original. The result of log.replace(...) is discarded because it isn't assigned to anything. log stays exactly as it was.`,
     },
     {
       tag: "Detection logic",
@@ -475,7 +475,7 @@ print(parts[1])`,
   ],
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 9 — Exceptions
+  // LESSON 9. Exceptions
   // ══════════════════════════════════════════════════════════════
   l9: [
     {
@@ -512,7 +512,7 @@ for item in data:
         pass`,
       opts: [
         "int() cannot accept a list",
-        "bare except: silently hides all errors including bugs — use except Exception or specific types",
+        "bare except: silently hides all errors including bugs. use except Exception or specific types",
         "pass is not valid inside except",
         "The for loop will crash on None",
       ],
@@ -541,12 +541,12 @@ print(safe_div(10, "x"))`,
         "DIV_ZERO / DIV_ZERO / BAD_TYPE",
       ],
       correct: 0,
-      explain: `10/2 = 5.0 (float division). 10/0 raises ZeroDivisionError → "DIV_ZERO". 10/"x" raises TypeError → "BAD_TYPE". Each except clause catches only its named exception type — they don't interfere with each other.`,
+      explain: `10/2 = 5.0 (float division). 10/0 raises ZeroDivisionError → "DIV_ZERO". 10/"x" raises TypeError → "BAD_TYPE". Each except clause catches only its named exception type. they don't interfere with each other.`,
     },
   ],
 
   // ══════════════════════════════════════════════════════════════
-  // LESSON 10 — Capstone
+  // LESSON 10. Capstone
   // ══════════════════════════════════════════════════════════════
   l10: [
     {

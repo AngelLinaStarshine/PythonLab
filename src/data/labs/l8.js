@@ -94,7 +94,7 @@ clean = log.lower()
 words = clean.split()
 
 print(f"Log: {log}")
-print("--- Detection Results ---")
+print("Detection Results")
 
 for keyword in keywords:
     if __BLANK__ in words:
@@ -113,7 +113,7 @@ clean = log.lower()
 words = clean.split()
 
 print(f"Log: {log}")
-print("--- Detection Results ---")
+print("Detection Results")
 
 for keyword in keywords:
     if keyword in words:
@@ -121,7 +121,7 @@ for keyword in keywords:
     else:
         print(f"  [  OK ] '{keyword}' not found")`,
       expectedOutput: `Log: blocked connection from root user, exploit attempt
---- Detection Results ---
+Detection Results
   [  OK ] 'failed' not found
   [ALERT] 'blocked' detected
   [  OK ] 'malware' not found
